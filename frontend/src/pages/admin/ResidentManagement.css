@@ -1,0 +1,41 @@
+.admin-page-content table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Apply truncation only to fullname and email cells */
+.admin-page-content td[title] {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-page-content .col-fullname { width: 33%; }
+.admin-page-content .col-email { width: 33%; }
+.admin-page-content .col-apartment { width: 20%; }
+.admin-page-content .col-actions { width: 16%; min-width: 120px; }
+
+/* Ensure cells vertically center their content so buttons aren't aligned to top */
+.admin-page-content th,
+.admin-page-content td {
+  vertical-align: middle;
+}
+
+/* Prevent header wrapping for action column */
+.admin-page-content th {
+  white-space: nowrap;
+}
+
+/* Button styling to avoid being cut */
+.admin-page-content .action-btn {
+  padding: 6px 10px;
+}
+
+/* Allow the action cell to show full button and wrap if needed */
+.admin-page-content td.col-actions {
+  white-space: normal;
+}
+
+.placeholder-row td {
+  height: 48px;
+}

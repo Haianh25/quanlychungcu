@@ -9,6 +9,48 @@
   min-height: 420px; /* điều chỉnh theo chiều cao 10 hàng của bảng */
 }
 
+/* Ổn định cấu trúc cột của bảng để tránh trôi chữ khi phân trang */
+.management-page-container table {
+  table-layout: fixed; /* phân bổ bề rộng cột cố định */
+  width: 100%;
+}
+
+/* Đặt tỷ lệ bề rộng các cột */
+.management-page-container .col-fullname { width: 25%; }
+.management-page-container .col-email { width: 30%; }
+.management-page-container .col-role { width: 15%; }
+.management-page-container .col-status { width: 15%; }
+.management-page-container .col-actions { width: 18%; min-width: 120px; }
+
+/* Tránh wrap và hiển thị ... cho email nếu quá dài */
+.management-page-container td.col-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Truncate name and email cells and keep action column stable */
+.management-page-container td[title] {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.management-page-container td.col-actions {
+  white-space: nowrap;
+}
+
+/* Prevent header wrapping for action column */
+.management-page-container th {
+  white-space: nowrap;
+}
+
+/* Button styling to avoid being cut */
+.management-page-container .action-btn {
+  padding: 6px 10px;
+}
+
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -20,3 +62,8 @@
   max-height: 400px;
   overflow-y: auto;
 } */
+
+.placeholder-row td {
+  height: 48px; /* đảm bảo mỗi hàng có chiều cao tương đương với dữ liệu thực */
+  background: transparent;
+}

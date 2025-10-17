@@ -66,6 +66,13 @@ const UserManagement = () => {
                     />
                 </div>
                 <table className="table table-striped table-hover">
+                    <colgroup>
+                        <col style={{ width: '25%' }} />
+                        <col style={{ width: '30%' }} />
+                        <col style={{ width: '15%' }} />
+                        <col style={{ width: '15%' }} />
+                        <col style={{ width: '15%' }} />
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Họ Tên</th>
@@ -78,14 +85,25 @@ const UserManagement = () => {
                     <tbody>
                         {currentUsers.map(user => (
                             <tr key={user.id}>
-                                <td>{user.full_name}</td>
-                                <td>{user.email}</td>
+                                <td title={user.full_name}>{user.full_name}</td>
+                                <td title={user.email}>{user.email}</td>
                                 <td><span className={`badge ${user.role === 'resident' ? 'bg-success' : 'bg-secondary'}`}>{user.role}</span></td>
                                 <td>{user.is_verified ? 'Đã xác thực' : 'Chưa xác thực'}</td>
                                 <td>
-                                    <button className="btn btn-primary btn-sm me-2" onClick={() => handleShowModal(user)}>Sửa</button>
-                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(user.id)}>Xóa</button>
+                                    <button className="btn btn-primary btn-sm me-2 action-btn" onClick={() => handleShowModal(user)}>Sửa</button>
+                                    <button className="btn btn-danger btn-sm action-btn" onClick={() => handleDelete(user.id)}>Xóa</button>
                                 </td>
+                            </tr>
+                        ))}
+
+                        {/* Render placeholder rows so table height remains constant across pages */}
+                        {currentUsers.length < usersPerPage && Array.from({ length: usersPerPage - currentUsers.length }).map((_, idx) => (
+                            <tr key={`placeholder-${idx}`} className="placeholder-row">
+                                <td className="col-fullname">&nbsp;</td>
+                                <td className="col-email">&nbsp;</td>
+                                <td className="col-role">&nbsp;</td>
+                                <td className="col-status">&nbsp;</td>
+                                <td className="col-actions">&nbsp;</td>
                             </tr>
                         ))}
                     </tbody>
