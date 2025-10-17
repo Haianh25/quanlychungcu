@@ -65,6 +65,7 @@ const UserManagement = () => {
                         }}
                     />
                 </div>
+                <div className="table-container">
                 <table className="table table-striped table-hover">
                     <colgroup>
                         <col style={{ width: '25%' }} />
@@ -108,6 +109,7 @@ const UserManagement = () => {
                         ))}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <div className="pagination-container">

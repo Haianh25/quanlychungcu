@@ -39,3 +39,6 @@
 .placeholder-row td {
   height: 48px;
 }
+
+/* Make table body scrollable to keep layout stable between pages */
+/* No scroll: show full list by default; keep placeholder rows to stabilize layout */

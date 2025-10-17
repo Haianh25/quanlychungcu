@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AssignRoomModal from '../../components/admin/AssignRoomModal';
-import Pagination from '../../components/admin/Pagination'; // Import Pagination
+import Pagination from '../../components/admin/Pagination';
 import './ResidentManagement.css';
 
 const ResidentManagement = () => {
@@ -11,7 +11,7 @@ const ResidentManagement = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedResident, setSelectedResident] = useState(null);
 
-    // State mới cho tìm kiếm và phân trang
+    // State cho tìm kiếm và phân trang
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [residentsPerPage] = useState(10);
@@ -42,10 +42,10 @@ const ResidentManagement = () => {
     };
 
     const handleAssignSuccess = () => {
-        fetchResidents(); // Tải lại danh sách sau khi gán thành công
+        fetchResidents();
     };
 
-    // Lọc danh sách cư dân dựa trên searchTerm
+    // Lọc danh sách cư dân
     const filteredResidents = residents.filter(resident =>
         resident.full_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -57,13 +57,12 @@ const ResidentManagement = () => {
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     return (
-        // Sử dụng thẻ Fragment <> để bọc các component con
+        // Sử dụng thẻ Fragment <> và các div với className tương ứng
         <>
             <div className="admin-page-content">
                 <h2>Quản Lý Cư Dân</h2>
                 {error && <p className="alert alert-danger">{error}</p>}
 
-                {/* THANH TÌM KIẾM */}
                 <div className="mb-3">
                     <input
                         type="text"
@@ -72,17 +71,17 @@ const ResidentManagement = () => {
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
-                            setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+                            setCurrentPage(1);
                         }}
                     />
                 </div>
 
                 <table className="table table-striped table-hover">
                     <colgroup>
-                        <col style={{ width: '35%' }} />
-                        <col style={{ width: '35%' }} />
+                        <col style={{ width: '33%' }} />
+                        <col style={{ width: '33%' }} />
                         <col style={{ width: '20%' }} />
-                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '14%' }} />
                     </colgroup>
                     <thead>
                         <tr>
@@ -93,13 +92,12 @@ const ResidentManagement = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* Render danh sách đã được phân trang */}
                         {currentResidents.map(resident => (
                             <tr key={resident.id}>
                                 <td title={resident.full_name}>{resident.full_name}</td>
                                 <td title={resident.email}>{resident.email}</td>
                                 <td>{resident.apartment_number || 'Chưa được gán'}</td>
-                                <td>
+                                <td className="col-actions">
                                     <button className="btn btn-primary btn-sm action-btn" onClick={() => handleShowModal(resident)}>
                                         Gán Căn Hộ
                                     </button>
@@ -107,12 +105,12 @@ const ResidentManagement = () => {
                             </tr>
                         ))}
 
-                        {/* Placeholder rows to keep table height stable across pages */}
+                        {/* Placeholder rows to keep table height/columns stable between pages */}
                         {currentResidents.length < residentsPerPage && Array.from({ length: residentsPerPage - currentResidents.length }).map((_, idx) => (
                             <tr key={`placeholder-${idx}`} className="placeholder-row">
-                                <td className="col-fullname">&nbsp;</td>
-                                <td className="col-email">&nbsp;</td>
-                                <td className="col-apartment">&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
                                 <td className="col-actions">&nbsp;</td>
                             </tr>
                         ))}
@@ -120,7 +118,6 @@ const ResidentManagement = () => {
                 </table>
             </div>
 
-            {/* THANH PHÂN TRANG */}
             <div className="pagination-container">
                 <Pagination
                     itemsPerPage={residentsPerPage}

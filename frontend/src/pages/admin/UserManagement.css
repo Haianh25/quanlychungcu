@@ -67,3 +67,9 @@
   height: 48px; /* đảm bảo mỗi hàng có chiều cao tương đương với dữ liệu thực */
   background: transparent;
 }
+
+/* Make table body scrollable to keep layout stable between pages */
+.management-page-container .table-container {
+  max-height: 480px; /* adjust to fit ~10 rows */
+  overflow-y: auto;
+}
