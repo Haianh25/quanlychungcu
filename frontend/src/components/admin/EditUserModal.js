@@ -1,0 +1,94 @@
+// frontend/src/components/admin/EditUserModal.js
+import React, { useState, useEffect } from 'react';
+import { Modal, Button, Form } from 'react-bootstrap';
+import axios from 'axios';
+
+const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
+    const [formData, setFormData] = useState({
+        fullName: '',
+        role: 'user',
+        newPassword: ''
+    });
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                fullName: user.full_name || '',
+                role: user.role || 'user',
+                newPassword: '' // Luôn để trống mật khẩu khi mở
+            });
+        }
+    }, [user]);
+
+    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const config = { headers: { 'Authorization': `Bearer ${token}` } };
+            
+            const payload = {
+                fullName: formData.fullName,
+                role: formData.role,
+            };
+
+            if (formData.newPassword.trim() !== '') {
+                payload.newPassword = formData.newPassword;
+            }
+
+            const res = await axios.put(`http://localhost:5000/api/admin/users/${user.id}`, payload, config);
+            
+            onUserUpdate(res.data.user);
+            handleClose();
+        } catch (error) {
+            console.error("Lỗi khi cập nhật:", error);
+            alert(error.response?.data?.message || 'Cập nhật thất bại!');
+        }
+    };
+
+    return (
+        <Modal show={show} onHide={handleClose}>
+            <Modal.Header closeButton>
+                <Modal.Title>Sửa thông tin người dùng</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Họ và Tên</Form.Label>
+                        <Form.Control type="text" name="fullName" value={formData.fullName} onChange={onChange} />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                        <Form.Label>Vai trò</Form.Label>
+                        <Form.Select name="role" value={formData.role} onChange={onChange}>
+                            <option value="user">User</option>
+                            <option value="resident">Resident</option>
+                        </Form.Select>
+                    </Form.Group>
+                    
+                    <hr />
+
+                    <Form.Group className="mb-3">
+                        <Form.Label>Đặt lại Mật khẩu</Form.Label>
+                        <Form.Control 
+                            type="password" 
+                            name="newPassword" 
+                            value={formData.newPassword} 
+                            onChange={onChange}
+                            placeholder="Để trống nếu không muốn thay đổi" 
+                        />
+                         <Form.Text className="text-muted">
+                            Mật khẩu phải đủ mạnh (chữ hoa, thường, số, ký tự đặc biệt).
+                        </Form.Text>
+                    </Form.Group>
+                </Form>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>Hủy</Button>
+                <Button variant="primary" onClick={handleSave}>Lưu thay đổi</Button>
+            </Modal.Footer>
+        </Modal>
+    );
+};
+
+export default EditUserModal;

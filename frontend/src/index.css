@@ -1,0 +1,32 @@
+/* --- CSS CHO LAYOUT ADMIN --- */
+
+.admin-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 75vh; /* Chiều cao tối thiểu, đảm bảo layout không bị vỡ */
+}
+
+.admin-page-content {
+  flex-grow: 1; /* Cho phép nội dung chính (bảng) co giãn */
+}
+
+.pagination-container {
+  margin-top: auto; /* Luôn đẩy xuống dưới cùng */
+  padding-top: 1rem;
+}
+
+/* --- CSS BO TRÒN NÚT PHÂN TRANG --- */
+
+.pagination .page-item .page-link {
+  border-radius: 50% !important;
+  margin: 0 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination .page-item.active .page-link {
+  border-radius: 50% !important;
+}

@@ -1,0 +1,22 @@
+.management-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-wrapper {
+  /* Đặt chiều cao tối thiểu để mỗi trang có cùng chiều cao, tránh đẩy pagination lên */
+  min-height: 420px; /* điều chỉnh theo chiều cao 10 hàng của bảng */
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Nếu bạn muốn tbody cuộn thay vì thay đổi layout, mở phần này */
+/* .table-container {
+  max-height: 400px;
+  overflow-y: auto;
+} */
