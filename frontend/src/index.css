@@ -1,21 +1,32 @@
-/* --- CSS CHO LAYOUT ADMIN --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+
+body {
+    background: linear-gradient(to right bottom, #1a2a44, #0f1c3a, #0b1527);
+    background-size: cover;
+    background-attachment: fixed;
+    color: #ccc;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+}
+
+html {
+  overflow-y: scroll;
+}
 
 .admin-content-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 75vh; /* Chiều cao tối thiểu, đảm bảo layout không bị vỡ */
+  min-height: 75vh;
 }
 
 .admin-page-content {
-  flex-grow: 1; /* Cho phép nội dung chính (bảng) co giãn */
+  flex-grow: 1;
 }
 
 .pagination-container {
-  margin-top: auto; /* Luôn đẩy xuống dưới cùng */
+  margin-top: auto;
   padding-top: 1rem;
 }
-
-/* --- CSS BO TRÒN NÚT PHÂN TRANG --- */
 
 .pagination .page-item .page-link {
   border-radius: 50% !important;

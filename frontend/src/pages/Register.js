@@ -1,6 +1,8 @@
+// frontend/src/pages/Register.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom'; // Import Link
+import { Link } from 'react-router-dom';
+import './Register.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -28,63 +30,58 @@ const Register = () => {
     };
 
     return (
-        <div className="row">
-            <div className="col-md-6 mx-auto">
-                <div className="card shadow-sm">
-                    <div className="card-body p-4">
-                        <h1 className="card-title text-center mb-4">Đăng Ký Tài Khoản</h1>
-                        {message && <div className="alert alert-success">{message}</div>}
-                        {error && <div className="alert alert-danger">{error}</div>}
-                        <form onSubmit={onSubmit}>
-                            {/* ... Các trường input giữ nguyên ... */}
-                            <div className="form-group mb-3">
-                                <label htmlFor="fullName">Họ và Tên</label>
-                                <input
-                                    id="fullName"
-                                    type="text"
-                                    className="form-control"
-                                    name="fullName"
-                                    value={fullName}
-                                    onChange={onChange}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group mb-3">
-                                <label htmlFor="email">Email</label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    className="form-control"
-                                    name="email"
-                                    value={email}
-                                    onChange={onChange}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group mb-3">
-                                <label htmlFor="password">Mật khẩu</label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    className="form-control"
-                                    name="password"
-                                    value={password}
-                                    onChange={onChange}
-                                    required
-                                />
-                                <small className="form-text text-muted">
-                                    Ít nhất 8 ký tự, gồm chữ hoa, thường, số và ký tự đặc biệt.
-                                </small>
-                            </div>
-                            <div className="d-grid mt-4">
-                                <button type="submit" className="btn btn-primary">Đăng Ký</button>
-                            </div>
-                            {/* DÒNG CODE MỚI ĐƯỢC THÊM VÀO */}
-                            <div className="text-center mt-3">
-                                <span>Đã có tài khoản? <Link to="/login">Đăng nhập</Link></span>
-                            </div>
-                        </form>
+        <div className="form-container">
+            {/* THÊM KHUNG BAO QUANH */}
+            <div className="form-frame">
+                {/* THÊM CHỖ ĐỂ LOGO */}
+                <div className="logo-placeholder">
+                    {/* Thay bằng thẻ <img src="/path/to/logo.png" alt="Logo"/> nếu có ảnh */}
+                    LOGO HERE
+                </div>
+
+                <div className="page-links mb-4">
+                    <Link to="/login">Login</Link>
+                    <Link to="/register" className="active">Register</Link>
+                </div>
+
+                <form onSubmit={onSubmit}>
+                    <input
+                        type="text"
+                        className="form-control"
+                        name="fullName"
+                        placeholder="Full Name"
+                        value={fullName}
+                        onChange={onChange}
+                        required
+                    />
+                    <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        placeholder="E-mail Address"
+                        value={email}
+                        onChange={onChange}
+                        required
+                    />
+                    <input
+                        type="password"
+                        className="form-control"
+                        name="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={onChange}
+                        required
+                    />
+                    {message && <div className="alert alert-success mt-3">{message}</div>}
+                    {error && <div className="alert alert-danger mt-3">{error}</div>}
+
+                    <div className="d-grid mt-3">
+                        <button type="submit" className="btn btn-primary">Register</button>
                     </div>
+                </form>
+
+                 <div className="text-center mt-4">
+                    <span>Already have an account? <Link to="/login" className="login-link">Login here</Link></span>
                 </div>
             </div>
         </div>

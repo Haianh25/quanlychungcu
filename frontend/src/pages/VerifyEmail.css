@@ -1,0 +1,68 @@
+/* frontend/src/pages/VerifyEmail.css */
+
+.verify-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: transparent; /* Makes sure gradient from body shows */
+    color: #ccc;
+    font-family: 'Poppins', sans-serif; /* Ensure font consistency */
+}
+
+.verify-frame { /* Changed class name for clarity */
+    background-color: #21314b;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 500px; /* Can adjust width if needed */
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Added Logo Placeholder styles */
+.logo-placeholder {
+    height: 60px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.logo-placeholder img {
+    max-height: 56px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.verify-frame h1 {
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 1.8em; /* Adjusted font size */
+    font-weight: 500; /* Adjusted font weight */
+}
+
+.verify-frame .alert {
+    margin-bottom: 25px;
+    font-size: 1.1em;
+}
+
+.verify-frame .btn-primary {
+    background-color: #3d88ec;
+    border-color: #3d88ec;
+    padding: 12px; /* Match login/register button padding */
+    font-weight: bold;
+    border-radius: 5px;
+    /* width: 100%; /* Optional: Make button full width */
+    margin-top: 10px; /* Add some top margin */
+}
+
+.verify-frame .btn-primary:hover {
+    background-color: #2a70c8;
+    border-color: #2a70c8;
+}

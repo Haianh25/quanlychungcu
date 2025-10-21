@@ -1,0 +1,296 @@
+/* frontend/src/pages/Homepage.css */
+
+/* --- General Styles --- */
+body {
+    background-color: #1a1a1a; /* Nền tối cho toàn bộ trang */
+    color: #e0e0e0;
+}
+.homepage-container {
+    /* Đảm bảo không có padding/margin tổng thể thừa */
+}
+
+/* --- Header (Cập nhật) --- */
+.resident-header {
+    background-color: #242933; /* Màu nền header mới, đậm hơn */
+    padding: 1rem 0;
+    border-bottom: 1px solid #3a414f; /* Đường kẻ phân cách */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Đổ bóng nhẹ */
+}
+
+.resident-header .navbar-brand {
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.5rem; /* Tăng kích thước logo */
+    display: flex; /* Dùng flexbox cho logo + text */
+    align-items: center;
+}
+.resident-header .navbar-brand img {
+    margin-right: 10px; /* Khoảng cách giữa logo và text */
+}
+
+.resident-header .nav-link {
+    color: #bbb;
+    margin: 0 15px; /* Tăng khoảng cách giữa các mục */
+    font-weight: 500;
+    transition: color 0.3s ease; /* Hiệu ứng hover mềm mại */
+}
+.resident-header .nav-link:hover,
+.resident-header .nav-link.active {
+    color: #f0ad4e; /* Màu cam nổi bật khi hover/active */
+}
+
+/* Các button và icon ở phía phải */
+.header-right-items {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Khoảng cách giữa các item */
+}
+
+.header-right-items .btn-auth {
+    background-color: #f0ad4e;
+    border-color: #f0ad4e;
+    color: #242933; /* Text đậm trên nền cam */
+    font-weight: bold;
+    padding: 8px 18px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+.header-right-items .btn-auth:hover {
+    background-color: #e69a00; /* Màu đậm hơn khi hover */
+    border-color: #e69a00;
+    color: #fff;
+}
+
+.header-right-items .icon-btn {
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+.header-right-items .icon-btn:hover {
+    color: #f0ad4e;
+}
+
+.header-right-items .avatar {
+    width: 38px; /* Kích thước avatar */
+    height: 38px;
+    border-radius: 50%; /* Bo tròn hoàn toàn */
+    object-fit: cover; /* Đảm bảo ảnh không bị méo */
+    border: 2px solid #f0ad4e; /* Viền cam */
+    cursor: pointer;
+}
+
+/* Hero Section - điều chỉnh margin top để không bị header che */
+.hero-section {
+    margin-top: 50px; /* Đẩy nội dung hero xuống dưới header */
+    position: relative;
+    height: 70vh;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 50px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+}
+.hero-content .sub-heading {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+.hero-content h1 {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    line-height: 1.2;
+}
+.hero-content .btn-talk {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    border: none;
+    padding: 12px 25px;
+    font-weight: bold;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+.hero-content .btn-play {
+    background-color: #f0ad4e;
+    color: #1f1f1f;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    vertical-align: middle;
+}
+
+/* --- Sections Styles (giữ nguyên hoặc điều chỉnh nhẹ) --- */
+.services-section, .about-section {
+    background-color: #242933; /* Sử dụng màu nền header cho các section chính */
+    padding: 50px 0;
+    border-radius: 15px;
+    margin-bottom: 50px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.services-section h5, .about-section h5 {
+    color: #f0ad4e; /* Màu cam cho sub-heading */
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.services-section h2, .about-section h2 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 40px;
+    font-weight: bold;
+}
+.service-card {
+    background-color: #2f343e; /* Nền card tối hơn */
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    color: #bbb;
+    padding: 15px;
+}
+.service-card .img-placeholder {
+    height: 200px;
+    background-color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-weight: bold;
+    margin: -15px -15px 15px -15px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+.service-card h4 {
+    color: #fff;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.service-card p {
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+.service-card .btn-read-more {
+    background-color: #f0ad4e;
+    border-color: #f0ad4e;
+    color: #1f1f1f;
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+
+/* About Section Specifics */
+.about-section h5 {
+    text-align: left; /* Căn trái cho about section */
+}
+.about-section h2 {
+    text-align: left; /* Căn trái cho about section */
+}
+.about-section p {
+    color: #bbb;
+    margin-bottom: 20px;
+}
+.about-section .img-placeholder-small {
+    height: 250px;
+    background-color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-weight: bold;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.about-section blockquote {
+    font-style: italic;
+    color: #ddd;
+    border-left: 3px solid #f0ad4e;
+    padding-left: 15px;
+    margin-top: 15px;
+}
+.about-section blockquote footer {
+    font-style: normal;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+.about-section .btn-read-more {
+     background-color: #f0ad4e;
+     border-color: #f0ad4e;
+     color: #1f1f1f;
+     font-weight: bold;
+}
+
+/* --- Footer --- */
+.resident-footer {
+    background-color: #1f1f1f;
+    padding: 40px 0 20px;
+    color: #bbb;
+    font-size: 0.9rem;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+.resident-footer .footer-logo {
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+.resident-footer h5 {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+.resident-footer ul {
+    list-style: none;
+    padding: 0;
+}
+.resident-footer ul li {
+    margin-bottom: 8px;
+}
+.resident-footer ul li a {
+    color: #bbb;
+    text-decoration: none;
+}
+.resident-footer ul li a:hover {
+    color: #f0ad4e; /* Màu cam khi hover footer */
+}
+.resident-footer .social-icons a {
+    color: #f0ad4e;
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+.resident-footer .copyright {
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    margin-top: 30px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #888;
+}

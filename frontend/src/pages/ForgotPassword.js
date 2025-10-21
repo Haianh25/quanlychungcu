@@ -1,6 +1,8 @@
+// frontend/src/pages/ForgotPassword.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import './ForgotPassword.css'; // Import the CSS
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -12,38 +14,44 @@ const ForgotPassword = () => {
         setMessage('');
         setError('');
         try {
+            // Use English message from backend if possible, otherwise use a generic one
             const res = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
-            setMessage(res.data.message);
+            // Assuming backend sends English message now, otherwise use below
+            setMessage(res.data.message || 'If an account with that email exists, a password reset link has been sent.');
         } catch (err) {
-            setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
+            setError('An error occurred. Please try again.'); // Generic English error
         }
     };
 
     return (
-        <div className="row">
-            <div className="col-md-6 mx-auto">
-                <div className="card">
-                    <div className="card-body">
-                        <h2 className="card-title text-center">Quên Mật Khẩu</h2>
-                        {message && <div className="alert alert-success">{message}</div>}
-                        {error && <div className="alert alert-danger">{error}</div>}
-                        <form onSubmit={onSubmit}>
-                            <div className="form-group mb-3">
-                                <label>Nhập email của bạn</label>
-                                <input
-                                    type="email"
-                                    className="form-control"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <button type="submit" className="btn btn-primary w-100">Gửi Link Reset</button>
-                        </form>
-                        <div className="text-center mt-3">
-                            <Link to="/login">Quay lại Đăng nhập</Link>
+        <div className="form-container">
+            <div className="form-frame">
+                <div className="logo-placeholder">
+                    LOGO HERE
+                </div>
+
+               
+                {message && <div className="alert alert-info mt-3">{message}</div>}
+                {error && <div className="alert alert-danger mt-3">{error}</div>}
+
+                {!message && (
+                    <form onSubmit={onSubmit}>
+                        <input
+                            type="email"
+                            className="form-control"
+                            placeholder="Enter your email address" // Changed Placeholder
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            required
+                        />
+                        <div className="d-grid mt-3">
+                             <button type="submit" className="btn btn-primary">Send Reset Link</button> {/* Changed Button Text */}
                         </div>
-                    </div>
+                    </form>
+                 )}
+
+                <div className="text-center mt-4 back-link">
+                    <Link to="/login">Back to Login</Link> {/* Changed Link Text */}
                 </div>
             </div>
         </div>
