@@ -17,6 +17,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ResidentManagement from './pages/admin/ResidentManagement';
+import BlockManagement from './pages/admin/BlockManagement';
 function App() {
   return (
     <Router>
@@ -36,7 +37,7 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="user-management" element={<UserManagement />} />
             <Route path="resident-management" element={<ResidentManagement />} />
-
+            <Route path="block-management" element={<BlockManagement />} />
           </Route>
 
         </Routes>

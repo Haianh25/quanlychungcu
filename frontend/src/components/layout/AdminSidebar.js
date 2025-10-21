@@ -15,7 +15,9 @@ const AdminSidebar = () => {
             <NavLink to="/admin/resident-management" className="list-group-item list-group-item-action">
                 Quản Lý Cư Dân
             </NavLink>
-        
+            <NavLink to="/admin/block-management" className="list-group-item list-group-item-action">
+                Quản Lý Tòa Nhà
+            </NavLink>
         </div>
     );
 };

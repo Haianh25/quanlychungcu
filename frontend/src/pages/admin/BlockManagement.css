@@ -1,0 +1,40 @@
+/* frontend/src/pages/admin/BlockManagement.css */
+
+.floor-container {
+  /* Có thể thêm style nếu cần */
+}
+
+.floor-row .card-body {
+  padding: 1rem;
+}
+
+.room-grid {
+  display: grid;
+  /* Tạo 6 cột bằng nhau */
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px; /* Khoảng cách giữa các ô phòng */
+}
+
+.room-box {
+  border: 1px solid #ccc;
+  padding: 15px; /* Tăng padding để ô vuông to hơn */
+  text-align: center;
+  font-weight: bold;
+  border-radius: 5px; /* Bo góc nhẹ */
+  cursor: default; /* Đổi con trỏ chuột */
+  color: white; /* Chữ màu trắng cho dễ đọc */
+  aspect-ratio: 1 / 1; /* Giữ tỷ lệ 1:1 để thành ô vuông */
+  display: flex; /* Căn giữa nội dung */
+  justify-content: center;
+  align-items: center;
+}
+
+.room-box.available {
+  background-color: #ffc107; /* Màu cam */
+  border-color: #e0a800;
+}
+
+.room-box.occupied {
+  background-color: #198754; /* Màu xanh lá cây */
+  border-color: #146c43;
+}

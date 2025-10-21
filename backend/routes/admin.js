@@ -171,4 +171,28 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
         client.release();
     }
 });
+
+router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
+    const { blockId } = req.params;
+    try {
+        // Dùng LEFT JOIN để lấy cả phòng trống và phòng có người
+        const rooms = await query(
+            `SELECT 
+                r.id, 
+                r.room_number, 
+                r.floor, 
+                r.status, 
+                u.full_name as resident_name 
+             FROM rooms r 
+             LEFT JOIN users u ON r.resident_id = u.id 
+             WHERE r.block_id = $1 
+             ORDER BY r.floor ASC, r.room_number ASC`,
+            [blockId]
+        );
+        res.status(200).json(rooms.rows);
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách phòng:", error);
+        res.status(500).json({ message: 'Lỗi server khi lấy danh sách phòng.' });
+    }
+});
 module.exports = router;
