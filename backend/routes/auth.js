@@ -97,7 +97,18 @@ router.post('/login', async (req, res) => {
             // Changed message to English
             return res.status(401).json({ message: 'Incorrect email or password.' });
         }
-        const token = jwt.sign({ id: foundUser.id, email: foundUser.email }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Kept token expiry as 1h, can change if needed
+        // Include role and full_name in the token so frontend can read user role without extra API calls
+        const token = jwt.sign(
+            {
+                id: foundUser.id,
+                email: foundUser.email,
+                role: foundUser.role,
+                full_name: foundUser.full_name,
+                avatar_url: foundUser.avatar_url || null
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        ); // Kept token expiry as 1h, can change if needed
         // Changed message to English
         res.status(200).json({ message: 'Login successful!', token: token });
     } catch (error) {

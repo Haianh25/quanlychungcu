@@ -1,6 +1,7 @@
 // frontend/src/pages/Homepage.js
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+// `jwt-decode` exports `jwtDecode` as a named export in some versions. Import the named export to avoid build-time errors.
 import { jwtDecode } from 'jwt-decode';
 import './Homepage.css';
 // QUAN TRỌNG: Đảm bảo bạn đã import CSS của icon library ở đây hoặc trong index.js/App.js
@@ -8,7 +9,6 @@ import './Homepage.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'; // <- THÊM DÒNG NÀY NẾU CHƯA CÓ VÀ DÙNG BOOTSTRAP ICONS
 
 const Homepage = () => {
-    const navigate = useNavigate();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
@@ -17,6 +17,8 @@ const Homepage = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
+            // Assume logged in if token exists; try to decode to extract role/avatar
+            setIsLoggedIn(true);
             try {
                 const decodedToken = jwtDecode(token);
                 // (Tùy chọn) Kiểm tra token hết hạn
@@ -29,15 +31,24 @@ const Homepage = () => {
                     setUserName('');
                     setUserAvatar('/images/default-avatar.jpg');
                 } else {
-                    setIsLoggedIn(true);
-                    setUserRole(decodedToken.role);
+                    // Extract role robustly: token may have role as string or array or nested
+                    const rawRole = decodedToken?.role ?? decodedToken?.roles ?? decodedToken?.user?.role;
+                    let normalizedRole = null;
+                    if (Array.isArray(rawRole)) {
+                        const lowerRoles = rawRole.map(r => String(r).toLowerCase());
+                        if (lowerRoles.includes('resident')) normalizedRole = 'resident';
+                        else normalizedRole = lowerRoles[0] || null;
+                    } else if (rawRole) {
+                        normalizedRole = String(rawRole).toLowerCase();
+                    }
+
+                    setUserRole(normalizedRole);
                     setUserName(decodedToken.full_name || decodedToken.email);
                     setUserAvatar(decodedToken.avatar_url || '/images/default-avatar.jpg');
                 }
             } catch (error) {
-                console.error("Invalid token:", error);
-                localStorage.removeItem('token');
-                setIsLoggedIn(false);
+                // If decode fails, keep isLoggedIn = true (token exists) but clear role/avatar
+                console.error("Invalid token (keep as logged in):", error);
                 setUserRole(null);
                 setUserName('');
                 setUserAvatar('/images/default-avatar.jpg');
@@ -94,35 +105,45 @@ const Homepage = () => {
                             </li>
                             {/* Always show these links, actual page content can be protected later */}
                             <li className="nav-item">
-                                <Link className="nav-link" to="/services">Services</Link>
+                                {isLoggedIn && userRole === 'resident' ? (
+                                    <Link className="nav-link" to="/services">Services</Link>
+                                ) : (
+                                    <span className="nav-link disabled" title="Available for residents only">Services</span>
+                                )}
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/bill">Bill</Link>
+                                {isLoggedIn && userRole === 'resident' ? (
+                                    <Link className="nav-link" to="/bill">Bill</Link>
+                                ) : (
+                                    <span className="nav-link disabled" title="Available for residents only">Bill</span>
+                                )}
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/news">News</Link>
+                                {isLoggedIn && userRole === 'resident' ? (
+                                    <Link className="nav-link" to="/news">News</Link>
+                                ) : (
+                                    <span className="nav-link disabled" title="Available for residents only">News</span>
+                                )}
                             </li>
                         </ul>
+                    </div>
 
-                        {/* Right side items */}
-                        <div className="header-right-items">
-                            {isLoggedIn ? (
-                                <>
-                                    {/* Notification Bell Icon */}
-                                    <button className="icon-btn" onClick={handleBellClick} title="Notifications">
-                                        <i className="bi bi-bell-fill"></i> {/* Bootstrap Icons class */}
-                                        {/* Or Font Awesome: <i className="fas fa-bell"></i> */}
-                                    </button>
-                                    {/* User Avatar */}
-                                    <img src={userAvatar} alt={userName} className="avatar" onClick={handleAvatarClick} title={userName} />
-                                    {/* Logout Button */}
-                                    <button className="btn btn-auth" onClick={handleLogout}>Logout</button>
-                                </>
-                            ) : (
-                                // Login Button if not logged in
-                                <Link className="btn btn-auth" to="/login">Login</Link>
-                            )}
-                        </div>
+                    {/* Right side items (kept outside collapse so they stay right-aligned) */}
+                    <div className="header-right-items ms-auto">
+                        {isLoggedIn ? (
+                            <>
+                                {/* Notification Bell Icon */}
+                                <button className="icon-btn" onClick={handleBellClick} title="Notifications">
+                                    <i className="bi bi-bell-fill"></i>
+                                </button>
+                                {/* User Avatar */}
+                                <img src={userAvatar} alt={userName} className="avatar" onClick={handleAvatarClick} title={userName} />
+                                {/* Logout Button */}
+                                <button className="btn btn-auth" onClick={handleLogout}>Logout</button>
+                            </>
+                        ) : (
+                            <Link className="btn btn-auth btn-login-visible" to="/login">Login</Link>
+                        )}
                     </div>
                 </nav>
             </header>

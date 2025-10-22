@@ -1,15 +1,18 @@
 // frontend/src/components/ProtectedRoute.js
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 const ProtectedRoute = ({ allowedRoles }) => {
     const token = localStorage.getItem('token');
-    let userRole = null;
+
+    const location = useLocation();
 
     // Basic check for token existence
     if (!token) {
-        // No token, redirect to login
-        return <Navigate to="/login" replace />;
+        // Decide which login page to redirect to: admin or user
+        const isAdminRoute = location.pathname.startsWith('/admin') || (allowedRoles && allowedRoles.includes('admin'));
+        const redirectTo = isAdminRoute ? '/admin/login' : '/login';
+        return <Navigate to={redirectTo} replace />;
     }
 
     // --- Optional: Role Checking (Uncomment and adjust later if needed) ---

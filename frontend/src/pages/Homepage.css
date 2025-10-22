@@ -7,6 +7,9 @@ body {
 }
 .homepage-container {
     /* Đảm bảo không có padding/margin tổng thể thừa */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 /* --- Header (Cập nhật) --- */
@@ -39,11 +42,46 @@ body {
     color: #f0ad4e; /* Màu cam nổi bật khi hover/active */
 }
 
+/* Disabled nav link style */
+.resident-header .nav-link.disabled {
+    color: #6b6b6b;
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
 /* Các button và icon ở phía phải */
 .header-right-items {
     display: flex;
     align-items: center;
     gap: 15px; /* Khoảng cách giữa các item */
+    justify-content: flex-end;
+    min-width: 120px; /* small reserve so items don't cram, but not too large */
+}
+
+/* Center the main nav visually and keep it stable regardless of right-side width */
+/* Keep default navbar flow; don't absolutely center the nav to avoid overlap issues. */
+.resident-header .navbar {
+    display: flex;
+    align-items: center;
+}
+.resident-header .navbar-nav {
+    display: flex;
+    align-items: center;
+}
+
+/* On smaller screens, revert to normal flow so collapse works */
+@media (max-width: 991.98px) {
+    .resident-header .navbar-nav {
+        position: static;
+        transform: none;
+        margin-top: 10px;
+        flex-direction: column;
+    }
+    .header-right-items {
+        min-width: auto;
+        justify-content: flex-start;
+    }
 }
 
 .header-right-items .btn-auth {
@@ -80,6 +118,14 @@ body {
     object-fit: cover; /* Đảm bảo ảnh không bị méo */
     border: 2px solid #f0ad4e; /* Viền cam */
     cursor: pointer;
+}
+
+/* Ensure the login button has the same visual width as the logout button to avoid shifting */
+.btn-login-visible {
+    min-width: 90px; /* same as the reserved placeholder width */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Hero Section - điều chỉnh margin top để không bị header che */
