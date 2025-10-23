@@ -4,6 +4,7 @@ const cors = require('cors');
 const db = require('./db'); // Import module database của chúng ta
 const authRoutes = require('./routes/auth'); 
 const adminRoutes = require('./routes/admin');
+const newsRoutes = require('./routes/news');
 // Tạo một ứng dụng Express
 const app = express();
 console.log('--- KẾT NỐI DATABASE ĐANG SỬ DỤNG ---');
@@ -17,6 +18,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/news', newsRoutes);
 
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {

@@ -21,6 +21,8 @@ import UserManagement from './pages/admin/UserManagement';
 import ResidentManagement from './pages/admin/ResidentManagement';
 import BlockManagement from './pages/admin/BlockManagement';
 import NewsManagement from './pages/admin/NewsManagement';
+import News from './pages/News';
+import NewsDetail from './pages/NewsDetail';
 function App() {
   return (
     <Router>
@@ -28,6 +30,8 @@ function App() {
         <Routes>
           {/* === Public Routes === */}
           <Route path="/" element={<Homepage />} /> {/* Đặt Homepage ở đây */}
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -47,6 +51,7 @@ function App() {
               <Route path="resident-management" element={<ResidentManagement />} />
               <Route path="block-management" element={<BlockManagement />} />
               <Route path="news-management" element={<NewsManagement />} />
+              
             </Route>
           </Route>
           {/* === End Protected Routes === */}
