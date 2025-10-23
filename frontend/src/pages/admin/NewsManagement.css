@@ -1,0 +1,78 @@
+/* frontend/src/pages/admin/NewsManagement.css */
+
+.form-card {
+    background-color: #2f343e;
+    color: #e0e0e0;
+    border: 1px solid #3a414f;
+}
+
+.form-card .form-label {
+    color: #f0ad4e;
+}
+
+.form-card .form-control,
+.form-card .form-select {
+    background-color: #242933;
+    color: #fff;
+    border-color: #3a414f;
+}
+
+.form-card .form-control:focus,
+.form-card .form-select:focus {
+    background-color: #242933;
+    color: #fff;
+    border-color: #f0ad4e;
+    box-shadow: 0 0 0 0.25rem rgba(240, 173, 78, 0.25);
+}
+
+/* CSS CHO TRÌNH SOẠN THẢO VĂN BẢN (ReactQuill) */
+.quill-editor-container {
+    background-color: #fff; /* Nền trắng để dễ soạn thảo */
+    color: #000; /* Chữ đen */
+    border-radius: 5px;
+}
+
+.quill-editor-container .ql-toolbar {
+    background-color: #f1f1f1;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom: 1px solid #ccc !important;
+    border-color: #ccc; /* Ghi đè border của ReactQuill */
+}
+
+.quill-editor-container .ql-container {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    height: 250px; /* Chiều cao cố định */
+    border-color: #ccc; /* Ghi đè border của ReactQuill */
+    font-size: 16px; /* Cỡ chữ khi gõ */
+}
+/* --- Hết CSS cho ReactQuill --- */
+
+
+.news-list-container {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.news-list-item {
+    background-color: #2f343e;
+    color: #e0e0e0;
+    border-color: #3a414f;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.news-thumbnail-list {
+    width: 100px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 15px;
+    background-color: #242933; /* Nền cho 'No Image' */
+    font-size: 0.8rem;
+    font-weight: bold;
+}

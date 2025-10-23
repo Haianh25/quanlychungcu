@@ -6,20 +6,24 @@ const AdminHeader = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
         navigate('/admin/login');
     };
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm">
-            <div className="container-fluid">
+        // Bỏ mb-4 (margin-bottom) để layout liền mạch hơn
+        <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm"> 
+            {/* Thêm padding ngang (px-4) */}
+            <div className="container-fluid px-4">
                 <Link className="navbar-brand" to="/admin/dashboard">
                     Admin Dashboard
                 </Link>
                 <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav ms-auto align-items-center">
+                    <ul className="navbar-nav ms-auto">
                         <li className="nav-item">
-                            <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
+                            <button className="btn btn-outline-danger" onClick={handleLogout}>
+                                Logout
+                            </button>
                         </li>
                     </ul>
                 </div>

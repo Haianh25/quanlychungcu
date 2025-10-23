@@ -17,8 +17,8 @@ const BlockManagement = () => {
     // Fetch blocks
     useEffect(() => {
         const fetchBlocks = async () => {
-            try {
-                const token = localStorage.getItem('token');
+                try {
+                const token = localStorage.getItem('adminToken');
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const res = await axios.get('http://localhost:5000/api/admin/blocks', config);
                 setBlocks(res.data);
@@ -41,8 +41,8 @@ const BlockManagement = () => {
         setSelectedBlockName(blockName);
         setLoadingRooms(true);
         setError('');
-        try {
-            const token = localStorage.getItem('token');
+            try {
+            const token = localStorage.getItem('adminToken');
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const res = await axios.get(`http://localhost:5000/api/admin/blocks/${blockId}/rooms`, config);
             setRooms(Array.isArray(res.data) ? res.data : []);

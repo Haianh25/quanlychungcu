@@ -20,7 +20,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ResidentManagement from './pages/admin/ResidentManagement';
 import BlockManagement from './pages/admin/BlockManagement';
-
+import NewsManagement from './pages/admin/NewsManagement';
 function App() {
   return (
     <Router>
@@ -46,6 +46,7 @@ function App() {
               <Route path="user-management" element={<UserManagement />} />
               <Route path="resident-management" element={<ResidentManagement />} />
               <Route path="block-management" element={<BlockManagement />} />
+              <Route path="news-management" element={<NewsManagement />} />
             </Route>
           </Route>
           {/* === End Protected Routes === */}

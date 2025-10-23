@@ -18,6 +18,9 @@ const AdminSidebar = () => {
             <NavLink to="/admin/block-management" className="list-group-item list-group-item-action">
                 Block Management
             </NavLink>
+            <NavLink to="/admin/news-management" className="list-group-item list-group-item-action">
+                Quản Lý Tin Tức
+            </NavLink>
         </div>
     );
 };

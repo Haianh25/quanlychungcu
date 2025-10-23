@@ -16,7 +16,7 @@ const UserManagement = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('adminToken');
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const res = await axios.get('http://localhost:5000/api/admin/users', config);
                 setUsers(res.data);
@@ -29,7 +29,7 @@ const UserManagement = () => {
     const handleDelete = async (userId) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này không?')) {
             try {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('adminToken');
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, config);
                 setUsers(users.filter(user => user.id !== userId));

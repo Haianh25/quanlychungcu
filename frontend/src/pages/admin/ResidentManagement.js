@@ -18,7 +18,7 @@ const ResidentManagement = () => {
 
     const fetchResidents = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('adminToken');
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const res = await axios.get('http://localhost:5000/api/admin/residents', config);
             setResidents(res.data);

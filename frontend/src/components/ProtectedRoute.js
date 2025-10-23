@@ -3,14 +3,16 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 const ProtectedRoute = ({ allowedRoles }) => {
-    const token = localStorage.getItem('token');
-
     const location = useLocation();
+    // Use separate storage keys so admin and user sessions don't conflict
+    const userToken = localStorage.getItem('token');
+    const adminToken = localStorage.getItem('adminToken');
+    // Decide token to check depending on route
+    const isAdminRoute = location.pathname.startsWith('/admin') || (allowedRoles && allowedRoles.includes('admin'));
+    const token = isAdminRoute ? adminToken : userToken;
 
     // Basic check for token existence
     if (!token) {
-        // Decide which login page to redirect to: admin or user
-        const isAdminRoute = location.pathname.startsWith('/admin') || (allowedRoles && allowedRoles.includes('admin'));
         const redirectTo = isAdminRoute ? '/admin/login' : '/login';
         return <Navigate to={redirectTo} replace />;
     }
@@ -37,8 +39,10 @@ const ProtectedRoute = ({ allowedRoles }) => {
 
     } catch (error) {
         console.error("Error decoding token:", error);
-        localStorage.removeItem('token'); // Clear invalid token
-        return <Navigate to="/login" replace />;
+        // Clear only the relevant token (admin vs user)
+        if (isAdminRoute) localStorage.removeItem('adminToken');
+        else localStorage.removeItem('token');
+        return <Navigate to={isAdminRoute ? '/admin/login' : '/login'} replace />;
     }
     */
    // --- End Optional Role Checking ---

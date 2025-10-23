@@ -21,7 +21,8 @@ const AdminLogin = () => {
         setError('');
         try {
             const res = await axios.post('http://localhost:5000/api/auth/admin/login', formData);
-            localStorage.setItem('token', res.data.token);
+            // Store admin token separately so admin sessions don't overwrite user sessions
+            localStorage.setItem('adminToken', res.data.token);
             navigate('/admin/dashboard'); // Navigate to admin dashboard on success
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred.'); // Use English error

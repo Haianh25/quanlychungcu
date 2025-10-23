@@ -13,7 +13,7 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
     useEffect(() => {
         if (show) {
             const fetchBlocks = async () => {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('adminToken');
                 const config = { headers: { 'Authorization': `Bearer ${token}` } };
                 const res = await axios.get('http://localhost:5000/api/admin/blocks', config);
                 setBlocks(res.data);
@@ -26,7 +26,7 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
     useEffect(() => {
         if (selectedBlockId) {
             const fetchRooms = async () => {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('adminToken');
                 const config = { headers: { 'Authorization': `Bearer ${token}` } };
                 const res = await axios.get(`http://localhost:5000/api/admin/blocks/${selectedBlockId}/available-rooms`, config);
                 setAvailableRooms(res.data);
@@ -38,7 +38,7 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
 
     const handleAssign = async (roomId) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('adminToken');
             const config = { headers: { 'Authorization': `Bearer ${token}` } };
             const payload = { residentId: resident.id, roomId: roomId };
             await axios.post('http://localhost:5000/api/admin/assign-room', payload, config);
@@ -56,15 +56,15 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
     return (
         <Modal show={show} onHide={handleClose} size="lg">
             <Modal.Header closeButton>
-                <Modal.Title>Gán Căn Hộ cho: {resident?.full_name}</Modal.Title>
+                <Modal.Title>Assign Room to: {resident?.full_name}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Row>
                     <Col md={6}>
                         <Form.Group className="mb-3">
-                            <Form.Label>1. Chọn Tòa Nhà (Block)</Form.Label>
+                            <Form.Label>1. Choose Block</Form.Label>
                             <Form.Select onChange={(e) => setSelectedBlockId(e.target.value)}>
-                                <option value="">-- Chọn Block --</option>
+                                <option value="">-- Choose Block --</option>
                                 {blocks.map(block => <option key={block.id} value={block.id}>{block.name}</option>)}
                             </Form.Select>
                         </Form.Group>
@@ -73,23 +73,23 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
                         <Form.Group className="mb-3">
                             <Form.Label>2. Choose Floor</Form.Label>
                             <Form.Select disabled={!selectedBlockId} onChange={(e) => setSelectedFloor(e.target.value)}>
-                                <option value="">-- Chọn Tầng --</option>
-                                {floors.map(floor => <option key={floor} value={floor}>Tầng {floor}</option>)}
+                                <option value="">-- Choose Floor --</option>
+                                {floors.map(floor => <option key={floor} value={floor}>Floor {floor}</option>)}
                             </Form.Select>
                         </Form.Group>
                     </Col>
                 </Row>
                 <hr />
-                <h6>3. Chọn Phòng Trống</h6>
+                <h6>3. Choose Available Room</h6>
                 <div>
                     {selectedFloor ? (
                         roomsOnSelectedFloor.map(room => (
                             <Button key={room.id} variant="outline-success" className="me-2 mb-2" onClick={() => handleAssign(room.id)}>
-                                Phòng {room.room_number}
+                                Room {room.room_number}
                             </Button>
                         ))
                     ) : (
-                        <p className="text-muted">Vui lòng chọn Tòa nhà và Tầng để xem phòng trống.</p>
+                        <p className="text-muted">Please select a Block and Floor to see available rooms.</p>
                     )}
                 </div>
             </Modal.Body>
