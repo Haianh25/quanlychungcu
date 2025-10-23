@@ -1,17 +1,14 @@
-/* frontend/src/pages/VerifyEmail.css */
+/* frontend/src/pages/AdminLogin.css */
 
-.verify-container {
+.form-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     padding: 20px;
-    background-color: transparent; /* Makes sure gradient from body shows */
-    color: #ccc;
-    font-family: 'Poppins', sans-serif; /* Ensure font consistency */
 }
 
-.verify-frame { /* Changed class name for clarity */
+.form-frame {
     background-color: #21314b;
     padding: 40px;
     border-radius: 10px;
@@ -21,7 +18,6 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Added Logo Placeholder styles */
 .logo-placeholder {
     height: 140px; /* Larger container for logo */
     margin-bottom: 30px;
@@ -38,29 +34,55 @@
     object-fit: contain;
 }
 
-.verify-frame h1 {
+/* Added specific style for Admin Login Title */
+.form-frame h2 {
     color: #fff;
     margin-bottom: 30px;
-    font-size: 1.8em; /* Adjusted font size */
-    font-weight: 500; /* Adjusted font weight */
+    font-weight: bold;
 }
 
-.verify-frame .alert {
-    margin-bottom: 25px;
-    font-size: 1.1em;
+
+.form-frame form {
+    margin-top: 30px;
 }
 
-.verify-frame .btn-primary {
+.form-frame .form-control {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    color: #212529;
+    border-radius: 5px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    box-shadow: none;
+}
+
+.form-frame .form-control::placeholder {
+    color: #6c757d;
+}
+
+.form-frame .form-control:focus {
+    background-color: #fff;
+    border-color: #86b7fe;
+    color: #212529;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-frame .btn-primary {
     background-color: #3d88ec;
     border-color: #3d88ec;
-    padding: 12px; /* Match login/register button padding */
+    padding: 12px;
     font-weight: bold;
     border-radius: 5px;
-    /* width: 100%; /* Optional: Make button full width */
-    margin-top: 10px; /* Add some top margin */
+    width: 100%;
+    margin-top: 10px;
 }
 
-.verify-frame .btn-primary:hover {
+.form-frame .btn-primary:hover {
     background-color: #2a70c8;
     border-color: #2a70c8;
+}
+
+.form-frame .alert {
+    margin-top: 20px;
+    text-align: center;
 }

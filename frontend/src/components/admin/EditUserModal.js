@@ -49,17 +49,17 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
-                <Modal.Title>Sửa thông tin người dùng</Modal.Title>
+                <Modal.Title>Edit User Information</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form>
                     <Form.Group className="mb-3">
-                        <Form.Label>Họ và Tên</Form.Label>
+                        <Form.Label>Full Name</Form.Label>
                         <Form.Control type="text" name="fullName" value={formData.fullName} onChange={onChange} />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                        <Form.Label>Vai trò</Form.Label>
+                        <Form.Label>Role</Form.Label>
                         <Form.Select name="role" value={formData.role} onChange={onChange}>
                             <option value="user">User</option>
                             <option value="resident">Resident</option>
@@ -69,7 +69,7 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
                     <hr />
 
                     <Form.Group className="mb-3">
-                        <Form.Label>Đặt lại Mật khẩu</Form.Label>
+                        <Form.Label>Reset Password</Form.Label>
                         <Form.Control 
                             type="password" 
                             name="newPassword" 
@@ -78,14 +78,14 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
                             placeholder="Để trống nếu không muốn thay đổi" 
                         />
                          <Form.Text className="text-muted">
-                            Mật khẩu phải đủ mạnh (chữ hoa, thường, số, ký tự đặc biệt).
+                            Password must be strong (uppercase, lowercase, number, special character).
                         </Form.Text>
                     </Form.Group>
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>Hủy</Button>
-                <Button variant="primary" onClick={handleSave}>Lưu thay đổi</Button>
+                <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+                <Button variant="primary" onClick={handleSave}>Save Changes</Button>
             </Modal.Footer>
         </Modal>
     );

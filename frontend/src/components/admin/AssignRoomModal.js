@@ -71,7 +71,7 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
                     </Col>
                     <Col md={6}>
                         <Form.Group className="mb-3">
-                            <Form.Label>2. Chọn Tầng</Form.Label>
+                            <Form.Label>2. Choose Floor</Form.Label>
                             <Form.Select disabled={!selectedBlockId} onChange={(e) => setSelectedFloor(e.target.value)}>
                                 <option value="">-- Chọn Tầng --</option>
                                 {floors.map(floor => <option key={floor} value={floor}>Tầng {floor}</option>)}

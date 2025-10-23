@@ -32,8 +32,7 @@ const Login = () => {
         <div className="form-container">
             <div className="form-frame"> {/* Added frame */}
                 <div className="logo-placeholder"> {/* Added logo placeholder */}
-                    {/* Replace with <img src="/path/to/logo.png" alt="Logo"/> if you have one */}
-                    LOGO HERE
+                    <img src="/images/logo.png" alt="PTIT Apartment Logo" />
                 </div>
 
                 <div className="page-links mb-4">

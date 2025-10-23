@@ -51,7 +51,7 @@ const UserManagement = () => {
         // Thẻ div này bây giờ chỉ có một nhiệm vụ
         <>
             <div className="admin-page-content">
-                <h2>Quản Lý Tài Khoản</h2>
+                <h2>User Management</h2>
                 {error && <p className="alert alert-danger">{error}</p>}
                 <div className="mb-3">
                     <input
@@ -76,11 +76,11 @@ const UserManagement = () => {
                     </colgroup>
                     <thead>
                         <tr>
-                            <th>Họ Tên</th>
+                            <th>Full Name</th>
                             <th>Email</th>
-                            <th>Vai Trò</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành Động</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -91,8 +91,8 @@ const UserManagement = () => {
                                 <td><span className={`badge ${user.role === 'resident' ? 'bg-success' : 'bg-secondary'}`}>{user.role}</span></td>
                                 <td>{user.is_verified ? 'Đã xác thực' : 'Chưa xác thực'}</td>
                                 <td>
-                                    <button className="btn btn-primary btn-sm me-2 action-btn" onClick={() => handleShowModal(user)}>Sửa</button>
-                                    <button className="btn btn-danger btn-sm action-btn" onClick={() => handleDelete(user.id)}>Xóa</button>
+                                    <button className="btn btn-primary btn-sm me-2 action-btn" onClick={() => handleShowModal(user)}>Edit</button>
+                                    <button className="btn btn-danger btn-sm action-btn" onClick={() => handleDelete(user.id)}>Delete</button>
                                 </td>
                             </tr>
                         ))}

@@ -35,8 +35,7 @@ const Register = () => {
             <div className="form-frame">
                 {/* THÊM CHỖ ĐỂ LOGO */}
                 <div className="logo-placeholder">
-                    {/* Thay bằng thẻ <img src="/path/to/logo.png" alt="Logo"/> nếu có ảnh */}
-                    LOGO HERE
+                    <img src="/images/logo.png" alt="PTIT Apartment Logo" />
                 </div>
 
                 <div className="page-links mb-4">

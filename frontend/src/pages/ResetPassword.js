@@ -32,13 +32,13 @@ const ResetPassword = () => {
             <div className="col-md-6 mx-auto">
                 <div className="card">
                     <div className="card-body">
-                        <h2 className="card-title text-center">Đặt Lại Mật Khẩu Mới</h2>
+                        <h2 className="card-title text-center">Reset New Password</h2>
                         {message && <div className="alert alert-success">{message}</div>}
                         {error && <div className="alert alert-danger">{error}</div>}
                         {!message && (
                             <form onSubmit={onSubmit}>
                                 <div className="form-group mb-3">
-                                    <label>Mật khẩu mới</label>
+                                    <label>New Password</label>
                                     <input
                                         type="password"
                                         className="form-control"
@@ -48,7 +48,7 @@ const ResetPassword = () => {
                                     />
                                 </div>
                                 <div className="form-group mb-3">
-                                    <label>Xác nhận mật khẩu mới</label>
+                                    <label>Confirm New Password</label>
                                     <input
                                         type="password"
                                         className="form-control"
@@ -57,10 +57,10 @@ const ResetPassword = () => {
                                         required
                                     />
                                 </div>
-                                <button type="submit" className="btn btn-primary w-100">Cập nhật Mật khẩu</button>
+                                <button type="submit" className="btn btn-primary w-100">Update Password</button>
                             </form>
                         )}
-                        {message && <Link to="/login">Đi đến trang Đăng nhập ngay</Link>}
+                        {message && <Link to="/login">Go to Login Page</Link>}
                     </div>
                 </div>
             </div>

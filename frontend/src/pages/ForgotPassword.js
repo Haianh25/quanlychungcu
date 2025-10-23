@@ -27,7 +27,7 @@ const ForgotPassword = () => {
         <div className="form-container">
             <div className="form-frame">
                 <div className="logo-placeholder">
-                    LOGO HERE
+                    <img src="/images/logo.png" alt="PTIT Apartment Logo" />
                 </div>
 
                

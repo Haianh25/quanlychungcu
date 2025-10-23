@@ -13,14 +13,14 @@
     padding: 40px;
     border-radius: 10px;
     text-align: center;
-    max-width: 450px;
+    max-width: 600px; /* allow wider form to fit larger logo */
     width: 100%;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* --- ADJUSTED LOGO CONTAINER --- */
 .logo-placeholder {
-    height: 120px; /* Increased height */
+    height: 140px; /* Larger container height for logo */
     margin-bottom: 30px; /* Adjusted margin for spacing */
     display: flex;
     justify-content: center;
@@ -30,7 +30,7 @@
 /* --- ADJUSTED LOGO IMAGE SIZE --- */
 .logo-placeholder img {
     max-height: 100%;   /* Still limited by container height */
-    max-width: 220px;  /* Increased max-width significantly */
+    max-width: 280px;  /* Increased max-width for clearer logo */
     width: auto;       /* Maintain aspect ratio */
     height: auto;      /* Maintain aspect ratio */
     object-fit: contain;

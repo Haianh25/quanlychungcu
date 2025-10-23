@@ -12,20 +12,20 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName }) => {
     return (
         <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Thông Tin Phòng: {roomFullName}</Modal.Title>
+                <Modal.Title>Room Information: {roomFullName}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p><strong>Mã căn hộ:</strong> {roomFullName}</p>
-                <p><strong>Trạng thái:</strong>
+                <p><strong>Room ID:</strong> {roomFullName}</p>
+                <p><strong>Status:</strong>
                     <span className={`ms-2 badge ${roomData.resident_name ? 'bg-success' : 'bg-warning text-dark'}`}>
                         {statusText}
                     </span>
                 </p>
-                <p><strong>Người sở hữu:</strong> {ownerText}</p>
+                <p><strong>Owner:</strong> {ownerText}</p>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose}>
-                    Đóng
+                    Close
                 </Button>
             </Modal.Footer>
         </Modal>

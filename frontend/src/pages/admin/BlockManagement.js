@@ -82,11 +82,11 @@ const BlockManagement = () => {
     return (
         <>
             <div className="admin-page-content">
-                <h2>Quản Lý Tòa Nhà</h2>
+                <h2>Block Management</h2>
                 {error && <p className="alert alert-danger">{error}</p>}
 
                 <div className="mb-3">
-                    <label htmlFor="blockSelect" className="form-label">Chọn Tòa Nhà:</label>
+                    <label htmlFor="blockSelect" className="form-label">Select Block:</label>
                     <select
                         id="blockSelect"
                         className="form-select"
@@ -97,21 +97,21 @@ const BlockManagement = () => {
                             handleBlockSelect(selectedId, selectedBlock ? selectedBlock.name : '');
                         }}
                     >
-                        <option value="">-- Chọn Block --</option>
+                        <option value="">-- Select Block --</option>
                         {blocks.map(block => (
                             <option key={block.id} value={block.id}>{block.name}</option>
                         ))}
                     </select>
                 </div>
 
-                {loadingRooms && <p>Đang tải danh sách phòng...</p>}
+                {loadingRooms && <p>Loading room list...</p>}
 
                 {!loadingRooms && selectedBlockId && (
                     <div className="floor-container">
                         {sortedFloors.length > 0 ? sortedFloors.map(floor => (
                             <div key={floor} className="floor-row card mb-3">
                                 <div className="card-header">
-                                    <strong>Tầng {floor}</strong>
+                                    <strong>Floor {floor}</strong>
                                 </div>
                                 <div className="card-body room-grid">
                                     {roomsByFloor[floor].map(room => (
@@ -128,7 +128,7 @@ const BlockManagement = () => {
                                     ))}
                                 </div>
                             </div>
-                        )) : <p>Không tìm thấy phòng nào cho tòa nhà này.</p>}
+                        )) : <p>No rooms found for this block.</p>}
                     </div>
                 )}
             </div>

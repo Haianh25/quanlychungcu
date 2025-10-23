@@ -9,14 +9,14 @@ const AdminSidebar = () => {
                 Tổng Quan
             </NavLink>
             <NavLink to="/admin/user-management" className="list-group-item list-group-item-action">
-                Quản Lý Tài Khoản
+                User Management
             </NavLink>
             {/* LINK MỚI */}
             <NavLink to="/admin/resident-management" className="list-group-item list-group-item-action">
-                Quản Lý Cư Dân
+                Resident Management
             </NavLink>
             <NavLink to="/admin/block-management" className="list-group-item list-group-item-action">
-                Quản Lý Tòa Nhà
+                Block Management
             </NavLink>
         </div>
     );

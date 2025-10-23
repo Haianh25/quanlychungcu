@@ -88,7 +88,7 @@ const Homepage = () => {
                     {/* Logo & Site Name */}
                     <Link className="navbar-brand" to={isLoggedIn ? "/" : "/login"}>
                         {/* Ensure logo image is in public/images/logo.png */}
-                        <img src="/images/logo.png" alt="PTIT Apartment Logo" style={{ height: '30px' }} />
+                        <img src="/images/logo.png" alt="PTIT Apartment Logo" style={{ height: '100px' }} />
                         PTIT Apartment
                     </Link>
 

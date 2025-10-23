@@ -31,6 +31,15 @@ body {
     margin-right: 10px; /* Khoảng cách giữa logo và text */
 }
 
+/* Allow a larger navbar logo on homepage and ensure header is tall enough */
+.resident-header .navbar {
+    min-height: 140px; /* make room for taller logo */
+    align-items: center;
+}
+.resident-header .navbar-brand img {
+    height: 100px; /* match the inline size on Homepage.js */
+}
+
 .resident-header .nav-link {
     color: #bbb;
     margin: 0 15px; /* Tăng khoảng cách giữa các mục */

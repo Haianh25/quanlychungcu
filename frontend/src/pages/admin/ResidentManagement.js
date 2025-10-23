@@ -60,7 +60,7 @@ const ResidentManagement = () => {
         // Sử dụng thẻ Fragment <> và các div với className tương ứng
         <>
             <div className="admin-page-content">
-                <h2>Quản Lý Cư Dân</h2>
+                <h2>Resident Management</h2>
                 {error && <p className="alert alert-danger">{error}</p>}
 
                 <div className="mb-3">
@@ -85,10 +85,10 @@ const ResidentManagement = () => {
                     </colgroup>
                     <thead>
                         <tr>
-                            <th>Họ Tên</th>
+                            <th>Full Name</th>
                             <th>Email</th>
-                            <th>Căn Hộ Hiện Tại</th>
-                            <th>Hành Động</th>
+                            <th>Current Apartment</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,7 +99,7 @@ const ResidentManagement = () => {
                                 <td>{resident.apartment_number || 'Chưa được gán'}</td>
                                 <td className="col-actions">
                                     <button className="btn btn-primary btn-sm action-btn" onClick={() => handleShowModal(resident)}>
-                                        Gán Căn Hộ
+                                        Assign Apartment
                                     </button>
                                 </td>
                             </tr>

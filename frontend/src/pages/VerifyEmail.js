@@ -52,7 +52,7 @@ const VerifyEmail = () => {
         <div className="verify-container"> {/* Updated container class */}
             <div className="verify-frame"> {/* Updated frame class */}
                 <div className="logo-placeholder"> {/* Added logo placeholder */}
-                    LOGO HERE
+                    <img src="/images/logo.png" alt="PTIT Apartment Logo" />
                 </div>
 
                 <h1>Account Activation Status</h1>
