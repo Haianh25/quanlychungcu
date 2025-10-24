@@ -1,10 +1,11 @@
+// backend/index.js
 // Import các thư viện cần thiết
 const express = require('express');
 const cors = require('cors');
 const db = require('./db'); // Import module database của chúng ta
 const authRoutes = require('./routes/auth'); 
 const adminRoutes = require('./routes/admin');
-const newsRoutes = require('./routes/news');
+const newsRoutes = require('./routes/news'); // Giữ nguyên file này
 // Tạo một ứng dụng Express
 const app = express();
 console.log('--- KẾT NỐI DATABASE ĐANG SỬ DỤNG ---');
@@ -13,12 +14,20 @@ console.log('Port:', process.env.DB_PORT);
 console.log('Database:', process.env.DB_DATABASE);
 console.log('User:', process.env.DB_USER);
 console.log('------------------------------------');
+
 // Sử dụng middleware
 app.use(cors());
-app.use(express.json());
+
+// --- SỬA Ở ĐÂY ---
+// Tăng giới hạn kích thước payload để nhận nội dung Base64 từ ReactQuill
+// Cần đặt TRƯỚC khi định nghĩa routes (app.use('/api/...'))
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// --- KẾT THÚC SỬA ---
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/news', newsRoutes);
+app.use('/api/news', newsRoutes); // Vẫn giữ route này
 
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
