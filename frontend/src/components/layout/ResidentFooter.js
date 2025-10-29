@@ -37,7 +37,7 @@ const ResidentFooter = () => {
                         <h5>Information</h5>
                         <p>Number: 012-345-6789</p>
                         <p>Email: info@ptitapartment.com</p>
-                        <p>Address: 123 Code St, Hanoi</p>
+                        <p>Address: km 10 đường nguyễn trãi quận thanh xuân tp hà nội</p>
                     </div>
                 </div>
                 <div className="copyright">
