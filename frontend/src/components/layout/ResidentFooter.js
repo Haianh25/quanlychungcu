@@ -1,5 +1,7 @@
 // frontend/src/components/layout/ResidentFooter.js
 import React from 'react';
+// Bạn có thể tạo file CSS riêng cho Footer nếu muốn
+// import './ResidentFooter.css'; 
 
 const ResidentFooter = () => {
     return (
@@ -9,7 +11,8 @@ const ResidentFooter = () => {
                     <div className="col-md-4">
                         <div className="footer-logo">PTIT Apartment</div>
                         <p>Placeholder text about the apartment complex. Lorem ipsum dolor sit amet...</p>
-                         <div className="social-icons">
+                        <div className="social-icons">
+                            {/* Thay <i> bằng icon thật nếu dùng FontAwesome/Bootstrap */}
                             <a href="#!"><i className="fab fa-facebook-f"></i></a>
                             <a href="#!"><i className="fab fa-twitter"></i></a>
                             <a href="#!"><i className="fab fa-instagram"></i></a>
@@ -17,18 +20,18 @@ const ResidentFooter = () => {
                     </div>
                     <div className="col-md-2">
                         <h5>Accommodations</h5>
-                         <ul>
+                        <ul>
                             <li><a href="#!">Deluxe Room</a></li>
                             <li><a href="#!">Premium Suite</a></li>
                         </ul>
                     </div>
                     <div className="col-md-2">
-                         <h5>Support</h5>
-                         <ul>
+                        <h5>Support</h5>
+                        <ul>
                             <li><a href="#!">Customer Support</a></li>
                             <li><a href="#!">Privacy Policy</a></li>
                             <li><a href="#!">Contact Us</a></li>
-                         </ul>
+                        </ul>
                     </div>
                     <div className="col-md-4">
                         <h5>Information</h5>

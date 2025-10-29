@@ -1,103 +1,146 @@
 // frontend/src/components/layout/ResidentHeader.js
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import { Link } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode'; // Đảm bảo đã cài: npm install jwt-decode
 import 'bootstrap-icons/font/bootstrap-icons.css';
+// Bạn có thể tạo file CSS riêng cho Header nếu muốn
+// import './ResidentHeader.css'; 
 
 const ResidentHeader = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
     const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg');
 
+    // Logic này giờ sẽ chạy ở Header, trên mọi trang
     useEffect(() => {
-        const token = localStorage.getItem('userToken'); // Chỉ đọc userToken
+        const token = localStorage.getItem('token');
         if (token) {
+            setIsLoggedIn(true);
             try {
                 const decodedToken = jwtDecode(token);
                 const currentTime = Date.now() / 1000;
+                
                 if (decodedToken.exp < currentTime) {
-                    localStorage.removeItem('userToken');
+                    console.log("Token expired");
+                    localStorage.removeItem('token');
                     setIsLoggedIn(false);
                     setUserRole(null);
+                    setUserName('');
+                    setUserAvatar('/images/default-avatar.jpg');
                 } else {
-                    setIsLoggedIn(true);
-                    setUserRole(decodedToken.role);
+                    const rawRole = decodedToken?.role ?? decodedToken?.roles ?? decodedToken?.user?.role;
+                    let normalizedRole = null;
+                    if (Array.isArray(rawRole)) {
+                        const lowerRoles = rawRole.map(r => String(r).toLowerCase());
+                        if (lowerRoles.includes('resident')) normalizedRole = 'resident';
+                        else normalizedRole = lowerRoles[0] || null;
+                    } else if (rawRole) {
+                        normalizedRole = String(rawRole).toLowerCase();
+                    }
+
+                    setUserRole(normalizedRole);
                     setUserName(decodedToken.full_name || decodedToken.email);
                     setUserAvatar(decodedToken.avatar_url || '/images/default-avatar.jpg');
                 }
             } catch (error) {
-                console.error("Invalid token:", error);
-                localStorage.removeItem('userToken');
-                setIsLoggedIn(false);
+                console.error("Invalid token (keep as logged in):", error);
                 setUserRole(null);
+                setUserName('');
+                setUserAvatar('/images/default-avatar.jpg');
             }
         } else {
             setIsLoggedIn(false);
             setUserRole(null);
+            setUserName('');
+            setUserAvatar('/images/default-avatar.jpg');
         }
-    }, [location.pathname]); // Cập nhật lại state khi chuyển trang
+    }, []); // Chỉ chạy 1 lần khi load
 
     const handleLogout = () => {
-        localStorage.removeItem('userToken');
+        localStorage.removeItem('token');
         setIsLoggedIn(false);
         setUserRole(null);
         setUserName('');
         setUserAvatar('/images/default-avatar.jpg');
-        navigate('/'); // Về trang chủ
+        // (Tùy chọn) Chuyển về trang login nếu muốn, nhưng ở đây ta ở lại trang hiện tại
+        // window.location.href = '/login'; // Dùng cách này để reset toàn bộ state
     };
 
-    const handleBellClick = () => { alert('Show notifications!'); };
-    const handleAvatarClick = () => { alert('Open user profile menu!'); };
+    const handleBellClick = () => {
+        alert('Show notifications!'); // Placeholder
+    };
 
-    const isNavLinkActive = (path) => {
-        return location.pathname === path;
+    const handleAvatarClick = () => {
+        alert('Open user profile menu!'); // Placeholder
     };
 
     return (
         <header className="resident-header sticky-top">
             <nav className="container navbar navbar-expand-lg navbar-dark">
+                {/* Logo & Site Name */}
                 <Link className="navbar-brand" to={isLoggedIn ? "/" : "/login"}>
-                    <img src="/images/logo.png" alt="PTIT Apartment Logo" style={{ height: '30px' }} />
+                    <img src="/images/logo.png" alt="PTIT Apartment Logo" style={{ height: '100px' }} />
                     PTIT Apartment
                 </Link>
+
+                {/* Navbar Toggler (for mobile) */}
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#residentNavbar" aria-controls="residentNavbar" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
                 </button>
+
+                {/* Navbar Links */}
                 <div className="collapse navbar-collapse" id="residentNavbar">
                     <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li className="nav-item">
-                            <Link className={`nav-link ${isNavLinkActive('/') ? 'active' : ''}`} to="/">Homepage</Link>
+                            {/* Link to="/" thay vì "/homepage" */}
+                            <Link className="nav-link" aria-current="page" to="/">Homepage</Link>
                         </li>
-                        {isLoggedIn && userRole === 'resident' && (
-                            <>
-                                <li className="nav-item">
-                                    <Link className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`} to="/services">Services</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`} to="/bill">Bill</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className={`nav-link ${isNavLinkActive('/news') ? 'active' : ''}`} to="/news">News</Link>
-                                </li>
-                            </>
-                        )}
+                        <li className="nav-item">
+                            {isLoggedIn && userRole === 'resident' ? (
+                                <Link className="nav-link" to="/services">Services</Link>
+                            ) : (
+                                <span className="nav-link disabled" title="Available for residents only">Services</span>
+                            )}
+                        </li>
+                        <li className="nav-item">
+                            {isLoggedIn && userRole === 'resident' ? (
+                                <Link className="nav-link" to="/bill">Bill</Link>
+                            ) : (
+                                <span className="nav-link disabled" title="Available for residents only">Bill</span>
+                            )}
+                        </li>
+                        <li className="nav-item">
+                            {/* Sửa logic: Trang News có thể xem công khai (nếu muốn)
+                                 Hoặc vẫn giữ logic cũ là resident mới thấy */}
+                            
+                            {/* CÁCH 1: Giữ logic cũ (resident only) */}
+                            {isLoggedIn && userRole === 'resident' ? (
+                                <Link className="nav-link" to="/news">News</Link>
+                            ) : (
+                                <span className="nav-link disabled" title="Available for residents only">News</span>
+                            )}
+
+                            {/* CÁCH 2: Ai cũng xem được News (Public)
+                            <Link className="nav-link" to="/news">News</Link> 
+                            */}
+                        </li>
                     </ul>
-                    <div className="header-right-items">
-                        {isLoggedIn ? (
-                            <>
-                                <button className="icon-btn" onClick={handleBellClick} title="Notifications">
-                                    <i className="bi bi-bell-fill"></i>
-                                </button>
-                                <img src={userAvatar} alt={userName} className="avatar" onClick={handleAvatarClick} title={userName} />
-                                <button className="btn btn-auth" onClick={handleLogout}>Logout</button>
-                            </>
-                        ) : (
-                            <Link className="btn btn-auth" to="/login">Login</Link>
-                        )}
-                    </div>
+                </div>
+
+                {/* Right side items */}
+                <div className="header-right-items ms-auto">
+                    {isLoggedIn ? (
+                        <>
+                            <button className="icon-btn" onClick={handleBellClick} title="Notifications">
+                                <i className="bi bi-bell-fill"></i>
+                            </button>
+                            <img src={userAvatar} alt={userName} className="avatar" onClick={handleAvatarClick} title={userName} />
+                            <button className="btn btn-auth" onClick={handleLogout}>Logout</button>
+                        </>
+                    ) : (
+                        <Link className="btn btn-auth btn-login-visible" to="/login">Login</Link>
+                    )}
                 </div>
             </nav>
         </header>

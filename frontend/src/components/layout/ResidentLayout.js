@@ -6,10 +6,12 @@ import ResidentFooter from './ResidentFooter';
 
 const ResidentLayout = () => {
     return (
-        <div className="homepage-container">
+        // Dùng lại class CSS của Homepage cũ để giữ giao diện
+        <div className="homepage-container"> 
             <ResidentHeader />
             <main>
-                <Outlet /> {/* Nội dung trang (Homepage, News...) sẽ được chèn vào đây */}
+                {/* Outlet sẽ render Homepage, News, NewsDetail... */}
+                <Outlet /> 
             </main>
             <ResidentFooter />
         </div>
