@@ -1,9 +1,11 @@
 // frontend/src/components/layout/ResidentHeader.js
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; // Đảm bảo đã cài: npm install jwt-decode
+// highlight-start
+// 1. Import 'useNavigate' để điều hướng
+import { Link, useNavigate } from 'react-router-dom';
+// highlight-end
+import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-// Bạn có thể tạo file CSS riêng cho Header nếu muốn
 // import './ResidentHeader.css'; 
 
 const ResidentHeader = () => {
@@ -11,6 +13,11 @@ const ResidentHeader = () => {
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
     const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg');
+
+    // highlight-start
+    // 2. Khởi tạo hook useNavigate
+    const navigate = useNavigate();
+    // highlight-end
 
     // Logic này giờ sẽ chạy ở Header, trên mọi trang
     useEffect(() => {
@@ -25,6 +32,7 @@ const ResidentHeader = () => {
                     console.log("Token expired");
                     localStorage.removeItem('token');
                     setIsLoggedIn(false);
+                    // ... (reset state)
                     setUserRole(null);
                     setUserName('');
                     setUserAvatar('/images/default-avatar.jpg');
@@ -45,12 +53,14 @@ const ResidentHeader = () => {
                 }
             } catch (error) {
                 console.error("Invalid token (keep as logged in):", error);
+                // ... (reset state)
                 setUserRole(null);
                 setUserName('');
                 setUserAvatar('/images/default-avatar.jpg');
             }
         } else {
             setIsLoggedIn(false);
+            // ... (reset state)
             setUserRole(null);
             setUserName('');
             setUserAvatar('/images/default-avatar.jpg');
@@ -63,17 +73,21 @@ const ResidentHeader = () => {
         setUserRole(null);
         setUserName('');
         setUserAvatar('/images/default-avatar.jpg');
-        // (Tùy chọn) Chuyển về trang login nếu muốn, nhưng ở đây ta ở lại trang hiện tại
-        // window.location.href = '/login'; // Dùng cách này để reset toàn bộ state
+        // (Tùy chọn) Chuyển về trang login
+        // navigate('/login'); // Có thể dùng navigate ở đây
     };
 
     const handleBellClick = () => {
         alert('Show notifications!'); // Placeholder
     };
 
+    // highlight-start
+    // 3. Sửa hàm này để điều hướng
     const handleAvatarClick = () => {
-        alert('Open user profile menu!'); // Placeholder
+        // alert('Open user profile menu!'); // Xóa dòng alert cũ
+        navigate('/profile'); // Chuyển đến trang Profile
     };
+    // highlight-end
 
     return (
         <header className="resident-header sticky-top">
@@ -93,7 +107,6 @@ const ResidentHeader = () => {
                 <div className="collapse navbar-collapse" id="residentNavbar">
                     <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li className="nav-item">
-                            {/* Link to="/" thay vì "/homepage" */}
                             <Link className="nav-link" aria-current="page" to="/">Homepage</Link>
                         </li>
                         <li className="nav-item">
@@ -111,19 +124,11 @@ const ResidentHeader = () => {
                             )}
                         </li>
                         <li className="nav-item">
-                            {/* Sửa logic: Trang News có thể xem công khai (nếu muốn)
-                                 Hoặc vẫn giữ logic cũ là resident mới thấy */}
-                            
-                            {/* CÁCH 1: Giữ logic cũ (resident only) */}
                             {isLoggedIn && userRole === 'resident' ? (
                                 <Link className="nav-link" to="/news">News</Link>
                             ) : (
                                 <span className="nav-link disabled" title="Available for residents only">News</span>
                             )}
-
-                            {/* CÁCH 2: Ai cũng xem được News (Public)
-                            <Link className="nav-link" to="/news">News</Link> 
-                            */}
                         </li>
                     </ul>
                 </div>
@@ -135,6 +140,7 @@ const ResidentHeader = () => {
                             <button className="icon-btn" onClick={handleBellClick} title="Notifications">
                                 <i className="bi bi-bell-fill"></i>
                             </button>
+                            {/* onClick của img này đã được cập nhật */}
                             <img src={userAvatar} alt={userName} className="avatar" onClick={handleAvatarClick} title={userName} />
                             <button className="btn btn-auth" onClick={handleLogout}>Logout</button>
                         </>

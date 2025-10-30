@@ -13,4 +13,4 @@ const pool = new Pool({
 module.exports = {
     query: (text, params) => pool.query(text, params),
     getPool: () => pool // Dòng này export ra pool để quản lý transaction
-};
+};                 

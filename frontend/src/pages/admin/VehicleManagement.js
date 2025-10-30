@@ -207,7 +207,7 @@ const VehicleManagement = () => {
                     {loadingRequests ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                      pendingRequests.length === 0 ? <Alert variant="info">Không có yêu cầu chờ duyệt.</Alert> : (
                         <Table striped bordered hover responsive size="sm">
-                           <thead><tr><th>ID</th><th>Cư dân</th><th>Loại Y/C</th><th>Loại xe</th><th>Người dùng</th><th>Biển số</th><th>Nhãn hiệu</th><th>Ảnh/Lý do</th><th>Thời gian</th><th>Hành động</th></tr></thead>
+                           <thead><tr><th>ID</th><th>Resident</th><th>Loại Y/C</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Ảnh/Lý do</th><th>Time</th><th>Actions</th></tr></thead>
                             <tbody>{pendingRequests.map(req => (
                                 <tr key={req.id}>
                                     <td>{req.id}</td><td>{req.resident_name || `ID:${req.resident_id}`}</td>
@@ -237,7 +237,7 @@ const VehicleManagement = () => {
                      {loadingCards ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                      allCards.length === 0 ? <Alert variant="info">Chưa có thẻ xe nào.</Alert> : (
                         <Table striped bordered hover responsive size="sm">
-                            <thead><tr><th>ID</th><th>Cư dân</th><th>Người dùng</th><th>Loại xe</th><th>Biển số</th><th>Nhãn hiệu</th><th>Trạng thái</th><th>Ngày cấp</th><th>Hành động</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Resident</th><th>User</th><th>Type</th><th>License Plate</th><th>Brand</th><th>Status</th><th>Issued At</th><th>Actions</th></tr></thead>
                             <tbody>{allCards.map(card => {
                                 const isChangableStatus = card.status === 'active' || card.status === 'inactive';
                                 return (

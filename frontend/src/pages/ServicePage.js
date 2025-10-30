@@ -20,6 +20,7 @@ const initialRegFormData = {
 const ServicePage = () => {
     const [key, setKey] = useState('register'); // State cho Tab
     const [existingCards, setExistingCards] = useState([]);
+    const [historyCards, setHistoryCards] = useState([]); // <-- 1. STATE MỚI
     const [loading, setLoading] = useState(true); // Chỉ dùng cho lần load đầu
     const [fetchError, setFetchError] = useState(''); // Lỗi khi fetch thẻ
 
@@ -50,7 +51,7 @@ const ServicePage = () => {
         return { headers: { 'Authorization': `Bearer ${token}` } };
     }, []);
 
-    // Hàm fetch thẻ của user
+    // --- 2. CẬP NHẬT HÀM FETCH ---
     const fetchExistingCards = useCallback(async () => {
         const config = getUserAuthConfig();
         if (!config) { setLoading(false); return; } // Dừng nếu chưa login
@@ -58,7 +59,9 @@ const ServicePage = () => {
         setFetchError('');
         try {
             const res = await axios.get(`${API_BASE_URL}/api/services/my-cards`, config);
-            setExistingCards(res.data);
+            // Cập nhật cả 2 state từ data trả về
+            setExistingCards(res.data.managedCards || []);
+            setHistoryCards(res.data.historyCards || []);
         } catch (err) {
             console.error('Lỗi tải danh sách thẻ:', err);
             setFetchError(err.response?.data?.message || 'Không thể tải danh sách thẻ của bạn.');
@@ -142,6 +145,9 @@ const ServicePage = () => {
         }
     };
 
+     // Hàm helper lấy text loại xe
+     const getVehicleTypeText = (type) => ({ car: 'Ô tô', motorbike: 'Xe máy', bicycle: 'Xe đạp' }[type] || type);
+
      // Hàm render form đăng ký
      const renderRegisterForm = () => {
         if (!regVehicleType) return null;
@@ -213,7 +219,7 @@ const ServicePage = () => {
         }
     };
 
-    // Hàm render card item
+    // --- 3. CẬP NHẬT HÀM RENDER CARD ITEM ---
     const renderCardItem = (card) => {
         let iconClass = 'bi bi-patch-question';
         const type = card.type || card.vehicle_type;
@@ -223,7 +229,7 @@ const ServicePage = () => {
 
         let statusText = card.status;
         let statusClass = 'text-secondary';
-        let actions = <Button variant="secondary" size="sm" disabled>Đang xử lý</Button>;
+        let actions = null; // Mặc định không có hành động (cho tab Lịch sử)
 
         switch (card.status) {
             case 'active':
@@ -233,7 +239,23 @@ const ServicePage = () => {
                     <Button variant="danger" size="sm" onClick={() => openModal('cancel', card)}>Hủy thẻ</Button>
                 </>);
                 break;
-            case 'pending_register': statusText = 'Chờ duyệt ĐK'; statusClass = 'text-warning'; break;
+            // --- LOGIC MỚI CHO 'INACTIVE' ---
+            // highlight-start
+            case 'inactive':
+                statusText = 'Bị khoá'; // <-- Yêu cầu của bạn
+                statusClass = 'text-warning'; // Màu vàng
+                actions = (<>
+                    {/* Vẫn cho phép cấp lại (báo mất) hoặc hủy thẻ bị khóa */}
+                    <Button variant="warning" size="sm" onClick={() => openModal('reissue', card)}>Cấp lại</Button>
+                    <Button variant="danger" size="sm" onClick={() => openModal('cancel', card)}>Hủy thẻ</Button>
+                </>);
+                break;
+            // highlight-end
+            // --- (Các trạng thái pending giữ nguyên) ---
+            case 'pending_register':
+                statusText = 'Chờ duyệt ĐK'; statusClass = 'text-warning';
+                actions = <Button variant="secondary" size="sm" disabled>Đang xử lý</Button>;
+                break;
             case 'pending_reissue':
                 statusText = 'Chờ duyệt Cấp lại'; statusClass = 'text-warning';
                 actions = (<>
@@ -244,13 +266,19 @@ const ServicePage = () => {
              case 'pending_cancel':
                 statusText = 'Chờ duyệt Hủy'; statusClass = 'text-warning';
                 actions = (<>
-                    <Button variant="warning" size="sm" disabled>Chờ duyệt Hủy</Button> {/* Không cho cấp lại khi chờ hủy */}
+                    <Button variant="warning" size="sm" disabled>Chờ duyệt Hủy</Button>
                     <Button variant="danger" size="sm" disabled>Chờ duyệt Hủy</Button>
                 </>);
                 break;
-            // Thêm các trạng thái từ bảng vehicle_cards nếu cần (vd: 'lost', 'canceled')
-             case 'lost': statusText = 'Đã báo mất'; statusClass = 'text-danger'; actions = null; break; // Ví dụ
-             case 'canceled': statusText = 'Đã hủy'; statusClass = 'text-danger'; actions = null; break; // Ví dụ
+            // --- (Các trạng thái lịch sử) ---
+             case 'lost':
+                statusText = 'Đã báo mất'; statusClass = 'text-danger';
+                actions = null; // Không có hành động
+                break;
+             case 'canceled':
+                statusText = 'Đã hủy'; statusClass = 'text-danger';
+                actions = null; // Không có hành động
+                break;
             default: statusText = card.status;
         }
 
@@ -259,20 +287,18 @@ const ServicePage = () => {
                 <div className="existing-card-info">
                     <i className={iconClass}></i>
                     <div>
-                        <h5>{card.brand} {/* Thêm model nếu có */} </h5>
+                        <h5>{card.brand} {card.model || ''}</h5>
                         <p>Biển số: <span>{card.license_plate || 'N/A'}</span></p>
                         <p>Trạng thái: <span className={statusClass}>{statusText}</span></p>
                     </div>
                 </div>
+                {/* Chỉ hiển thị div actions nếu 'actions' không phải là null */}
                 {actions && <div className="existing-card-actions">{actions}</div>}
             </div>
         );
     };
 
-     // Hàm helper lấy text loại xe
-     const getVehicleTypeText = (type) => ({ car: 'Ô tô', motorbike: 'Xe máy', bicycle: 'Xe đạp' }[type] || type);
-
-    // --- JSX Render Chính ---
+    // --- 4. CẬP NHẬT JSX (THÊM TAB MỚI) ---
     return (
         <Container className="service-page my-4">
             <h2 className="mb-4">Dịch vụ Thẻ xe</h2>
@@ -281,7 +307,7 @@ const ServicePage = () => {
             {manageSuccess && <Alert variant="success" onClose={() => setManageSuccess('')} dismissible>{manageSuccess}</Alert>}
 
             <Tabs id="service-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
-                {/* --- Tab 1 --- */}
+                {/* --- Tab 1: Đăng ký (Giữ nguyên) --- */}
                 <Tab eventKey="register" title="Đăng ký thẻ mới">
                     {!regVehicleType ? (
                          <>
@@ -295,16 +321,26 @@ const ServicePage = () => {
                     ) : ( renderRegisterForm() )}
                 </Tab>
 
-                {/* --- Tab 2 --- */}
+                {/* --- Tab 2: Quản lý (Sử dụng 'existingCards') --- */}
                 <Tab eventKey="manage" title="Quản lý thẻ hiện có">
                     {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                      !fetchError && existingCards.length === 0 ? <p>Bạn chưa có thẻ xe nào hoặc yêu cầu nào đang chờ xử lý.</p> :
                      existingCards.map(card => renderCardItem(card))
                     }
                 </Tab>
+
+                {/* --- TAB 3: LỊCH SỬ THẺ (MỚI - Sử dụng 'historyCards') --- */}
+                {/* highlight-start */}
+                <Tab eventKey="history" title="Lịch sử thẻ">
+                    {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
+                     !fetchError && historyCards.length === 0 ? <p>Không có thẻ nào trong lịch sử (đã hủy hoặc báo mất).</p> :
+                     historyCards.map(card => renderCardItem(card)) // Tái sử dụng renderCardItem
+                    }
+                </Tab>
+                {/* highlight-end */}
             </Tabs>
 
-             {/* --- Modal Cấp lại / Hủy --- */}
+             {/* --- Modals (Giữ nguyên) --- */}
             <Modal show={showModal} onHide={closeModal}>
                 <Modal.Header closeButton><Modal.Title>{modalMode === 'reissue' ? 'Yêu cầu Cấp lại thẻ' : 'Yêu cầu Hủy thẻ'}</Modal.Title></Modal.Header>
                 <Modal.Body>
@@ -326,4 +362,4 @@ const ServicePage = () => {
     );
 };
 
-export default ServicePage;
+export default ServicePage

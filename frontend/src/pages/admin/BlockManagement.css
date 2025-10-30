@@ -2,6 +2,7 @@
 
 .floor-container {
   /* Có thể thêm style nếu cần */
+  display: block;
 }
 
 .floor-row .card-body {

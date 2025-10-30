@@ -1,7 +1,7 @@
 // frontend/src/pages/admin/NewsManagement.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Button, ListGroup, Row, Col, Card, Modal, Badge } from 'react-bootstrap';
+import { Form, Button, ListGroup, Row, Col, Modal, Badge } from 'react-bootstrap';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './NewsManagement.css';

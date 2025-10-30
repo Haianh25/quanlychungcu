@@ -10,7 +10,7 @@ const vehicleAdminRoutes = require('./routes/vehicleAdmin');
 const serviceRoutes = require('./routes/services');
 const fs = require('fs');
 const path = require('path'); // <-- 1. THÊM DÒNG NÀY
-
+const profileRoutes = require('./routes/profile');
 // Tạo một ứng dụng Express
 const app = express();
 console.log('--- KẾT NỐI DATABASE ĐANG SỬ DỤNG ---');
@@ -45,7 +45,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/news', newsRoutes); // Vẫn giữ route này
 app.use('/api/admin', vehicleAdminRoutes);
 app.use('/api/services', serviceRoutes);
-
+app.use('/api/profile', profileRoutes);
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
     res.send('Chào mừng đến với API quản lý chung cư!');
