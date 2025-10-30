@@ -96,3 +96,12 @@
     margin-top: 1.5rem;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
+.registration-form-container .form-label {
+    color: #495057; /* Một màu tối, dễ đọc (màu xám đậm của Bootstrap) */
+    font-weight: 500; /* Hơi đậm một chút cho rõ */
+}
+
+/* (Tùy chọn) Sửa cả màu chữ của modal */
+.modal-body .form-label {
+     color: #495057; /* Sửa luôn cho modal Cấp lại/Hủy thẻ */
+}
