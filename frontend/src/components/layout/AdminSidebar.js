@@ -56,6 +56,12 @@ const AdminSidebar = () => {
             >
                 Vehicle Management
             </NavLink>
+            <NavLink
+                to="/admin/bill-management"
+                className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
+            >
+                Quản Lý Hóa Đơn
+            </NavLink>
             {/* highlight-end */}
             {/* === KẾT THÚC LINK MỚI === */}
 

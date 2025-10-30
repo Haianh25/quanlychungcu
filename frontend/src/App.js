@@ -25,7 +25,7 @@ import ResidentManagement from './pages/admin/ResidentManagement';
 import BlockManagement from './pages/admin/BlockManagement';
 import NewsManagement from './pages/admin/NewsManagement';
 import VehicleManagement from './pages/admin/VehicleManagement';
-
+import BillManagement from './pages/admin/BillManagement';
 function App() {
   return (
     <Router>
@@ -59,6 +59,7 @@ function App() {
               <Route path="block-management" element={<BlockManagement />} />
               <Route path="news-management" element={<NewsManagement />} />
               <Route path="vehicle-management" element={<VehicleManagement />} />
+              <Route path="bill-management" element={<BillManagement />} />
               
             </Route>
           </Route>

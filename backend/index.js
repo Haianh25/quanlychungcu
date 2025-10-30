@@ -9,43 +9,47 @@ const newsRoutes = require('./routes/news'); // Giữ nguyên file này
 const vehicleAdminRoutes = require('./routes/vehicleAdmin');
 const serviceRoutes = require('./routes/services');
 const fs = require('fs');
-const path = require('path'); // <-- 1. THÊM DÒNG NÀY
+const path = require('path');
 const profileRoutes = require('./routes/profile');
+const billAdminRoutes = require('./routes/billAdmin');
+
 // Tạo một ứng dụng Express
 const app = express();
 console.log('--- KẾT NỐI DATABASE ĐANG SỬ DỤNG ---');
-console.log('Host:', process.env.DB_HOST);
-console.log('Port:', process.env.DB_PORT);
-console.log('Database:', process.env.DB_DATABASE);
-console.log('User:', process.env.DB_USER);
-console.log('------------------------------------');
+// ... (console.log DB)
 
 // Sử dụng middleware
 app.use(cors());
-
-// --- SỬA Ở ĐÂY ---
-// Tăng giới hạn kích thước payload để nhận nội dung Base64 từ ReactQuill
-// Cần đặt TRƯỚC khi định nghĩa routes (app.use('/api/...'))
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-// --- KẾT THÚC SỬA ---
 
-// --- 2. THÊM PHỤC VỤ FILE TĨNH CHO ẢNH MINH CHỨNG ---
-// highlight-start
-// Tạo đường dẫn tuyệt đối đến thư mục 'uploads'
+// --- Phục vụ file tĩnh ---
 const uploadsDir = path.join(__dirname, 'uploads');
-// Phục vụ file: Khi ai đó truy cập /uploads/..., hãy lấy file từ thư mục uploadsDir
 app.use('/uploads', express.static(uploadsDir));
 console.log(`Serving static files from ${uploadsDir} at /uploads`);
-// highlight-end
-// --- KẾT THÚC THÊM ---
 
+// --- SỬA LỖI 404 Ở ĐÂY ---
+// highlight-start
+// 1. Tạo MỘT Router chính cho admin
+const adminMasterRouter = express.Router();
+
+// 2. Bảo router chính SỬ DỤNG cả 3 file route con
+adminMasterRouter.use(adminRoutes); // Chứa các route: /dashboard, /user-management...
+adminMasterRouter.use(vehicleAdminRoutes); // Chứa các route: /vehicle-requests, /vehicle-cards...
+adminMasterRouter.use(billAdminRoutes); // Chứa các route: /bills, /bills/generate...
+
+// 3. Đăng ký các route KHÔNG phải admin
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/news', newsRoutes); // Vẫn giữ route này
-app.use('/api/admin', vehicleAdminRoutes);
+app.use('/api/news', newsRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/profile', profileRoutes);
+
+// 4. Chỉ gọi app.use('/api/admin', ...) MỘT LẦN duy nhất
+app.use('/api/admin', adminMasterRouter); 
+// highlight-end
+
+// (Xóa các dòng app.use('/api/admin', ...) cũ ở đây nếu có)
+
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
     res.send('Chào mừng đến với API quản lý chung cư!');
