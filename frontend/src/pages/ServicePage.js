@@ -1,5 +1,5 @@
 // frontend/src/pages/ServicePage.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react'; // <-- 1. THÊM useMemo
 import { Container, Tabs, Tab, Card, Button, Form, Row, Col, Modal, Spinner, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import './ServicePage.css'; // Import CSS
@@ -20,7 +20,10 @@ const initialRegFormData = {
 const ServicePage = () => {
     const [key, setKey] = useState('register'); // State cho Tab
     const [existingCards, setExistingCards] = useState([]);
-    const [historyCards, setHistoryCards] = useState([]); // <-- 1. STATE MỚI
+    // highlight-start
+    // Sửa state theo logic mới của bạn (đã làm ở lần trước)
+    const [historyCards, setHistoryCards] = useState([]); 
+    // highlight-end
     const [loading, setLoading] = useState(true); // Chỉ dùng cho lần load đầu
     const [fetchError, setFetchError] = useState(''); // Lỗi khi fetch thẻ
 
@@ -51,7 +54,7 @@ const ServicePage = () => {
         return { headers: { 'Authorization': `Bearer ${token}` } };
     }, []);
 
-    // --- 2. CẬP NHẬT HÀM FETCH ---
+    // --- 2. SỬA HÀM FETCH ĐỂ NHẬN 2 DANH SÁCH ---
     const fetchExistingCards = useCallback(async () => {
         const config = getUserAuthConfig();
         if (!config) { setLoading(false); return; } // Dừng nếu chưa login
@@ -75,10 +78,37 @@ const ServicePage = () => {
         fetchExistingCards();
     }, [fetchExistingCards]);
 
+    // --- 3. (MỚI) TÍNH TOÁN GIỚI HẠN XE ---
+    const vehicleCounts = useMemo(() => {
+        const counts = { car: 0, motorbike: 0 };
+        // existingCards chứa cả thẻ (active/inactive) và yêu cầu (pending)
+        existingCards.forEach(card => {
+            const type = card.vehicle_type || card.type;
+            if (type === 'car') {
+                if (card.status === 'active' || card.status === 'inactive' || card.status === 'pending_register') {
+                    counts.car++;
+                }
+            }
+            if (type === 'motorbike') {
+                 if (card.status === 'active' || card.status === 'inactive' || card.status === 'pending_register') {
+                    counts.motorbike++;
+                }
+            }
+        });
+        return counts;
+    }, [existingCards]);
+
+    // Tạo biến boolean để dễ đọc code
+    // highlight-start
+    const canRegisterCar = vehicleCounts.car < 2; // <-- SỬA TỪ 1 THÀNH 2
+    const canRegisterMotorbike = vehicleCounts.motorbike < 2; // <-- Giữ nguyên là 2
+    // highlight-end
+
+
     // --- Logic Tab 1: Đăng ký ---
     const handleVehicleSelect = (type) => {
         setRegVehicleType(type);
-        setRegFormData(initialRegFormData); // Reset về trạng thái ban đầu đầy đủ
+        setRegFormData(initialRegFormData);
         setRegFile(null);
         setRegError('');
         setRegSuccess('');
@@ -92,6 +122,7 @@ const ServicePage = () => {
         setRegFile(e.target.files[0]);
     };
 
+    // --- 4. SỬA LOGIC SUBMIT (THEO GIỚI HẠN MỚI) ---
     const handleRegisterSubmit = async (e) => {
         e.preventDefault();
         const config = getUserAuthConfig();
@@ -99,22 +130,17 @@ const ServicePage = () => {
 
         setRegLoading(true); setRegError(''); setRegSuccess('');
 
-        // Kiểm tra logic nghiệp vụ
-        const activeCards = existingCards.filter(c => !c.status.startsWith('pending'));
-        if (regVehicleType === 'car') {
-            const carCount = activeCards.filter(c => c.vehicle_type === 'car' && c.status === 'active').length;
-             if (carCount >= 1) {
-                setRegError('Bạn chỉ được đăng ký tối đa 1 thẻ ô tô.');
-                setRegLoading(false); return;
-             }
+        // Kiểm tra logic nghiệp vụ (phía frontend)
+        // highlight-start
+        if (regVehicleType === 'car' && !canRegisterCar) { // Sửa kiểm tra
+            setRegError('Bạn đã đạt giới hạn 2 thẻ ô tô.');
+            setRegLoading(false); return;
         }
-         if (regVehicleType === 'motorbike') {
-            const motorbikeCount = activeCards.filter(c => c.vehicle_type === 'motorbike' && c.status === 'active').length;
-             if (motorbikeCount >= 2) {
-                setRegError('Bạn chỉ được đăng ký tối đa 2 thẻ xe máy.');
-                setRegLoading(false); return;
-             }
+         if (regVehicleType === 'motorbike' && !canRegisterMotorbike) { // Sửa kiểm tra
+            setRegError('Bạn đã đạt giới hạn 2 thẻ xe máy.');
+            setRegLoading(false); return;
         }
+        // highlight-end
         if (!regFile) {
             setRegError('Vui lòng tải lên ảnh minh chứng.');
              setRegLoading(false); return;
@@ -148,7 +174,7 @@ const ServicePage = () => {
      // Hàm helper lấy text loại xe
      const getVehicleTypeText = (type) => ({ car: 'Ô tô', motorbike: 'Xe máy', bicycle: 'Xe đạp' }[type] || type);
 
-     // Hàm render form đăng ký
+     // Hàm render form đăng ký (Giữ nguyên)
      const renderRegisterForm = () => {
         if (!regVehicleType) return null;
         const typeName = getVehicleTypeText(regVehicleType);
@@ -156,7 +182,8 @@ const ServicePage = () => {
              <Container className="registration-form-container">
                  <h4 className="mb-3">Đăng ký thẻ cho {typeName}</h4>
                  <Form onSubmit={handleRegisterSubmit}>
-                     <Row>
+                     {/* ... (Toàn bộ code Form JSX giữ nguyên) ... */}
+                    <Row>
                         <Col md={4}><Form.Group className="mb-3"><Form.Label>Họ và tên người dùng thẻ</Form.Label><Form.Control type="text" name="fullName" value={regFormData.fullName} onChange={handleRegFormChange} required /></Form.Group></Col>
                          <Col md={4}><Form.Group className="mb-3"><Form.Label>Ngày sinh</Form.Label><Form.Control type="date" name="dob" value={regFormData.dob} onChange={handleRegFormChange} required /></Form.Group></Col>
                          <Col md={4}><Form.Group className="mb-3"><Form.Label>Số điện thoại</Form.Label><Form.Control type="tel" name="phone" value={regFormData.phone} onChange={handleRegFormChange} required /></Form.Group></Col>
@@ -170,9 +197,8 @@ const ServicePage = () => {
                         {regVehicleType !== 'bicycle' && (
                             <Col md={6}><Form.Group className="mb-3"><Form.Label>Biển số xe</Form.Label><Form.Control type="text" name="licensePlate" value={regFormData.licensePlate} onChange={handleRegFormChange} required /></Form.Group></Col>
                         )}
-                        <Col md={regVehicleType !== 'bicycle' ? 6 : 12}><Form.Group className="mb-3"><Form.Label>Ảnh minh chứng (Giấy tờ xe/Biển số)</Form.Label><Form.Control type="file" name="proofImage" onChange={handleFileChange} accept="image/*" required /></Form.Group></Col> {/* Thêm accept="image/*" */}
-                     </Row>
-
+                        <Col md={regVehicleType !== 'bicycle' ? 6 : 12}><Form.Group className="mb-3"><Form.Label>Ảnh minh chứng (Giấy tờ xe/Biển số)</Form.Label><Form.Control type="file" name="proofImage" onChange={handleFileChange} accept="image/*" required /></Form.Group></Col>
+                    </Row>
                     {regError && <Alert variant="danger">{regError}</Alert>}
                     {regSuccess && <Alert variant="success">{regSuccess}</Alert>}
                     <div className="d-flex justify-content-end gap-2 mt-3">
@@ -181,12 +207,12 @@ const ServicePage = () => {
                             {regLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Gửi đăng ký'}
                         </Button>
                     </div>
-                </Form>
+                 </Form>
             </Container>
         );
       };
 
-    // --- Logic Tab 2: Quản lý ---
+    // --- Logic Tab 2: Quản lý (Giữ nguyên) ---
     const openModal = (mode, card) => {
         setModalMode(mode); setSelectedCard(card); setReason(''); setManageError(''); setManageSuccess(''); setShowModal(true);
     };
@@ -195,21 +221,17 @@ const ServicePage = () => {
     };
 
     const handleManageSubmit = async () => {
+        // ... (Code xử lý submit modal giữ nguyên) ...
         const config = getUserAuthConfig();
         if (!config) return;
-
         if (!reason.trim()) { setManageError('Vui lòng nhập lý do.'); return; }
         setManageLoading(true); setManageError(''); setManageSuccess('');
-
         try {
             const apiEndpoint = modalMode === 'reissue' ? 'reissue-card' : 'cancel-card';
-            await axios.post(`${API_BASE_URL}/api/services/${apiEndpoint}`,
-                { cardId: selectedCard.id, reason: reason },
-                config
-            );
+            await axios.post(`${API_BASE_URL}/api/services/${apiEndpoint}`, { cardId: selectedCard.id, reason: reason }, config);
             const successMessage = modalMode === 'reissue' ? 'Yêu cầu cấp lại đã gửi!' : 'Yêu cầu hủy thẻ đã gửi!';
             setManageSuccess(successMessage + ' Vui lòng chờ BQL duyệt.');
-            fetchExistingCards(); // Tải lại
+            fetchExistingCards();
             closeModal();
         } catch (err) {
             setManageError(err.response?.data?.message || 'Gửi yêu cầu thất bại.');
@@ -219,7 +241,7 @@ const ServicePage = () => {
         }
     };
 
-    // --- 3. CẬP NHẬT HÀM RENDER CARD ITEM ---
+    // --- 5. CẬP NHẬT RENDER CARD ITEM (LOGIC MỚI TỪ LẦN TRƯỚC) ---
     const renderCardItem = (card) => {
         let iconClass = 'bi bi-patch-question';
         const type = card.type || card.vehicle_type;
@@ -229,7 +251,7 @@ const ServicePage = () => {
 
         let statusText = card.status;
         let statusClass = 'text-secondary';
-        let actions = null; // Mặc định không có hành động (cho tab Lịch sử)
+        let actions = null;
 
         switch (card.status) {
             case 'active':
@@ -239,19 +261,13 @@ const ServicePage = () => {
                     <Button variant="danger" size="sm" onClick={() => openModal('cancel', card)}>Hủy thẻ</Button>
                 </>);
                 break;
-            // --- LOGIC MỚI CHO 'INACTIVE' ---
-            // highlight-start
-            case 'inactive':
-                statusText = 'Bị khoá'; // <-- Yêu cầu của bạn
-                statusClass = 'text-warning'; // Màu vàng
+            case 'inactive': // <-- Logic 'Bị khoá'
+                statusText = 'Bị khoá'; statusClass = 'text-warning';
                 actions = (<>
-                    {/* Vẫn cho phép cấp lại (báo mất) hoặc hủy thẻ bị khóa */}
                     <Button variant="warning" size="sm" onClick={() => openModal('reissue', card)}>Cấp lại</Button>
                     <Button variant="danger" size="sm" onClick={() => openModal('cancel', card)}>Hủy thẻ</Button>
                 </>);
                 break;
-            // highlight-end
-            // --- (Các trạng thái pending giữ nguyên) ---
             case 'pending_register':
                 statusText = 'Chờ duyệt ĐK'; statusClass = 'text-warning';
                 actions = <Button variant="secondary" size="sm" disabled>Đang xử lý</Button>;
@@ -270,15 +286,8 @@ const ServicePage = () => {
                     <Button variant="danger" size="sm" disabled>Chờ duyệt Hủy</Button>
                 </>);
                 break;
-            // --- (Các trạng thái lịch sử) ---
-             case 'lost':
-                statusText = 'Đã báo mất'; statusClass = 'text-danger';
-                actions = null; // Không có hành động
-                break;
-             case 'canceled':
-                statusText = 'Đã hủy'; statusClass = 'text-danger';
-                actions = null; // Không có hành động
-                break;
+             case 'lost': statusText = 'Đã báo mất'; statusClass = 'text-danger'; actions = null; break;
+             case 'canceled': statusText = 'Đã hủy'; statusClass = 'text-danger'; actions = null; break;
             default: statusText = card.status;
         }
 
@@ -292,13 +301,12 @@ const ServicePage = () => {
                         <p>Trạng thái: <span className={statusClass}>{statusText}</span></p>
                     </div>
                 </div>
-                {/* Chỉ hiển thị div actions nếu 'actions' không phải là null */}
                 {actions && <div className="existing-card-actions">{actions}</div>}
             </div>
         );
     };
 
-    // --- 4. CẬP NHẬT JSX (THÊM TAB MỚI) ---
+    // --- 6. CẬP NHẬT JSX (THÊM TAB MỚI VÀ LOGIC HIỂN THỊ GIỚI HẠN) ---
     return (
         <Container className="service-page my-4">
             <h2 className="mb-4">Dịch vụ Thẻ xe</h2>
@@ -307,15 +315,72 @@ const ServicePage = () => {
             {manageSuccess && <Alert variant="success" onClose={() => setManageSuccess('')} dismissible>{manageSuccess}</Alert>}
 
             <Tabs id="service-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
-                {/* --- Tab 1: Đăng ký (Giữ nguyên) --- */}
+                {/* --- Tab 1: Đăng ký (Sửa ở đây) --- */}
                 <Tab eventKey="register" title="Đăng ký thẻ mới">
                     {!regVehicleType ? (
                          <>
                             <h4 className="mb-3">Chọn loại phương tiện đăng ký:</h4>
                             <Row>
-                                <Col md={4} className="mb-3"><Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('car')}><Card.Body><i className="bi bi-car-front-fill"></i><Card.Title className="mt-3">Ô tô</Card.Title></Card.Body></Card></Col>
-                                <Col md={4} className="mb-3"><Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('motorbike')}><Card.Body><i className="bi bi-scooter"></i><Card.Title className="mt-3">Xe máy</Card.Title></Card.Body></Card></Col>
-                                <Col md={4} className="mb-3"><Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('bicycle')}><Card.Body><i className="bi bi-bicycle"></i><Card.Title className="mt-3">Xe đạp</Card.Title></Card.Body></Card></Col>
+                                {/* --- LOGIC MỚI CHO Ô TÔ --- */}
+                                {/* highlight-start */}
+                                {canRegisterCar ? (
+                                    <Col md={4} className="mb-3">
+                                        <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('car')}>
+                                            <Card.Body>
+                                                <i className="bi bi-car-front-fill"></i>
+                                                <Card.Title className="mt-3">Ô tô</Card.Title>
+                                                <Card.Text className="text-muted">(Còn {2 - vehicleCounts.car} suất)</Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                ) : (
+                                    <Col md={4} className="mb-3">
+                                        <Card className="text-center text-muted bg-light" style={{ cursor: 'not-allowed' }}>
+                                            <Card.Body>
+                                                <i className="bi bi-car-front-fill text-muted"></i>
+                                                <Card.Title className="mt-3">Ô tô</Card.Title>
+                                                <Card.Text>(Đã đạt giới hạn 2 thẻ)</Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+                                {/* highlight-end */}
+
+                                {/* --- LOGIC MỚI CHO XE MÁY --- */}
+                                {/* highlight-start */}
+                                {canRegisterMotorbike ? (
+                                    <Col md={4} className="mb-3">
+                                        <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('motorbike')}>
+                                            <Card.Body>
+                                                <i className="bi bi-scooter"></i>
+                                                <Card.Title className="mt-3">Xe máy</Card.Title>
+                                                <Card.Text className="text-muted">(Còn {2 - vehicleCounts.motorbike} suất)</Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                ) : (
+                                     <Col md={4} className="mb-3">
+                                        <Card className="text-center text-muted bg-light" style={{ cursor: 'not-allowed' }}>
+                                            <Card.Body>
+                                                <i className="bi bi-scooter text-muted"></i>
+                                                <Card.Title className="mt-3">Xe máy</Card.Title>
+                                                <Card.Text>(Đã đạt giới hạn 2 thẻ)</Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+                                {/* highlight-end */}
+
+                                {/* Xe đạp (Không giới hạn) */}
+                                <Col md={4} className="mb-3">
+                                    <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('bicycle')}>
+                                        <Card.Body>
+                                            <i className="bi bi-bicycle"></i>
+                                            <Card.Title className="mt-3">Xe đạp</Card.Title>
+                                            <Card.Text className="text-muted">(Không giới hạn)</Card.Text>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
                             </Row>
                          </>
                     ) : ( renderRegisterForm() )}
@@ -329,37 +394,35 @@ const ServicePage = () => {
                     }
                 </Tab>
 
-                {/* --- TAB 3: LỊCH SỬ THẺ (MỚI - Sử dụng 'historyCards') --- */}
-                {/* highlight-start */}
+                {/* --- TAB 3: LỊCH SỬ THẺ (Sử dụng 'historyCards') --- */}
                 <Tab eventKey="history" title="Lịch sử thẻ">
                     {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                      !fetchError && historyCards.length === 0 ? <p>Không có thẻ nào trong lịch sử (đã hủy hoặc báo mất).</p> :
-                     historyCards.map(card => renderCardItem(card)) // Tái sử dụng renderCardItem
+                     historyCards.map(card => renderCardItem(card))
                     }
                 </Tab>
-                {/* highlight-end */}
             </Tabs>
 
              {/* --- Modals (Giữ nguyên) --- */}
             <Modal show={showModal} onHide={closeModal}>
-                <Modal.Header closeButton><Modal.Title>{modalMode === 'reissue' ? 'Yêu cầu Cấp lại thẻ' : 'Yêu cầu Hủy thẻ'}</Modal.Title></Modal.Header>
-                <Modal.Body>
-                    {selectedCard && <p>Thẻ xe: <strong>{selectedCard.brand} - {selectedCard.license_plate || 'N/A'}</strong></p>}
-                    <Form.Group>
-                        <Form.Label>Lý do:</Form.Label>
-                        <Form.Control as="textarea" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setManageError('');}} isInvalid={!!manageError} />
-                        <Form.Control.Feedback type="invalid">{manageError}</Form.Control.Feedback>
-                    </Form.Group>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={closeModal}>Đóng</Button>
-                    <Button variant="primary" onClick={handleManageSubmit} disabled={manageLoading}>
-                         {manageLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Gửi yêu cầu'}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                 <Modal.Header closeButton><Modal.Title>{modalMode === 'reissue' ? 'Yêu cầu Cấp lại thẻ' : 'Yêu cầu Hủy thẻ'}</Modal.Title></Modal.Header>
+                 <Modal.Body>
+                     {selectedCard && <p>Thẻ xe: <strong>{selectedCard.brand} - {selectedCard.license_plate || 'N/A'}</strong></p>}
+                     <Form.Group>
+                         <Form.Label>Lý do:</Form.Label>
+                         <Form.Control as="textarea" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setManageError('');}} isInvalid={!!manageError} />
+                         <Form.Control.Feedback type="invalid">{manageError}</Form.Control.Feedback>
+                     </Form.Group>
+                 </Modal.Body>
+                 <Modal.Footer>
+                     <Button variant="secondary" onClick={closeModal}>Đóng</Button>
+                     <Button variant="primary" onClick={handleManageSubmit} disabled={manageLoading}>
+                          {manageLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Gửi yêu cầu'}
+                     </Button>
+                 </Modal.Footer>
+             </Modal>
         </Container>
     );
 };
 
-export default ServicePage
+export default ServicePage;
