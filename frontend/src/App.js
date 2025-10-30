@@ -16,6 +16,7 @@ import AdminLogin from './pages/AdminLogin';
 import Homepage from './pages/Homepage'; 
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
+import ServicePage from './pages/ServicePage';
 
 // Admin Pages (Protected)
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -23,6 +24,7 @@ import UserManagement from './pages/admin/UserManagement';
 import ResidentManagement from './pages/admin/ResidentManagement';
 import BlockManagement from './pages/admin/BlockManagement';
 import NewsManagement from './pages/admin/NewsManagement';
+import VehicleManagement from './pages/admin/VehicleManagement';
 
 function App() {
   return (
@@ -35,7 +37,7 @@ function App() {
             <Route path="/news" element={<News />} />
             <Route path="/news/:id" element={<NewsDetail />} />
             {/* Thêm các trang khác của resident vào đây, ví dụ: */}
-            {/* <Route path="/services" element={<ServicePage />} /> */}
+            <Route path="/services" element={<ServicePage />} />
             {/* <Route path="/bill" element={<BillPage />} /> */}
           </Route>
 
@@ -55,6 +57,7 @@ function App() {
               <Route path="resident-management" element={<ResidentManagement />} />
               <Route path="block-management" element={<BlockManagement />} />
               <Route path="news-management" element={<NewsManagement />} />
+              <Route path="vehicle-management" element={<VehicleManagement />} />
             </Route>
           </Route>
           {/* === End Protected Routes === */}

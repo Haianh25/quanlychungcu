@@ -3,9 +3,14 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./db'); // Import module database của chúng ta
-const authRoutes = require('./routes/auth'); 
+const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const newsRoutes = require('./routes/news'); // Giữ nguyên file này
+const vehicleAdminRoutes = require('./routes/vehicleAdmin');
+const serviceRoutes = require('./routes/services');
+const fs = require('fs');
+const path = require('path'); // <-- 1. THÊM DÒNG NÀY
+
 // Tạo một ứng dụng Express
 const app = express();
 console.log('--- KẾT NỐI DATABASE ĐANG SỬ DỤNG ---');
@@ -25,9 +30,21 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // --- KẾT THÚC SỬA ---
 
+// --- 2. THÊM PHỤC VỤ FILE TĨNH CHO ẢNH MINH CHỨNG ---
+// highlight-start
+// Tạo đường dẫn tuyệt đối đến thư mục 'uploads'
+const uploadsDir = path.join(__dirname, 'uploads');
+// Phục vụ file: Khi ai đó truy cập /uploads/..., hãy lấy file từ thư mục uploadsDir
+app.use('/uploads', express.static(uploadsDir));
+console.log(`Serving static files from ${uploadsDir} at /uploads`);
+// highlight-end
+// --- KẾT THÚC THÊM ---
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/news', newsRoutes); // Vẫn giữ route này
+app.use('/api/admin', vehicleAdminRoutes);
+app.use('/api/services', serviceRoutes);
 
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
