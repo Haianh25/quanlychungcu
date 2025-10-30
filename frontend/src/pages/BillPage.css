@@ -1,0 +1,90 @@
+/* frontend/src/pages/BillPage.css */
+
+.bill-page-container .nav-tabs .nav-link {
+    color: #adb5bd;
+    background-color: transparent;
+    border-bottom: 2px solid transparent;
+}
+.bill-page-container .nav-tabs .nav-link.active {
+    color: #ffffff;
+    background-color: transparent;
+    border-bottom: 2px solid var(--bs-primary);
+}
+.bill-page-container .nav-tabs {
+    border-bottom: 1px solid #495057;
+}
+
+/* Giao diện cho hóa đơn chưa thanh toán */
+.unpaid-bill-card {
+    background-color: #ffffff;
+    color: #212529;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.unpaid-bill-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.unpaid-bill-header h4 {
+    margin: 0;
+    color: var(--bs-primary);
+}
+
+.unpaid-bill-body {
+    padding: 1.5rem;
+}
+
+.unpaid-bill-body .line-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+.unpaid-bill-body .line-item:last-child {
+    border-bottom: 0;
+}
+
+.unpaid-bill-body .line-item-total {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid #212529;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.unpaid-bill-footer {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    text-align: right;
+}
+
+.payment-loading {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 0.5rem;
+}
+
+/* Tab lịch sử */
+.history-table .status-success {
+    color: var(--bs-success);
+    font-weight: 500;
+}
+.history-table .status-failed {
+    color: var(--bs-danger);
+    font-weight: 500;
+}

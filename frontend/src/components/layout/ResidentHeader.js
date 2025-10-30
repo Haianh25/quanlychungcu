@@ -1,9 +1,7 @@
 // frontend/src/components/layout/ResidentHeader.js
 import React, { useState, useEffect } from 'react';
-// highlight-start
 // 1. Import 'useNavigate' để điều hướng
 import { Link, useNavigate } from 'react-router-dom';
-// highlight-end
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 // import './ResidentHeader.css'; 
@@ -14,10 +12,8 @@ const ResidentHeader = () => {
     const [userName, setUserName] = useState('');
     const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg');
 
-    // highlight-start
     // 2. Khởi tạo hook useNavigate
     const navigate = useNavigate();
-    // highlight-end
 
     // Logic này giờ sẽ chạy ở Header, trên mọi trang
     useEffect(() => {
@@ -81,13 +77,11 @@ const ResidentHeader = () => {
         alert('Show notifications!'); // Placeholder
     };
 
-    // highlight-start
-    // 3. Sửa hàm này để điều hướng
+    // 3. Sửa hàm này để điều hướng (đã làm)
     const handleAvatarClick = () => {
         // alert('Open user profile menu!'); // Xóa dòng alert cũ
         navigate('/profile'); // Chuyển đến trang Profile
     };
-    // highlight-end
 
     return (
         <header className="resident-header sticky-top">
@@ -116,13 +110,18 @@ const ResidentHeader = () => {
                                 <span className="nav-link disabled" title="Available for residents only">Services</span>
                             )}
                         </li>
+                        
+                        {/* highlight-start */}
+                        {/* --- SỬA LINK BILL --- */}
                         <li className="nav-item">
                             {isLoggedIn && userRole === 'resident' ? (
-                                <Link className="nav-link" to="/bill">Bill</Link>
+                                <Link className="nav-link" to="/bill">Bill</Link> // Kích hoạt link
                             ) : (
                                 <span className="nav-link disabled" title="Available for residents only">Bill</span>
                             )}
                         </li>
+                        {/* highlight-end */}
+
                         <li className="nav-item">
                             {isLoggedIn && userRole === 'resident' ? (
                                 <Link className="nav-link" to="/news">News</Link>

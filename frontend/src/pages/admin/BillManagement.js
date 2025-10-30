@@ -47,6 +47,7 @@ const BillManagement = () => {
     // Format ngày (MM/YYYY)
     const formatMonth = (dateStr) => {
         const date = new Date(dateStr);
+        // Sử dụng getUTCMonth() và getUTCFullYear() để tránh lỗi timezone
         return `${date.getUTCMonth() + 1}/${date.getUTCFullYear()}`;
     };
     // Format ngày (DD/MM/YYYY)
@@ -86,18 +87,21 @@ const BillManagement = () => {
         }
     };
 
-    const handleMarkAsPaid = async (billId) => {
-        const config = getAuthConfig();
-        if (!config || !window.confirm(`Xác nhận thanh toán cho hóa đơn #${billId}?`)) return;
-        setError(''); setSuccess('');
-        try {
-            const res = await axios.post(`${API_BASE_URL}/api/admin/bills/${billId}/mark-paid`, {}, config);
-            setSuccess(res.data.message || `Đã cập nhật hóa đơn #${billId}.`);
-            await fetchBills(); // Tải lại
-        } catch (err) {
-            setError(err.response?.data?.message || 'Cập nhật thất bại.');
-        }
-    };
+    // --- HÀM NÀY KHÔNG CÒN ĐƯỢC SỬ DỤNG ---
+    // (Bạn có thể xóa nó đi nếu muốn)
+    // const handleMarkAsPaid = async (billId) => {
+    //     const config = getAuthConfig();
+    //     if (!config || !window.confirm(`Xác nhận thanh toán cho hóa đơn #${billId}?`)) return;
+    //     setError(''); setSuccess('');
+    //     try {
+    //         const res = await axios.post(`${API_BASE_URL}/api/admin/bills/${billId}/mark-paid`, {}, config);
+    //         setSuccess(res.data.message || `Đã cập nhật hóa đơn #${billId}.`);
+    //         await fetchBills(); // Tải lại
+    //     } catch (err) {
+    //         setError(err.response?.data?.message || 'Cập nhật thất bại.');
+    //     }
+    // };
+    // --- KẾT THÚC HÀM KHÔNG SỬ DỤNG ---
 
     const handleShowDetails = async (billId) => {
         const config = getAuthConfig();
@@ -158,11 +162,15 @@ const BillManagement = () => {
                                         <Button variant="info" size="sm" className="me-1" onClick={() => handleShowDetails(bill.id)}>
                                             Chi tiết
                                         </Button>
-                                        {bill.status !== 'paid' && (
+                                        
+                                        {/* highlight-start */}
+                                        {/* ĐÃ XÓA NÚT "THANH TOÁN" */}
+                                        {/* {bill.status !== 'paid' && (
                                             <Button variant="success" size="sm" onClick={() => handleMarkAsPaid(bill.id)}>
                                                 Thanh toán
                                             </Button>
-                                        )}
+                                        )} */}
+                                        {/* highlight-end */}
                                     </td>
                                 </tr>
                             ))

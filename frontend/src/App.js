@@ -26,6 +26,7 @@ import BlockManagement from './pages/admin/BlockManagement';
 import NewsManagement from './pages/admin/NewsManagement';
 import VehicleManagement from './pages/admin/VehicleManagement';
 import BillManagement from './pages/admin/BillManagement';
+import BillPage from './pages/BillPage';
 function App() {
   return (
     <Router>
@@ -40,6 +41,7 @@ function App() {
             <Route path="/services" element={<ServicePage />} />
             <Route path="profile" element={<ProfilePage />} />
             {/* <Route path="/bill" element={<BillPage />} /> */}
+            <Route path="/bill" element={<BillPage />} />
           </Route>
 
           {/* === Authentication Routes (Không dùng layout) === */}

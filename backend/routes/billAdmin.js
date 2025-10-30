@@ -4,20 +4,24 @@ const router = express.Router();
 const db = require('../db');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
-// --- (HÀM LOGIC generateBillsForMonth GIỮ NGUYÊN) ---
+// --- HÀM LOGIC CỐT LÕI: TẠO HÓA ĐƠN (ĐÃ CẬP NHẬT) ---
 async function generateBillsForMonth(month, year) {
     const pool = db.getPool();
     const client = await pool.connect();
     
-    // Ngày 1 của tháng (UTC)
-    const monthFor = new Date(Date.UTC(year, month - 1, 1)); 
-    const dueDate = new Date(Date.UTC(year, month - 1, 10)); // Hạn ngày 10
+    // Ngày 1 của tháng TẠO BILL (Vd: 1/11/2025)
+    const monthFor = `${year}-${String(month).padStart(2, '0')}-01`; 
+    const dueDate = `${year}-${String(month).padStart(2, '0')}-10`;
     
-    // Tìm các phí một lần (one-time) đã duyệt từ tháng TRƯỚC
+    // Tính toán tháng TRƯỚC (Vd: 10/2025)
     const prevMonth = (month === 1) ? 12 : month - 1;
     const prevYear = (month === 1) ? year - 1 : year;
-    const oneTimeFeeStartDate = new Date(Date.UTC(prevYear, prevMonth - 1, 1));
-    const oneTimeFeeEndDate = new Date(Date.UTC(year, month - 1, 1));
+    const prevMonthStartDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`; // Vd: 1/10/2025
+    const currentMonthStartDate = monthFor; // Vd: 1/11/2025
+
+    // Lấy số ngày trong tháng TRƯỚC (Vd: 31 ngày của tháng 10)
+    // new Date(year, month-1, 0) -> Lấy ngày cuối cùng của tháng trước
+    const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
 
     let generatedCount = 0;
     
@@ -40,10 +44,7 @@ async function generateBillsForMonth(month, year) {
             const roomId = room.id;
             
             // 3a. Kiểm tra bill đã tồn tại chưa
-            const existingBill = await client.query(
-                'SELECT id FROM bills WHERE room_id = $1 AND month_for = $2',
-                [roomId, monthFor]
-            );
+            const existingBill = await client.query('SELECT id FROM bills WHERE room_id = $1 AND month_for = $2', [roomId, monthFor]);
             if (existingBill.rows.length > 0) {
                 console.log(`[Bills] Skipping room ${roomId} for ${month}/${year}, bill already exists.`);
                 continue;
@@ -52,17 +53,14 @@ async function generateBillsForMonth(month, year) {
             let baseAmount = 0;
             const lineItems = [];
 
-            // 3b. Phí cố định
+            // 3b. Phí cố định hàng tháng (Cho tháng 11)
             baseAmount += rates['management_fee'];
             lineItems.push({ desc: 'Phí quản lý căn hộ', amount: rates['management_fee'] });
             baseAmount += rates['bqt_fee'];
             lineItems.push({ desc: 'Phí Ban Quản Trị', amount: rates['bqt_fee'] });
 
-            // 3c. Phí xe hàng tháng
-            const vehicleRes = await client.query(
-                'SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = $2 GROUP BY vehicle_type',
-                [residentId, 'active']
-            );
+            // 3c. Phí xe hàng tháng (Cho tháng 11)
+            const vehicleRes = await client.query('SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = $2 GROUP BY vehicle_type', [residentId, 'active']);
             for (const vehicle of vehicleRes.rows) {
                 let fee = 0; let desc = ''; const count = parseInt(vehicle.count, 10);
                 if (vehicle.vehicle_type === 'car') { fee = rates['car_fee_monthly'] * count; desc = `Phí gửi xe Ô tô (x${count})`; }
@@ -71,13 +69,13 @@ async function generateBillsForMonth(month, year) {
                 if (fee > 0) { baseAmount += fee; lineItems.push({ desc, amount: fee }); }
             }
 
-            // 3d. Lấy các phí một lần (đăng ký/cấp lại) đã duyệt tháng TRƯỚC
+            // 3d. Lấy các phí MỘT LẦN (đăng ký/cấp lại) đã duyệt tháng TRƯỚC (Tháng 10)
             const oneTimeFeeRes = await client.query(
                 `SELECT id, request_type, vehicle_type, one_time_fee_amount 
                  FROM vehicle_card_requests 
                  WHERE resident_id = $1 AND status = 'approved' AND billed_in_bill_id IS NULL
                  AND reviewed_at >= $2 AND reviewed_at < $3`,
-                [residentId, oneTimeFeeStartDate, oneTimeFeeEndDate]
+                [residentId, prevMonthStartDate, currentMonthStartDate]
             );
             const requestIdsToUpdate = [];
             for (const fee of oneTimeFeeRes.rows) {
@@ -89,6 +87,43 @@ async function generateBillsForMonth(month, year) {
                     requestIdsToUpdate.push(fee.id);
                 }
             }
+            
+            // highlight-start
+            // 3d-2. (LOGIC B) Lấy phí xe TÍNH TỶ LỆ cho các thẻ mới đăng ký tháng TRƯỚC (Tháng 10)
+            const proratedCardsRes = await client.query(
+                `SELECT vehicle_type, issued_at 
+                 FROM vehicle_cards 
+                 WHERE resident_id = $1 
+                 AND created_from_request_id IS NOT NULL -- Đảm bảo đây là thẻ mới tạo (từ request)
+                 AND issued_at >= $2 AND issued_at < $3`, // 'issued_at' là ngày admin duyệt (Trong tháng 10)
+                [residentId, prevMonthStartDate, currentMonthStartDate]
+            );
+
+            for (const card of proratedCardsRes.rows) {
+                // Lấy ngày kích hoạt (Vd: 15/10)
+                const issuedDate = new Date(card.issued_at).getUTCDate(); // Lấy ngày (15)
+                // Số ngày tính phí = (Tổng ngày T10 - Ngày kích hoạt) + 1
+                const daysToCharge = (daysInPrevMonth - issuedDate) + 1; // Vd: (31 - 15) + 1 = 17 ngày
+
+                if (daysToCharge <= 0 || daysToCharge > daysInPrevMonth) continue; // Bỏ qua nếu ngày không hợp lệ
+
+                let monthlyRate = 0; let vehicleName = '';
+                if (card.vehicle_type === 'car') { monthlyRate = rates['car_fee_monthly']; vehicleName = 'Ô tô'; }
+                else if (card.vehicle_type === 'motorbike') { monthlyRate = rates['motorbike_fee_monthly']; vehicleName = 'Xe máy'; }
+                else if (card.vehicle_type === 'bicycle') { monthlyRate = rates['bicycle_fee_monthly']; vehicleName = 'Xe đạp'; }
+
+                if (monthlyRate > 0) {
+                    // Tính phí theo tỷ lệ và làm tròn
+                    const proratedFee = Math.round((monthlyRate / daysInPrevMonth) * daysToCharge);
+                    
+                    baseAmount += proratedFee;
+                    lineItems.push({ 
+                        desc: `Phí gửi xe ${vehicleName} (Tỷ lệ T${prevMonth}: ${daysToCharge}/${daysInPrevMonth} ngày)`, 
+                        amount: proratedFee 
+                    });
+                }
+            }
+            // highlight-end
 
             // 3e. Tạo hóa đơn tổng
             const billInsertRes = await client.query(
@@ -108,7 +143,7 @@ async function generateBillsForMonth(month, year) {
                 await client.query('UPDATE vehicle_card_requests SET billed_in_bill_id = $1 WHERE id = ANY($2::int[])', [newBillId, requestIdsToUpdate]);
             }
             generatedCount++;
-        } // Hết vòng lặp
+        }
         await client.query('COMMIT');
         return { success: true, count: generatedCount };
     } catch (err) {
@@ -122,11 +157,13 @@ async function generateBillsForMonth(month, year) {
 
 // --- API Endpoints ---
 
-// POST /api/admin/bills/generate (Giữ nguyên)
+// POST /api/admin/bills/generate (Sửa lại logic lấy tháng/năm)
 router.post('/bills/generate', protect, isAdmin, async (req, res) => {
-    const now = new Date();
-    const month = now.getUTCMonth() + 1;
-    const year = now.getUTCFullYear();
+    // Lấy tháng/năm theo múi giờ VN
+    const localDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    const month = localDate.getMonth() + 1; // Lấy tháng (1-12) của VN
+    const year = localDate.getFullYear(); // Lấy năm của VN
+    
     console.log(`[Bills] Admin triggered generation for ${month}/${year}`);
     const result = await generateBillsForMonth(month, year);
     if (result.success) {
@@ -136,28 +173,30 @@ router.post('/bills/generate', protect, isAdmin, async (req, res) => {
     }
 });
 
-// GET /api/admin/bills - Lấy danh sách hóa đơn
-// highlight-start
-// --- SỬA LỖI Ở ĐÂY ---
+// GET /api/admin/bills (Đã sửa LEFT JOIN và TO_CHAR)
 router.get('/bills', protect, isAdmin, async (req, res) => {
+    console.log("[Bills GET] API /api/admin/bills called");
     try {
         const query = `
-            SELECT b.id, b.status, b.month_for, b.due_date, b.total_amount, b.paid_at,
+            SELECT b.id, b.status, 
+                   to_char(b.month_for, 'YYYY-MM-DD') AS month_for,
+                   to_char(b.due_date, 'YYYY-MM-DD') AS due_date,
+                   b.total_amount, b.paid_at,
                    u.full_name AS resident_name, 
-                   r.room_number AS room_name -- <<< GIẢ ĐỊNH TÊN CỘT LÀ 'room_number'
+                   r.room_number AS room_name
             FROM bills b
-            JOIN users u ON b.user_id = u.id
-            JOIN rooms r ON b.room_id = r.id -- Sửa 'r.name' thành 'r.room_number'
+            LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN rooms r ON b.room_id = r.id 
             ORDER BY b.month_for DESC, b.id DESC
         `;
         const { rows } = await db.query(query);
+        console.log(`[Bills GET] Query returned ${rows.length} total bills.`);
         res.json(rows);
     } catch (err) {
-        console.error('Error fetching bills:', err);
+        console.error('[Bills GET] Error fetching bills:', err);
         res.status(500).json({ message: 'Lỗi server khi tải hóa đơn' });
     }
 });
-// highlight-end
 
 // GET /api/admin/bills/:id (Giữ nguyên)
 router.get('/bills/:id', protect, isAdmin, async (req, res) => {
@@ -189,4 +228,8 @@ router.post('/bills/:id/mark-paid', protect, isAdmin, async (req, res) => {
     }
 });
 
-module.exports = router;
+// (Phần export cho Cron Job)
+module.exports = {
+    router, // Export router
+    generateBillsForMonth // Export hàm logic
+};

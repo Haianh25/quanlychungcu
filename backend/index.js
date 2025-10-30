@@ -5,13 +5,21 @@ const cors = require('cors');
 const db = require('./db'); // Import module database của chúng ta
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
-const newsRoutes = require('./routes/news'); // Giữ nguyên file này
+const newsRoutes = require('./routes/news');
 const vehicleAdminRoutes = require('./routes/vehicleAdmin');
 const serviceRoutes = require('./routes/services');
 const fs = require('fs');
 const path = require('path');
 const profileRoutes = require('./routes/profile');
-const billAdminRoutes = require('./routes/billAdmin');
+const billUserRoutes = require('./routes/billUser');
+
+// highlight-start
+// 1. Sửa lại cách import (vì billAdmin.js giờ export object)
+const billAdmin = require('./routes/billAdmin'); 
+
+// 2. Import file cron.js để khởi chạy (phải đặt SAU billAdmin vì cron.js cần hàm từ billAdmin)
+require('./cron'); 
+// highlight-end
 
 // Tạo một ứng dụng Express
 const app = express();
@@ -28,15 +36,18 @@ const uploadsDir = path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsDir));
 console.log(`Serving static files from ${uploadsDir} at /uploads`);
 
-// --- SỬA LỖI 404 Ở ĐÂY ---
-// highlight-start
+// --- SỬA LỖI 404 VÀ LỖI HIỆN TẠI Ở ĐÂY ---
 // 1. Tạo MỘT Router chính cho admin
 const adminMasterRouter = express.Router();
+
 
 // 2. Bảo router chính SỬ DỤNG cả 3 file route con
 adminMasterRouter.use(adminRoutes); // Chứa các route: /dashboard, /user-management...
 adminMasterRouter.use(vehicleAdminRoutes); // Chứa các route: /vehicle-requests, /vehicle-cards...
-adminMasterRouter.use(billAdminRoutes); // Chứa các route: /bills, /bills/generate...
+// highlight-start
+// 3. Sửa lại cách sử dụng (dùng .router)
+adminMasterRouter.use(billAdmin.router); // Chứa các route: /bills, /bills/generate...
+// highlight-end
 
 // 3. Đăng ký các route KHÔNG phải admin
 app.use('/api/auth', authRoutes);
@@ -46,9 +57,10 @@ app.use('/api/profile', profileRoutes);
 
 // 4. Chỉ gọi app.use('/api/admin', ...) MỘT LẦN duy nhất
 app.use('/api/admin', adminMasterRouter); 
-// highlight-end
+app.use('/api/bills', billUserRoutes);
+// --- KẾT THÚC SỬA ---
 
-// (Xóa các dòng app.use('/api/admin', ...) cũ ở đây nếu có)
+// (Các dòng 'app.use('/api/admin', ...)' riêng lẻ cũ đã bị xóa)
 
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
