@@ -15,7 +15,7 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
             setFormData({
                 fullName: user.full_name || '',
                 role: user.role || 'user',
-                newPassword: '' // Luôn để trống mật khẩu khi mở
+                newPassword: ''
             });
         }
     }, [user]);
@@ -24,7 +24,12 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
 
     const handleSave = async () => {
         try {
-            const token = localStorage.getItem('token');
+            // highlight-start
+            // --- SỬA LỖI Ở ĐÂY ---
+            // Lấy đúng 'adminToken' thay vì 'token'
+            const token = localStorage.getItem('adminToken');
+            // highlight-end
+            
             const config = { headers: { 'Authorization': `Bearer ${token}` } };
             
             const payload = {
@@ -42,10 +47,12 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
             handleClose();
         } catch (error) {
             console.error("Lỗi khi cập nhật:", error);
-            alert(error.response?.data?.message || 'Cập nhật thất bại!');
+            // Dịch thông báo lỗi sang Tiếng Anh cho đồng bộ
+            alert(error.response?.data?.message || 'Update failed!');
         }
     };
 
+    // Dịch các text sang Tiếng Anh
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
@@ -75,11 +82,11 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
                             name="newPassword" 
                             value={formData.newPassword} 
                             onChange={onChange}
-                            placeholder="Để trống nếu không muốn thay đổi" 
+                            placeholder="Leave blank to keep current password" 
                         />
                          <Form.Text className="text-muted">
                             Password must be strong (uppercase, lowercase, number, special character).
-                        </Form.Text>
+                         </Form.Text>
                     </Form.Group>
                 </Form>
             </Modal.Body>
