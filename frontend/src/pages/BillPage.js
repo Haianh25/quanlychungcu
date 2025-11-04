@@ -7,21 +7,21 @@ import './BillPage.css'; // Import CSS
 const API_BASE_URL = 'http://localhost:5000';
 
 const BillPage = () => {
-    const [key, setKey] = useState('unpaid'); // Tab mặc định
+    const [key, setKey] = useState('unpaid'); // Default tab
     const [allBills, setAllBills] = useState([]);
     const [transactions, setTransactions] = useState([]);
     
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // State cho thanh toán
-    const [paymentLoadingBillId, setPaymentLoadingBillId] = useState(null); // ID của bill đang thanh toán
+    // State for payment processing
+    const [paymentLoadingBillId, setPaymentLoadingBillId] = useState(null); // ID of the bill being paid
     const [paymentError, setPaymentError] = useState('');
     const [paymentSuccess, setPaymentSuccess] = useState('');
 
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('token'); // User token
-        if (!token) { setError("Vui lòng đăng nhập."); return null; }
+        if (!token) { setError("Please log in."); return null; }
         return { headers: { 'Authorization': `Bearer ${token}` } };
     }, []);
 
@@ -31,7 +31,7 @@ const BillPage = () => {
         setLoading(true); setError('');
         
         try {
-            // Gọi cả 2 API cùng lúc
+            // Call both APIs simultaneously
             const [billsRes, transRes] = await Promise.all([
                 axios.get(`${API_BASE_URL}/api/bills/my-bills-detailed`, config),
                 axios.get(`${API_BASE_URL}/api/bills/my-transactions`, config)
@@ -40,8 +40,8 @@ const BillPage = () => {
             setAllBills(billsRes.data.bills || []);
             setTransactions(transRes.data || []);
         } catch (err) {
-            console.error('Lỗi tải dữ liệu hóa đơn:', err);
-            setError(err.response?.data?.message || 'Không thể tải dữ liệu hóa đơn.');
+            console.error('Error loading bill data:', err);
+            setError(err.response?.data?.message || 'Could not load bill data.');
         } finally {
             setLoading(false);
         }
@@ -51,60 +51,62 @@ const BillPage = () => {
         fetchData();
     }, [fetchData]);
 
-    // Phân loại hóa đơn
+    // Categorize bills
     const { unpaidBills, paidBills } = useMemo(() => {
         const unpaid = allBills.filter(b => b.status === 'unpaid' || b.status === 'overdue');
         const paid = allBills.filter(b => b.status === 'paid');
         return { unpaidBills: unpaid, paidBills: paid };
     }, [allBills]);
 
-    // Xử lý thanh toán
+    // Handle payment
     const handlePayment = async (billId, paymentMethod) => {
         const config = getAuthConfig();
-        if (!config || !window.confirm(`Bạn có chắc muốn thanh toán hóa đơn #${billId} qua ${paymentMethod}?`)) return;
+        if (!config || !window.confirm(`Are you sure you want to pay bill #${billId} via ${paymentMethod}?`)) return;
 
-        setPaymentLoadingBillId(billId); // Hiển thị spinner
+        setPaymentLoadingBillId(billId); // Show spinner
         setPaymentError('');
         setPaymentSuccess('');
 
         try {
             const res = await axios.post(`${API_BASE_URL}/api/bills/create-payment`, { bill_id: billId, payment_method: paymentMethod }, config);
             setPaymentSuccess(res.data.message);
-            // Tải lại toàn bộ dữ liệu
+            // Reload all data
             await fetchData(); 
         } catch (err) {
-            console.error("Lỗi thanh toán:", err);
-            setPaymentError(err.response?.data?.message || "Thanh toán thất bại.");
+            console.error("Payment error:", err);
+            setPaymentError(err.response?.data?.message || "Payment failed.");
         } finally {
-            setPaymentLoadingBillId(null); // Ẩn spinner
+            setPaymentLoadingBillId(null); // Hide spinner
         }
     };
 
-    // Helper format
+    // Helper formats
     const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     const formatMonth = (dateStr) => {
         const date = new Date(dateStr);
-        return `Tháng ${date.getUTCMonth() + 1}/${date.getUTCFullYear()}`;
+        // Use UTC months/year as the date string is now 'YYYY-MM-DD'
+        return `Month ${date.getUTCMonth() + 1}/${date.getUTCFullYear()}`;
     };
-    const formatDate = (dateStr) => new Date(dateStr).toLocaleString('vi-VN');
+    const formatDate = (dateStr) => new Date(dateStr).toLocaleString('en-GB'); // DD/MM/YYYY, HH:MM:SS
+    const formatDueDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-GB'); // DD/MM/YYYY
+
     const getStatusBadge = (status) => {
-        if (status === 'unpaid') return <Badge bg="warning" text="dark">Chưa thanh toán</Badge>;
-        if (status === 'overdue') return <Badge bg="danger">Quá hạn</Badge>;
+        if (status === 'unpaid') return <Badge bg="warning" text="dark">Unpaid</Badge>;
+        if (status === 'overdue') return <Badge bg="danger">Overdue</Badge>;
         return <Badge bg="secondary">{status}</Badge>;
     };
 
-    // Render Tab 1 (Chưa thanh toán)
+    // Render Tab 1 (Unpaid)
     const renderUnpaidBills = () => {
         if (loading) return <div className="text-center p-5"><Spinner animation="border" /></div>;
-        if (unpaidBills.length === 0) return <Alert variant="success">Bạn không có hóa đơn nào cần thanh toán.</Alert>;
+        if (unpaidBills.length === 0) return <Alert variant="success">You have no unpaid bills.</Alert>;
 
         return unpaidBills.map(bill => (
             <Card className="unpaid-bill-card" key={bill.id}>
                 {paymentLoadingBillId === bill.id ? (
-                    // Hiển thị loading overlay khi đang thanh toán bill này
                     <div className="payment-loading">
                         <Spinner animation="border" />
-                        <span>Đang xử lý thanh toán...</span>
+                        <span>Processing payment...</span>
                     </div>
                 ) : (
                     <>
@@ -113,7 +115,7 @@ const BillPage = () => {
                                 <h4>{formatMonth(bill.month_for)}</h4>
                                 {getStatusBadge(bill.status)}
                             </div>
-                            <span>Hạn chót: {new Date(bill.due_date).toLocaleDateString('vi-VN')}</span>
+                            <span>Due Date: {formatDueDate(bill.due_date)}</span>
                         </Card.Header>
                         <Card.Body className="unpaid-bill-body">
                             {bill.line_items.map(item => (
@@ -122,25 +124,23 @@ const BillPage = () => {
                                     <span>{formatCurrency(item.amount)}</span>
                                 </div>
                             ))}
-                            {/* Hiển thị phí phạt nếu có */}
                             {bill.penalty_amount > 0 && (
                                 <div className="line-item text-danger">
-                                    <span>Phí phạt quá hạn</span>
+                                    <span>Overdue Penalty</span>
                                     <span>{formatCurrency(bill.penalty_amount)}</span>
                                 </div>
                             )}
                             <div className="line-item-total">
-                                <span>TỔNG CỘNG</span>
+                                <span>TOTAL</span>
                                 <span>{formatCurrency(bill.total_amount)}</span>
                             </div>
                         </Card.Body>
                         <Card.Footer className="unpaid-bill-footer">
-                            {/* Nút thanh toán (Giả lập 2 cổng) */}
                             <Button variant="primary" className="me-2" onClick={() => handlePayment(bill.id, 'VNPAY')}>
-                                Thanh toán VNPAY
+                                Pay with VNPAY
                             </Button>
                             <Button variant="danger" onClick={() => handlePayment(bill.id, 'MOMO')}>
-                                Thanh toán MOMO
+                                Pay with MOMO
                             </Button>
                         </Card.Footer>
                     </>
@@ -149,15 +149,15 @@ const BillPage = () => {
         ));
     };
 
-    // Render Tab 2 (Đã thanh toán)
+    // Render Tab 2 (Paid)
     const renderPaidBills = () => {
-        if (loading) return null; // Chỉ loading ở tab đầu
-        if (paidBills.length === 0) return <Alert variant="info">Chưa có hóa đơn nào đã thanh toán.</Alert>;
+        if (loading) return null;
+        if (paidBills.length === 0) return <Alert variant="info">No paid bills found.</Alert>;
 
         return (
             <Table striped bordered hover responsive size="sm" variant="dark">
                 <thead>
-                    <tr><th>ID</th><th>Tháng</th><th>Tổng tiền</th><th>Ngày thanh toán</th></tr>
+                    <tr><th>ID</th><th>Month</th><th>Total Amount</th><th>Paid At</th></tr>
                 </thead>
                 <tbody>
                     {paidBills.map(bill => (
@@ -173,15 +173,15 @@ const BillPage = () => {
         );
     };
 
-    // Render Tab 3 (Lịch sử giao dịch)
+    // Render Tab 3 (Transaction History)
     const renderTransactionHistory = () => {
         if (loading) return null;
-        if (transactions.length === 0) return <Alert variant="info">Chưa có giao dịch nào.</Alert>;
+        if (transactions.length === 0) return <Alert variant="info">No transactions found.</Alert>;
         
         return (
             <Table striped bordered hover responsive size="sm" variant="dark" className="history-table">
                 <thead>
-                    <tr><th>Mã GD</th><th>Hóa đơn ID</th><th>Số tiền</th><th>Phương thức</th><th>Trạng thái</th><th>Thời gian</th></tr>
+                    <tr><th>Txn Code</th><th>Bill ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Time</th></tr>
                 </thead>
                 <tbody>
                     {transactions.map(t => (
@@ -201,23 +201,22 @@ const BillPage = () => {
         );
     };
 
-
     return (
         <Container className="bill-page-container my-4">
-            <h2 className="mb-4 text-white">Hóa Đơn Dịch Vụ</h2>
+            <h2 className="mb-4 text-white">Service Bills</h2>
 
             {error && <Alert variant="danger">{error}</Alert>}
             {paymentError && <Alert variant="danger" onClose={() => setPaymentError('')} dismissible>{paymentError}</Alert>}
             {paymentSuccess && <Alert variant="success" onClose={() => setPaymentSuccess('')} dismissible>{paymentSuccess}</Alert>}
             
             <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
-                <Tab eventKey="unpaid" title="Chưa thanh toán">
+                <Tab eventKey="unpaid" title="Unpaid">
                     {renderUnpaidBills()}
                 </Tab>
-                <Tab eventKey="paid" title="Đã thanh toán">
+                <Tab eventKey="paid" title="Paid">
                     {renderPaidBills()}
                 </Tab>
-                <Tab eventKey="history" title="Lịch sử giao dịch">
+                <Tab eventKey="history" title="Transaction History">
                     {renderTransactionHistory()}
                 </Tab>
             </Tabs>

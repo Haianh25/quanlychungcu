@@ -14,7 +14,7 @@ const BillManagement = () => {
 
     const [generating, setGenerating] = useState(false);
 
-    // State cho Modal chi tiết
+    // State for Modal
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedBillId, setSelectedBillId] = useState(null);
     const [lineItems, setLineItems] = useState([]);
@@ -34,7 +34,7 @@ const BillManagement = () => {
             const res = await axios.get(`${API_BASE_URL}/api/admin/bills`, config);
             setBills(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Không thể tải danh sách hóa đơn.');
+            setError(err.response?.data?.message || 'Could not load the bill list.');
         } finally {
             setLoading(false);
         }
@@ -44,64 +44,49 @@ const BillManagement = () => {
         fetchBills();
     }, [fetchBills]);
 
-    // Format ngày (MM/YYYY)
+    // Format (MM/YYYY)
     const formatMonth = (dateStr) => {
         const date = new Date(dateStr);
-        // Sử dụng getUTCMonth() và getUTCFullYear() để tránh lỗi timezone
         return `${date.getUTCMonth() + 1}/${date.getUTCFullYear()}`;
     };
-    // Format ngày (DD/MM/YYYY)
+    // Format (DD/MM/YYYY)
     const formatDate = (dateStr) => {
          if (!dateStr) return '';
          const date = new Date(dateStr);
-         return date.toLocaleDateString('vi-VN');
+         return date.toLocaleDateString('en-GB'); // Use en-GB for DD/MM/YYYY
     };
-    // Format tiền
+    // Format currency
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
-    // Lấy badge màu cho status
+    // Get status badge
     const getStatusBadge = (status) => {
         switch (status) {
-            case 'paid': return <Badge bg="success">Đã thanh toán</Badge>;
-            case 'unpaid': return <Badge bg="warning" text="dark">Chưa thanh toán</Badge>;
-            case 'overdue': return <Badge bg="danger">Quá hạn</Badge>;
-            case 'canceled': return <Badge bg="secondary">Đã hủy</Badge>;
+            case 'paid': return <Badge bg="success">Paid</Badge>;
+            case 'unpaid': return <Badge bg="warning" text="dark">Unpaid</Badge>;
+            case 'overdue': return <Badge bg="danger">Overdue</Badge>;
+            case 'canceled': return <Badge bg="secondary">Canceled</Badge>;
             default: return <Badge bg="light" text="dark">{status}</Badge>;
         }
     };
 
-    // --- Xử lý sự kiện ---
+    // --- Event Handlers ---
     const handleGenerateBills = async () => {
         const config = getAuthConfig();
-        if (!config || !window.confirm('Tạo hóa đơn cho tháng này? (Sẽ bỏ qua các căn hộ đã có hóa đơn)')) return;
+        if (!config || !window.confirm('Generate bills for this month? (Will skip apartments that already have a bill)')) return;
         setGenerating(true); setError(''); setSuccess('');
         try {
             const res = await axios.post(`${API_BASE_URL}/api/admin/bills/generate`, {}, config);
-            setSuccess(res.data.message || 'Hoàn tất tạo hóa đơn.');
-            await fetchBills(); // Tải lại
+            setSuccess(res.data.message || 'Bill generation complete.');
+            await fetchBills(); // Reload
         } catch (err) {
-            setError(err.response?.data?.message || 'Tạo hóa đơn thất bại.');
+            setError(err.response?.data?.message || 'Bill generation failed.');
         } finally {
             setGenerating(false);
         }
     };
 
-    // --- HÀM NÀY KHÔNG CÒN ĐƯỢC SỬ DỤNG ---
-    // (Bạn có thể xóa nó đi nếu muốn)
-    // const handleMarkAsPaid = async (billId) => {
-    //     const config = getAuthConfig();
-    //     if (!config || !window.confirm(`Xác nhận thanh toán cho hóa đơn #${billId}?`)) return;
-    //     setError(''); setSuccess('');
-    //     try {
-    //         const res = await axios.post(`${API_BASE_URL}/api/admin/bills/${billId}/mark-paid`, {}, config);
-    //         setSuccess(res.data.message || `Đã cập nhật hóa đơn #${billId}.`);
-    //         await fetchBills(); // Tải lại
-    //     } catch (err) {
-    //         setError(err.response?.data?.message || 'Cập nhật thất bại.');
-    //     }
-    // };
-    // --- KẾT THÚC HÀM KHÔNG SỬ DỤNG ---
+    // const handleMarkAsPaid = async (billId) => { ... };
 
     const handleShowDetails = async (billId) => {
         const config = getAuthConfig();
@@ -113,7 +98,7 @@ const BillManagement = () => {
             const res = await axios.get(`${API_BASE_URL}/api/admin/bills/${billId}`, config);
             setLineItems(res.data);
         } catch (err) {
-            setError('Không thể tải chi tiết hóa đơn.');
+            setError('Could not load bill details.');
             setShowDetailModal(false);
         } finally {
             setLoadingDetails(false);
@@ -124,14 +109,14 @@ const BillManagement = () => {
 
     return (
         <Container fluid className="p-3">
-            <h3>Quản lý Hóa Đơn</h3> <hr />
+            <h3>Bill Management</h3> <hr />
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
             
             <div className="mb-3 d-flex justify-content-between">
-                <h4 className="mb-0">Danh sách hóa đơn</h4>
+                <h4 className="mb-0">Bill List</h4>
                 <Button variant="primary" onClick={handleGenerateBills} disabled={generating}>
-                    {generating ? <Spinner as="span" size="sm" /> : 'Tạo Hóa Đơn Tháng Này'}
+                    {generating ? <Spinner as="span" size="sm" /> : 'Generate This Month\'s Bills'}
                 </Button>
             </div>
 
@@ -141,13 +126,13 @@ const BillManagement = () => {
                 <Table striped bordered hover responsive size="sm" className="align-middle">
                     <thead className="table-dark">
                         <tr>
-                            <th>ID</th><th>Cư dân</th><th>Căn hộ</th><th>Tháng</th>
-                            <th>Trạng thái</th><th>Tổng tiền</th><th>Ngày TT</th><th>Hành động</th>
+                            <th>ID</th><th>Resident</th><th>Apartment</th><th>Month</th>
+                            <th>Status</th><th>Total Amount</th><th>Paid At</th><th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {bills.length === 0 ? (
-                            <tr><td colSpan="8" className="text-center">Chưa có hóa đơn nào.</td></tr>
+                            <tr><td colSpan="8" className="text-center">No bills found.</td></tr>
                         ) : (
                             bills.map(bill => (
                                 <tr key={bill.id} className={`status-${bill.status}`}>
@@ -160,17 +145,8 @@ const BillManagement = () => {
                                     <td>{formatDate(bill.paid_at)}</td>
                                     <td className="bill-actions">
                                         <Button variant="info" size="sm" className="me-1" onClick={() => handleShowDetails(bill.id)}>
-                                            Chi tiết
+                                            Details
                                         </Button>
-                                        
-                                        {/* highlight-start */}
-                                        {/* ĐÃ XÓA NÚT "THANH TOÁN" */}
-                                        {/* {bill.status !== 'paid' && (
-                                            <Button variant="success" size="sm" onClick={() => handleMarkAsPaid(bill.id)}>
-                                                Thanh toán
-                                            </Button>
-                                        )} */}
-                                        {/* highlight-end */}
                                     </td>
                                 </tr>
                             ))
@@ -179,18 +155,18 @@ const BillManagement = () => {
                 </Table>
             )}
 
-            {/* Modal Chi Tiết Hóa Đơn */}
+            {/* Bill Details Modal */}
             <Modal show={showDetailModal} onHide={handleCloseDetailModal} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Chi tiết Hóa đơn #{selectedBillId}</Modal.Title>
+                    <Modal.Title>Bill Details #{selectedBillId}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {loadingDetails ? <div className="text-center"><Spinner animation="border" /></div> :
-                        lineItems.length === 0 ? <p>Không có chi tiết.</p> :
+                        lineItems.length === 0 ? <p>No details found.</p> :
                         (
                             <Table striped size="sm">
                                 <thead>
-                                    <tr><th>Mô tả</th><th className="text-end">Số tiền</th></tr>
+                                    <tr><th>Description</th><th className="text-end">Amount</th></tr>
                                 </thead>
                                 <tbody>
                                     {lineItems.map((item, index) => (
@@ -200,7 +176,7 @@ const BillManagement = () => {
                                         </tr>
                                     ))}
                                     <tr className="table-group-divider">
-                                        <td className="fw-bold">TỔNG CỘNG</td>
+                                        <td className="fw-bold">TOTAL</td>
                                         <td className="fw-bold text-end">
                                             {formatCurrency(lineItems.reduce((acc, item) => acc + parseFloat(item.amount), 0))}
                                         </td>

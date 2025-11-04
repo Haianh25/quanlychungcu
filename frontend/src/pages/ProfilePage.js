@@ -120,7 +120,7 @@ const ProfilePage = () => {
 
     return (
         <Container className="profile-page-container my-4">
-            <h2 className="mb-4 text-white">Hồ Sơ Cá Nhân</h2>
+            <h2 className="mb-4 text-white">Profile</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             
             <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
@@ -138,7 +138,7 @@ const ProfilePage = () => {
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group className="mb-3">
-                                            <Form.Label>Số điện thoại</Form.Label>
+                                            <Form.Label>Phone Number</Form.Label>
                                             <Form.Control type="tel" name="phone" value={detailsFormData.phone} onChange={handleDetailsChange} required />
                                         </Form.Group>
                                     </Col>
@@ -146,9 +146,7 @@ const ProfilePage = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Email</Form.Label>
                                     <Form.Control type="email" name="email" value={detailsFormData.email} onChange={handleDetailsChange} required />
-                                    <Form.Text className="text-warning">
-                                        Cảnh báo: Đổi email có thể ảnh hưởng đến khả năng đăng nhập.
-                                    </Form.Text>
+                                   
                                 </Form.Group>
                                 
                                 {detailsError && <Alert variant="danger" className="mt-3">{detailsError}</Alert>}
@@ -156,7 +154,7 @@ const ProfilePage = () => {
 
                                 <div className="text-end">
                                     <Button variant="primary" type="submit" disabled={detailsLoading}>
-                                        {detailsLoading ? <Spinner as="span" size="sm" /> : 'Lưu thay đổi'}
+                                        {detailsLoading ? <Spinner as="span" size="sm" /> : 'Save Changes'}
                                     </Button>
                                 </div>
                             </Form>
@@ -165,20 +163,20 @@ const ProfilePage = () => {
                 </Tab>
 
                 {/* === TAB 2: ĐỔI MẬT KHẨU === */}
-                <Tab eventKey="password" title="Đổi mật khẩu">
+                <Tab eventKey="password" title="Change Password">
                      <Card className="profile-form-card">
                         <Card.Body>
                              <Form onSubmit={handlePasswordSubmit}>
                                  <Form.Group className="mb-3">
-                                    <Form.Label>Mật khẩu hiện tại</Form.Label>
+                                    <Form.Label>Current Password</Form.Label>
                                     <Form.Control type="password" name="currentPassword" value={passFormData.currentPassword} onChange={handlePassChange} required />
                                 </Form.Group>
                                  <Form.Group className="mb-3">
-                                    <Form.Label>Mật khẩu mới</Form.Label>
+                                    <Form.Label>New Password</Form.Label>
                                     <Form.Control type="password" name="newPassword" value={passFormData.newPassword} onChange={handlePassChange} required />
                                 </Form.Group>
                                  <Form.Group className="mb-3">
-                                    <Form.Label>Xác nhận mật khẩu mới</Form.Label>
+                                    <Form.Label>Confirm New Password</Form.Label>
                                     <Form.Control type="password" name="confirmPassword" value={passFormData.confirmPassword} onChange={handlePassChange} required />
                                 </Form.Group>
 
@@ -187,7 +185,7 @@ const ProfilePage = () => {
 
                                 <div className="text-end">
                                     <Button variant="primary" type="submit" disabled={passLoading}>
-                                        {passLoading ? <Spinner as="span" size="sm" /> : 'Đổi mật khẩu'}
+                                        {passLoading ? <Spinner as="span" size="sm" /> : 'Change Password'}
                                     </Button>
                                 </div>
                             </Form>

@@ -11,7 +11,7 @@ const AdminSidebar = () => {
                     `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
                 }
             >
-                Tổng Quan
+                General Dashboard
             </NavLink>
             <NavLink
                 to="/admin/user-management"
@@ -46,8 +46,7 @@ const AdminSidebar = () => {
                 News Management
             </NavLink>
 
-            {/* === THÊM LINK MỚI VÀO ĐÂY === */}
-            {/* highlight-start */}
+            
             <NavLink
                 to="/admin/vehicle-management"
                 className={({ isActive }) =>
@@ -60,10 +59,9 @@ const AdminSidebar = () => {
                 to="/admin/bill-management"
                 className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
             >
-                Quản Lý Hóa Đơn
+                Bill Management
             </NavLink>
-            {/* highlight-end */}
-            {/* === KẾT THÚC LINK MỚI === */}
+            
 
         </div>
     );

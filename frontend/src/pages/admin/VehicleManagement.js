@@ -10,8 +10,7 @@ import { PencilFill, PauseCircleFill, PlayCircleFill } from 'react-bootstrap-ico
 const API_BASE_URL = 'http://localhost:5000';
 
 // --- (Component Edit Modal) ---
-// Hàm helper đặt bên ngoài component chính nếu không cần truy cập state/props của nó
-const getVehicleTypeText = (type) => ({ car: 'Ô tô', motorbike: 'Xe máy', bicycle: 'Xe đạp' }[type] || type);
+const getVehicleTypeText = (type) => ({ car: 'Car', motorbike: 'Motorbike', bicycle: 'Bicycle' }[type] || type);
 
 const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
     const [formData, setFormData] = useState({});
@@ -33,8 +32,8 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
 
     const handleSaveChanges = async () => {
          setError('');
-        if (!formData.card_user_name || !formData.brand || !formData.color) { setError('Tên người dùng, nhãn hiệu, màu xe là bắt buộc.'); return; }
-        if (cardData && cardData.vehicle_type !== 'bicycle' && !formData.license_plate) { setError('Biển số là bắt buộc cho ô tô/xe máy.'); return; }
+        if (!formData.card_user_name || !formData.brand || !formData.color) { setError('User name, brand, and color are required.'); return; }
+        if (cardData && cardData.vehicle_type !== 'bicycle' && !formData.license_plate) { setError('License plate is required for cars/motorbikes.'); return; }
         if(cardData) {
             onSave(cardData.id, formData);
         }
@@ -42,33 +41,31 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
 
      return (
         <Modal show={show} onHide={handleClose} centered>
-            <Modal.Header closeButton><Modal.Title>Chỉnh sửa Thẻ xe #{cardData?.id}</Modal.Title></Modal.Header>
+            <Modal.Header closeButton><Modal.Title>Edit Vehicle Card #{cardData?.id}</Modal.Title></Modal.Header>
             <Modal.Body>
                 {cardData ? (
                     <Form>
-                         <Form.Group className="mb-3"><Form.Label>Loại xe</Form.Label><Form.Control type="text" value={getVehicleTypeText(cardData.vehicle_type)} disabled readOnly /></Form.Group> {/* Sử dụng helper */}
-                         <Form.Group className="mb-3"><Form.Label>Tên người dùng thẻ</Form.Label><Form.Control type="text" name="card_user_name" value={formData.card_user_name || ''} onChange={handleChange} required /></Form.Group>
-                        {cardData.vehicle_type !== 'bicycle' && (<Form.Group className="mb-3"><Form.Label>Biển số</Form.Label><Form.Control type="text" name="license_plate" value={formData.license_plate || ''} onChange={handleChange} required /></Form.Group>)}
+                         <Form.Group className="mb-3"><Form.Label>Vehicle Type</Form.Label><Form.Control type="text" value={getVehicleTypeText(cardData.vehicle_type)} disabled readOnly /></Form.Group>
+                         <Form.Group className="mb-3"><Form.Label>Card User Name</Form.Label><Form.Control type="text" name="card_user_name" value={formData.card_user_name || ''} onChange={handleChange} required /></Form.Group>
+                        {cardData.vehicle_type !== 'bicycle' && (<Form.Group className="mb-3"><Form.Label>License Plate</Form.Label><Form.Control type="text" name="license_plate" value={formData.license_plate || ''} onChange={handleChange} required /></Form.Group>)}
                         <Row>
-                            <Col><Form.Group className="mb-3"><Form.Label>Nhãn hiệu</Form.Label><Form.Control type="text" name="brand" value={formData.brand || ''} onChange={handleChange} required /></Form.Group></Col>
-                            <Col><Form.Group className="mb-3"><Form.Label>Màu xe</Form.Label><Form.Control type="text" name="color" value={formData.color || ''} onChange={handleChange} required /></Form.Group></Col>
+                            <Col><Form.Group className="mb-3"><Form.Label>Brand</Form.Label><Form.Control type="text" name="brand" value={formData.brand || ''} onChange={handleChange} required /></Form.Group></Col>
+                            <Col><Form.Group className="mb-3"><Form.Label>Color</Form.Label><Form.Control type="text" name="color" value={formData.color || ''} onChange={handleChange} required /></Form.Group></Col>
                         </Row>
                         {error && <Alert variant="danger" size="sm">{error}</Alert>}
                     </Form>
                 ) : <div className="text-center"><Spinner animation="border" /></div>}
             </Modal.Body>
             <Modal.Footer>
-                 <Button variant="secondary" onClick={handleClose} disabled={loading}>Hủy</Button>
-                 <Button variant="primary" onClick={handleSaveChanges} disabled={loading}>{loading ? <Spinner as="span" size="sm" /> : 'Lưu thay đổi'}</Button>
+                 <Button variant="secondary" onClick={handleClose} disabled={loading}>Cancel</Button>
+                 <Button variant="primary" onClick={handleSaveChanges} disabled={loading}>{loading ? <Spinner as="span" size="sm" /> : 'Save Changes'}</Button>
              </Modal.Footer>
         </Modal>
     );
 };
-// --- (Kết thúc EditCardModal) ---
+// --- (End EditCardModal) ---
 
-// Hàm helper đặt bên ngoài
-const getRequestTypeText = (type) => ({ register: 'Đăng ký mới', reissue: 'Cấp lại', cancel: 'Hủy' }[type] || type);
-// getVehicleTypeText đã được đưa lên trên
+const getRequestTypeText = (type) => ({ register: 'New Registration', reissue: 'Reissue', cancel: 'Cancel' }[type] || type);
 
 
 const VehicleManagement = () => {
@@ -105,7 +102,7 @@ const VehicleManagement = () => {
             setPendingRequests(res.data);
         } catch (err) { setError(err.response?.data?.message || 'Failed load pending.'); }
         finally { setLoadingRequests(false); }
-    }, []); // <-- Đã bỏ getAuthConfig
+    }, []); 
 
     const fetchAllCards = useCallback(async () => {
         const config = getAuthConfig();
@@ -116,7 +113,7 @@ const VehicleManagement = () => {
             setAllCards(res.data);
         } catch (err) { setError(err.response?.data?.message || 'Failed load cards.'); }
         finally { setLoadingCards(false); }
-    }, []); // <-- Đã bỏ getAuthConfig
+    }, []); 
 
     useEffect(() => {
         fetchPendingRequests();
@@ -163,7 +160,7 @@ const VehicleManagement = () => {
     const handleOpenEditModal = async (cardId) => {
         setError(''); setSuccess(''); setEditLoading(true); setShowEditModal(true); setCardToEditDetails(null);
         try {
-            const config = getAuthConfig(); if (!config) throw new Error("Chưa đăng nhập admin.");
+            const config = getAuthConfig(); if (!config) throw new Error("Admin not logged in.");
             const res = await axios.get(`${API_BASE_URL}/api/admin/vehicle-cards/${cardId}`, config);
             setCardToEditDetails(res.data);
         } catch (err) { setError(err.response?.data?.message || `Cannot load card #${cardId}.`); setShowEditModal(false); }
@@ -174,9 +171,9 @@ const VehicleManagement = () => {
     const handleSaveChanges = async (cardId, updatedData) => {
         setError(''); setSuccess(''); setEditLoading(true);
         try {
-            const config = getAuthConfig(); if (!config) throw new Error("Chưa đăng nhập admin.");
+            const config = getAuthConfig(); if (!config) throw new Error("Admin not logged in.");
             await axios.put(`${API_BASE_URL}/api/admin/vehicle-cards/${cardId}`, updatedData, config);
-            setSuccess(`Đã cập nhật thẻ #${cardId}.`); handleCloseEditModal();
+            setSuccess(`Card #${cardId} has been updated.`); handleCloseEditModal();
             await fetchAllCards();
         } catch (err) { setError(err.response?.data?.message || `Update card #${cardId} failed.`); }
         finally { setEditLoading(false); }
@@ -185,11 +182,11 @@ const VehicleManagement = () => {
     const handleSetStatus = async (cardId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         setError(''); setSuccess('');
-        if (!window.confirm(`Bạn có chắc muốn ${newStatus === 'active' ? 'Kích hoạt' : 'Vô hiệu hóa'} thẻ #${cardId}?`)) return;
+        if (!window.confirm(`Are you sure you want to ${newStatus === 'active' ? 'Activate' : 'Deactivate'} card #${cardId}?`)) return;
         try {
-            const config = getAuthConfig(); if (!config) throw new Error("Chưa đăng nhập admin.");
+            const config = getAuthConfig(); if (!config) throw new Error("Admin not logged in.");
             await axios.patch(`${API_BASE_URL}/api/admin/vehicle-cards/${cardId}/status`, { status: newStatus }, config);
-            setSuccess(`Đã ${newStatus === 'active' ? 'kích hoạt' : 'vô hiệu hóa'} thẻ #${cardId}.`);
+            setSuccess(`Card #${cardId} has been ${newStatus === 'active' ? 'activated' : 'deactivated'}.`);
             await fetchAllCards();
         } catch (err) { setError(err.response?.data?.message || `Update status card #${cardId} failed.`); }
     };
@@ -197,34 +194,31 @@ const VehicleManagement = () => {
     // --- JSX Render Chính ---
     return (
         <Container fluid className="p-3">
-            <h3>Quản lý Thẻ xe</h3> <hr />
+            <h3>Vehicle Card Management</h3> <hr />
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
 
             <Tabs id="vehicle-management-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
                 {/* --- Tab Pending Requests --- */}
-                <Tab eventKey="pending" title={`Yêu cầu (${loadingRequests ? '...' : pendingRequests.length})`}>
+                <Tab eventKey="pending" title={`Requests (${loadingRequests ? '...' : pendingRequests.length})`}>
                     {loadingRequests ? <div className="text-center p-5"><Spinner animation="border" /></div> :
-                     pendingRequests.length === 0 ? <Alert variant="info">Không có yêu cầu chờ duyệt.</Alert> : (
+                     pendingRequests.length === 0 ? <Alert variant="info">No pending requests.</Alert> : (
                         <Table striped bordered hover responsive size="sm">
-                           <thead><tr><th>ID</th><th>Resident</th><th>Loại Y/C</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Ảnh/Lý do</th><th>Time</th><th>Actions</th></tr></thead>
+                           <thead><tr><th>ID</th><th>Resident</th><th>Req. Type</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Proof/Reason</th><th>Time</th><th>Actions</th></tr></thead>
                             <tbody>{pendingRequests.map(req => (
                                 <tr key={req.id}>
                                     <td>{req.id}</td><td>{req.resident_name || `ID:${req.resident_id}`}</td>
                                     <td>{getRequestTypeText(req.request_type)}</td>
                                     <td>{getVehicleTypeText(req.vehicle_type)}</td><td>{req.full_name}</td><td>{req.license_plate || 'N/A'}</td><td>{req.brand}</td>
                                     <td>
-                                        {/* highlight-start */}
-                                        {/* Đã xóa comment lỗi */}
-                                        {req.proof_image_url ? (<Button variant="link" size="sm" onClick={() => handleShowImage(req.proof_image_url)}>Xem Ảnh</Button>)
+                                        {req.proof_image_url ? (<Button variant="link" size="sm" onClick={() => handleShowImage(req.proof_image_url)}>View Photo</Button>)
                                          : req.reason ? (<span title={req.reason}>{req.reason.substring(0, 30)}{req.reason.length > 30 ? '...' : ''}</span>)
                                          : '-'}
-                                        {/* highlight-end */}
                                     </td>
                                     <td>{new Date(req.requested_at).toLocaleString()}</td>
                                     <td>
-                                        <Button variant="success" size="sm" className="me-1" onClick={() => handleApprove(req.id)} disabled={loadingRequests}>Duyệt</Button>
-                                        <Button variant="danger" size="sm" onClick={() => openRejectModal(req)} disabled={loadingRequests}>Từ chối</Button>
+                                        <Button variant="success" size="sm" className="me-1" onClick={() => handleApprove(req.id)} disabled={loadingRequests}>Approve</Button>
+                                        <Button variant="danger" size="sm" onClick={() => openRejectModal(req)} disabled={loadingRequests}>Reject</Button>
                                     </td>
                                 </tr>
                             ))}</tbody>
@@ -233,9 +227,9 @@ const VehicleManagement = () => {
                 </Tab>
 
                 {/* --- Tab All Cards --- */}
-                <Tab eventKey="all" title="Tất cả Thẻ">
+                <Tab eventKey="all" title="All Cards">
                      {loadingCards ? <div className="text-center p-5"><Spinner animation="border" /></div> :
-                     allCards.length === 0 ? <Alert variant="info">Chưa có thẻ xe nào.</Alert> : (
+                     allCards.length === 0 ? <Alert variant="info">No vehicle cards found.</Alert> : (
                         <Table striped bordered hover responsive size="sm">
                             <thead><tr><th>ID</th><th>Resident</th><th>User</th><th>Type</th><th>License Plate</th><th>Brand</th><th>Status</th><th>Issued At</th><th>Actions</th></tr></thead>
                             <tbody>{allCards.map(card => {
@@ -246,7 +240,7 @@ const VehicleManagement = () => {
                                     <td><span className={`badge bg-${{active:'success', inactive:'warning', lost:'secondary', canceled:'danger'}[card.status] || 'secondary'}`}>{card.status}</span></td>
                                     <td>{new Date(card.issued_at).toLocaleDateString()}</td>
                                     <td>
-                                        <Button variant="outline-primary" size="sm" className="me-1" onClick={() => handleOpenEditModal(card.id)} title="Chỉnh sửa">
+                                        <Button variant="outline-primary" size="sm" className="me-1" onClick={() => handleOpenEditModal(card.id)} title="Edit">
                                             <PencilFill />
                                         </Button>
                                         {isChangableStatus && (
@@ -254,7 +248,7 @@ const VehicleManagement = () => {
                                                 variant={card.status === 'active' ? 'outline-warning' : 'outline-success'}
                                                 size="sm"
                                                 onClick={() => handleSetStatus(card.id, card.status)}
-                                                title={card.status === 'active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                                                title={card.status === 'active' ? 'Deactivate' : 'Activate'}
                                             >
                                                 {card.status === 'active' ? <PauseCircleFill /> : <PlayCircleFill />}
                                             </Button>
@@ -270,20 +264,20 @@ const VehicleManagement = () => {
 
             {/* --- Modals --- */}
             <Modal show={showImageModal} onHide={handleCloseImageModal} centered size="lg">
-                 <Modal.Header closeButton><Modal.Title>Ảnh Minh Chứng</Modal.Title></Modal.Header>
+                 <Modal.Header closeButton><Modal.Title>Proof Document</Modal.Title></Modal.Header>
                  <Modal.Body className="text-center">
                     {imageUrlToShow ?
-                        <Image src={imageUrlToShow} fluid onError={(e) => { e.target.onerror = null; e.target.alt="Ảnh bị lỗi hoặc không tồn tại"; e.target.src="/images/placeholder-error.png"}} />
-                        : <p>Không có đường dẫn ảnh.</p>
+                        <Image src={imageUrlToShow} fluid onError={(e) => { e.target.onerror = null; e.target.alt="Image failed to load or does not exist"; e.target.src="/images/placeholder-error.png"}} />
+                        : <p>No image URL provided.</p>
                     }
                  </Modal.Body>
              </Modal>
             <Modal show={showRejectModal} onHide={handleCloseRejectModal}>
-                 <Modal.Header closeButton><Modal.Title>Từ chối yêu cầu #{requestToReject?.id}</Modal.Title></Modal.Header>
-                 <Modal.Body><Form.Group><Form.Label>Lý do từ chối:</Form.Label><Form.Control as="textarea" rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required /></Form.Group></Modal.Body>
+                 <Modal.Header closeButton><Modal.Title>Reject Request #{requestToReject?.id}</Modal.Title></Modal.Header>
+                 <Modal.Body><Form.Group><Form.Label>Reason for rejection:</Form.Label><Form.Control as="textarea" rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required /></Form.Group></Modal.Body>
                  <Modal.Footer>
-                     <Button variant="secondary" onClick={handleCloseRejectModal}>Hủy</Button>
-                     <Button variant="danger" onClick={handleReject} disabled={rejectLoading}>{rejectLoading ? <Spinner size="sm"/> : 'Xác nhận Từ chối'}</Button>
+                     <Button variant="secondary" onClick={handleCloseRejectModal}>Cancel</Button>
+                     <Button variant="danger" onClick={handleReject} disabled={rejectLoading}>{rejectLoading ? <Spinner size="sm"/> : 'Confirm Rejection'}</Button>
                  </Modal.Footer>
              </Modal>
             <EditCardModal

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import Pagination from '../components/admin/Pagination'; // <-- SỬA ĐÚNG
+import Pagination from '../components/admin/Pagination'; 
 import './News.css';
 
 const News = () => {
@@ -11,7 +11,7 @@ const News = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   
   const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 6; // Giới hạn 6 bài/trang (Sẽ dùng cho prop 'itemsPerPage')
+  const postsPerPage = 6; 
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -51,30 +51,30 @@ const News = () => {
     });
   }, [newsList, sortOrder]);
 
-  // Lấy ra danh sách bài viết cho trang hiện tại
+  
   const currentNewsList = useMemo(() => {
     const indexOfLastPost = currentPage * postsPerPage;
     const indexOfFirstPost = indexOfLastPost - postsPerPage;
     return sortedNewsList.slice(indexOfFirstPost, indexOfLastPost);
   }, [sortedNewsList, currentPage, postsPerPage]);
 
-  // Hàm xử lý khi đổi trang (sẽ truyền vào prop 'paginate')
+ 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo(0, 0); 
   };
 
-  // Tính tổng số trang (vẫn cần để ẩn/hiện pagination)
+
   const totalPages = Math.ceil(sortedNewsList.length / postsPerPage);
 
-  if (loading) return <div className="news-page container">Đang tải tin tức...</div>;
+  if (loading) return <div className="news-page container">Loading News...</div>;
   if (error) return <div className="news-page container text-danger">{error}</div>;
 
   return (
     <div className="news-page container my-4">
       
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Tin tức</h2>
+        <h2>News</h2>
         
         <div className="col-md-3">
           <select 
@@ -86,14 +86,14 @@ const News = () => {
               setCurrentPage(1); 
             }}
           >
-            <option value="desc">Mới nhất</option>
-            <option value="asc">Cũ nhất</option>
+            <option value="desc">Newest</option>
+            <option value="asc">Oldest</option>
           </select>
         </div>
       </div>
       
       {currentNewsList.length === 0 && !loading ? (
-        <p>Hiện chưa có tin tức nào.</p>
+        <p>No news available.</p>
       ) : (
         <div className="row">
           {currentNewsList.map(item => (
@@ -112,7 +112,7 @@ const News = () => {
                   <div className="mt-auto d-flex justify-content-between align-items-center">
                     <small className="text-muted">{new Date(item.created_at).toLocaleString()}</small>
                     <Link className="btn btn-sm btn-primary" to={`/news/${item.id}`}>
-                      Xem chi tiết
+                      View Details
                     </Link>
                   </div>
                 </div>
@@ -122,8 +122,7 @@ const News = () => {
         </div>
       )}
 
-      {/* --- SỬA ĐỔI CHÍNH Ở ĐÂY --- */}
-      {/* Truyền đúng props mà Pagination.js yêu cầu */}
+     
       {totalPages > 1 && (
         <div className="d-flex justify-content-center mt-4">
           <Pagination
