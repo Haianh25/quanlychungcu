@@ -349,3 +349,15 @@ body {
     font-size: 0.8rem;
     color: #888;
 }
+.icon-btn {
+    background: none;
+    border: none;
+    color: #adb5bd; /* Màu xám nhạt, giống các link */
+    padding: 0;
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+}
+
+.icon-btn:hover {
+    color: #ffffff; /* Màu trắng khi hover */
+}

@@ -1,21 +1,18 @@
 // frontend/src/components/layout/ResidentHeader.js
 import React, { useState, useEffect } from 'react';
-// 1. Import 'useNavigate' để điều hướng
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-// import './ResidentHeader.css'; 
+// import './ResidentHeader.css'; // (Bạn có thể đã có file này)
 
 const ResidentHeader = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
-    const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg');
+    // const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); // Bỏ userAvatar
 
-    // 2. Khởi tạo hook useNavigate
     const navigate = useNavigate();
 
-    // Logic này giờ sẽ chạy ở Header, trên mọi trang
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -28,10 +25,8 @@ const ResidentHeader = () => {
                     console.log("Token expired");
                     localStorage.removeItem('token');
                     setIsLoggedIn(false);
-                    // ... (reset state)
                     setUserRole(null);
                     setUserName('');
-                    setUserAvatar('/images/default-avatar.jpg');
                 } else {
                     const rawRole = decodedToken?.role ?? decodedToken?.roles ?? decodedToken?.user?.role;
                     let normalizedRole = null;
@@ -42,44 +37,37 @@ const ResidentHeader = () => {
                     } else if (rawRole) {
                         normalizedRole = String(rawRole).toLowerCase();
                     }
-
                     setUserRole(normalizedRole);
                     setUserName(decodedToken.full_name || decodedToken.email);
-                    setUserAvatar(decodedToken.avatar_url || '/images/default-avatar.jpg');
+                    // setUserAvatar(decodedToken.avatar_url || '/images/default-avatar.jpg'); // Bỏ
                 }
             } catch (error) {
-                console.error("Invalid token (keep as logged in):", error);
-                // ... (reset state)
+                console.error("Invalid token:", error);
+                setIsLoggedIn(false); 
                 setUserRole(null);
                 setUserName('');
-                setUserAvatar('/images/default-avatar.jpg');
             }
         } else {
             setIsLoggedIn(false);
-            // ... (reset state)
             setUserRole(null);
             setUserName('');
-            setUserAvatar('/images/default-avatar.jpg');
         }
-    }, []); // Chỉ chạy 1 lần khi load
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         setIsLoggedIn(false);
         setUserRole(null);
         setUserName('');
-        setUserAvatar('/images/default-avatar.jpg');
-        // (Tùy chọn) Chuyển về trang login
-        // navigate('/login'); // Có thể dùng navigate ở đây
+        navigate('/login'); 
     };
 
     const handleBellClick = () => {
         alert('Show notifications!'); // Placeholder
     };
 
-    // 3. Sửa hàm này để điều hướng (đã làm)
-    const handleAvatarClick = () => {
-        // alert('Open user profile menu!'); // Xóa dòng alert cũ
+    // Đổi tên hàm cho rõ nghĩa
+    const handleProfileClick = () => {
         navigate('/profile'); // Chuyển đến trang Profile
     };
 
@@ -110,18 +98,13 @@ const ResidentHeader = () => {
                                 <span className="nav-link disabled" title="Available for residents only">Services</span>
                             )}
                         </li>
-                        
-                        {/* highlight-start */}
-                        {/* --- SỬA LINK BILL --- */}
                         <li className="nav-item">
                             {isLoggedIn && userRole === 'resident' ? (
-                                <Link className="nav-link" to="/bill">Bill</Link> // Kích hoạt link
+                                <Link className="nav-link" to="/bill">Bill</Link>
                             ) : (
                                 <span className="nav-link disabled" title="Available for residents only">Bill</span>
                             )}
                         </li>
-                        {/* highlight-end */}
-
                         <li className="nav-item">
                             {isLoggedIn && userRole === 'resident' ? (
                                 <Link className="nav-link" to="/news">News</Link>
@@ -133,15 +116,22 @@ const ResidentHeader = () => {
                 </div>
 
                 {/* Right side items */}
-                <div className="header-right-items ms-auto">
+                {/* Thêm 'd-flex align-items-center' để icon và nút logout thẳng hàng */}
+                <div className="header-right-items ms-auto d-flex align-items-center">
                     {isLoggedIn ? (
                         <>
                             <button className="icon-btn" onClick={handleBellClick} title="Notifications">
                                 <i className="bi bi-bell-fill"></i>
                             </button>
-                            {/* onClick của img này đã được cập nhật */}
-                            <img src={userAvatar} alt={userName} className="avatar" onClick={handleAvatarClick} title={userName} />
-                            <button className="btn btn-auth" onClick={handleLogout}>Logout</button>
+
+                            {/* --- (ĐÃ THAY ĐỔI Ở ĐÂY) --- */}
+                            {/* Thay thế <img> bằng <button> chứa icon */}
+                            <button className="icon-btn ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
+                                <i className="bi bi-person-circle" style={{ fontSize: '1.5rem' }}></i>
+                            </button>
+                            {/* --- (KẾT THÚC THAY ĐỔI) --- */}
+                            
+                            <button className="btn btn-auth ms-2" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (
                         <Link className="btn btn-auth btn-login-visible" to="/login">Login</Link>
