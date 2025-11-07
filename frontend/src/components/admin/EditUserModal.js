@@ -24,9 +24,7 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
 
     const handleSave = async () => {
         try {
-            // highlight-start
-            // --- SỬA LỖI Ở ĐÂY ---
-            // Lấy đúng 'adminToken' thay vì 'token'
+            
             const token = localStorage.getItem('adminToken');
             // highlight-end
             

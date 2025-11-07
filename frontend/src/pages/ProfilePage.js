@@ -156,6 +156,7 @@ const ProfilePage = () => {
                                     <Button variant="primary" type="submit" disabled={detailsLoading}>
                                         {detailsLoading ? <Spinner as="span" size="sm" /> : 'Save Changes'}
                                     </Button>
+                                    
                                 </div>
                             </Form>
                         </Card.Body>

@@ -1,0 +1,17 @@
+/* frontend/src/pages/admin/BillManagement.css */
+.status-unpaid {
+    background-color: #fff3cd; /* Vàng nhạt */
+    color: #664d03;
+}
+.status-paid {
+    background-color: #d1e7dd; /* Xanh nhạt */
+    color: #0f5132;
+}
+.status-overdue {
+    background-color: #f8d7da; /* Đỏ nhạt */
+    color: #842029;
+}
+.bill-actions {
+    min-width: 150px;
+    text-align: right;
+}
