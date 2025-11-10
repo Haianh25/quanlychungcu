@@ -2,50 +2,49 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { protect, isAdmin } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
-// GET /api/admin/notifications
-// Gets the latest notifications and unread count for the logged-in admin
-router.get('/notifications', protect, isAdmin, async (req, res) => {
-    const adminId = req.user.id;
+// Lấy tất cả thông báo (chưa đọc) của user (admin hoặc resident)
+router.get('/', protect, async (req, res) => {
     try {
-        // Get latest 5 unread notifications
-        const notifRes = await db.query(
-            `SELECT * FROM notifications 
-             WHERE recipient_id = $1 
-             ORDER BY created_at DESC 
-             LIMIT 5`,
-            [adminId]
+        const result = await db.query(
+            "SELECT * FROM notifications WHERE user_id = $1 AND is_read = false ORDER BY created_at DESC",
+            [req.user.id]
         );
-
-        // Get the total unread count
-        const countRes = await db.query(
-            "SELECT COUNT(*) FROM notifications WHERE recipient_id = $1 AND is_read = false",
-            [adminId]
-        );
-
-        res.json({
-            notifications: notifRes.rows,
-            unread_count: parseInt(countRes.rows[0].count, 10)
-        });
+        res.status(200).json(result.rows);
     } catch (err) {
         console.error('Error fetching notifications:', err);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-// POST /api/admin/notifications/mark-read
-// Marks all notifications as read for the logged-in admin
-router.post('/notifications/mark-read', protect, isAdmin, async (req, res) => {
-    const adminId = req.user.id;
+// Đánh dấu 1 thông báo là đã đọc
+router.post('/mark-read', protect, async (req, res) => {
+    const { notificationId } = req.body;
+    
+    // Đánh dấu tất cả là đã đọc (nếu không có ID cụ thể)
+    if (!notificationId) {
+        try {
+            await db.query(
+                "UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false",
+                [req.user.id]
+            );
+            return res.status(200).json({ message: "Tất cả thông báo đã được đánh dấu là đã đọc." });
+        } catch (err) {
+            console.error('Error marking all notifications as read:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    // Đánh dấu 1 ID cụ thể
     try {
         await db.query(
-            "UPDATE notifications SET is_read = true WHERE recipient_id = $1 AND is_read = false",
-            [adminId]
+            "UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2",
+            [notificationId, req.user.id]
         );
-        res.status(200).json({ message: 'Notifications marked as read' });
+        res.status(200).json({ message: "Thông báo đã được đánh dấu là đã đọc." });
     } catch (err) {
-        console.error('Error marking notifications as read:', err);
+        console.error('Error marking notification as read:', err);
         res.status(500).json({ message: 'Server error' });
     }
 });

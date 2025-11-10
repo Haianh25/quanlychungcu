@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const profileRoutes = require('./routes/profile');
 const billUserRoutes = require('./routes/billUser');
-
+const notificationRoutes = require('./routes/notifications');
 // highlight-start
 // 1. Sửa lại cách import (vì billAdmin.js giờ export object)
 const billAdmin = require('./routes/billAdmin'); 
@@ -58,6 +58,7 @@ app.use('/api/profile', profileRoutes);
 // 4. Chỉ gọi app.use('/api/admin', ...) MỘT LẦN duy nhất
 app.use('/api/admin', adminMasterRouter); 
 app.use('/api/bills', billUserRoutes);
+app.use('/api/notifications', notificationRoutes);
 // --- KẾT THÚC SỬA ---
 
 // (Các dòng 'app.use('/api/admin', ...)' riêng lẻ cũ đã bị xóa)
