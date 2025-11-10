@@ -177,7 +177,7 @@ router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
 
 // === API QUẢN LÝ TIN TỨC (NEWS) - CRUD HOÀN CHỈNH ===
 
-// TẠO TIN TỨC (Dùng Image URL, không dùng Multer)
+// TẠO TIN TỨC
 router.post('/news', protect, isAdmin, async (req, res) => {
     const { title, content, status, imageUrl } = req.body;
     const authorId = req.user.id;
@@ -199,13 +199,21 @@ router.post('/news', protect, isAdmin, async (req, res) => {
 });
 
 // LẤY TẤT CẢ TIN TỨC (Cho trang quản lý)
+// --- (SỬA Ở ĐÂY) ---
 router.get('/news', protect, isAdmin, async (req, res) => {
+    const { sortBy } = req.query; // Lấy tham số sortBy
+    
+    let orderByClause = 'ORDER BY n.created_at DESC'; // Mặc định: Mới nhất
+    if (sortBy === 'oldest') {
+        orderByClause = 'ORDER BY n.created_at ASC'; // Cũ nhất
+    }
+
     try {
         const news = await query(
             `SELECT n.id, n.title, n.status, n.image_url, n.created_at, u.full_name as author_name 
              FROM news n 
              LEFT JOIN users u ON n.author_id = u.id 
-             ORDER BY n.created_at DESC`
+             ${orderByClause}` // Thêm mệnh đề ORDER BY
         );
         res.status(200).json(news.rows);
     } catch (error) {
@@ -213,8 +221,9 @@ router.get('/news', protect, isAdmin, async (req, res) => {
         res.status(500).json({ message: 'Server error fetching news.' });
     }
 });
+// --- (KẾT THÚC SỬA) ---
 
-// LẤY CHI TIẾT 1 TIN TỨC (Dùng cho việc Sửa)
+// LẤY CHI TIẾT 1 TIN TỨC
 router.get('/news/:id', protect, isAdmin, async (req, res) => {
     try {
         const result = await query("SELECT * FROM news WHERE id = $1", [req.params.id]);
@@ -228,7 +237,7 @@ router.get('/news/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// CẬP NHẬT 1 TIN TỨC (Dùng Image URL)
+// CẬP NHẬT 1 TIN TỨC
 router.put('/news/:id', protect, isAdmin, async (req, res) => {
     const { id } = req.params;
     const { title, content, status, imageUrl } = req.body;

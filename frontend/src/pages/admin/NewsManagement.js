@@ -17,11 +17,16 @@ const NewsManagement = () => {
     });
     const [content, setContent] = useState('');
     const [imageUrlPreview, setImageUrlPreview] = useState('');
+    const [sortBy, setSortBy] = useState('newest'); // <-- THÊM STATE MỚI
 
+    // SỬA: Hàm fetchNews giờ sẽ nhận tham số sortBy
     const fetchNews = async () => {
         try {
             const token = localStorage.getItem('adminToken');
-            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const config = { 
+                headers: { Authorization: `Bearer ${token}` },
+                params: { sortBy: sortBy } // <-- THÊM THAM SỐ
+            };
             const res = await axios.get('http://localhost:5000/api/admin/news', config);
             setNewsList(res.data);
         } catch (err) {
@@ -29,9 +34,10 @@ const NewsManagement = () => {
         }
     };
 
+    // SỬA: useEffect sẽ chạy lại khi sortBy thay đổi
     useEffect(() => {
         fetchNews();
-    }, []);
+    }, [sortBy]); // <-- THÊM sortBy VÀO DEPENDENCY
 
     const quillModules = {
         toolbar: [
@@ -140,6 +146,23 @@ const NewsManagement = () => {
                     <Button variant="primary" onClick={handleShowCreate}>Create New Post</Button>
                 </div>
 
+                {/* --- (THÊM BỘ LỌC SẮP XẾP) --- */}
+                <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortNewsBy">
+                    <Form.Label column sm="auto" className="mb-0">
+                        Sắp xếp theo:
+                    </Form.Label>
+                    <Col sm="4" md="3" lg="2">
+                        <Form.Select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                        >
+                            <option value="newest">Bài đăng mới nhất</option>
+                            <option value="oldest">Bài đăng cũ nhất</option>
+                        </Form.Select>
+                    </Col>
+                </Form.Group>
+                {/* --- (KẾT THÚC BỘ LỌC) --- */}
+
                 <ListGroup className="news-list-container">
                     {newsList.map(item => (
                         <ListGroup.Item key={item.id} className="news-list-item">
@@ -147,11 +170,12 @@ const NewsManagement = () => {
                                 {item.image_url ? (
                                     <img src={item.image_url} alt={item.title} className="news-thumbnail-list" />
                                 ) : (
-                                    <div className="news-thumbnail-list bg-secondary text-white d-flex align-items-center justify-content-center">No Image</div>
+                                    <div className="news-thumbnail-list d-flex align-items-center justify-content-center">No Image</div>
                                 )}
                                 <div className="ms-3 flex-grow-1">
-                                    <h5 className="mb-1">{item.title}</h5>
-                                    <p className="mb-1 text-muted small">
+                                    {/* SỬA LỖI FONT: Thêm class CSS */}
+                                    <h5 className="news-item-title">{item.title}</h5>
+                                    <p className="news-item-meta">
                                         By: {item.author_name || 'Admin'} | On: {new Date(item.created_at).toLocaleDateString()}
                                     </p>
                                     <Badge bg={item.status === 'active' ? 'success' : 'secondary'}>

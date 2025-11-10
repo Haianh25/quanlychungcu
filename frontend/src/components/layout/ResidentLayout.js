@@ -6,7 +6,7 @@ import ResidentFooter from './ResidentFooter';
 
 const ResidentLayout = () => {
     return (
-        // Dùng lại class CSS của Homepage cũ để giữ giao diện
+        
         <div className="homepage-container"> 
             <ResidentHeader />
             <main>

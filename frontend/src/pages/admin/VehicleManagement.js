@@ -39,15 +39,15 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
         }
     };
 
-     return (
+    return (
         <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton><Modal.Title>Edit Vehicle Card #{cardData?.id}</Modal.Title></Modal.Header>
             <Modal.Body>
                 {cardData ? (
                     <Form>
-                         <Form.Group className="mb-3"><Form.Label>Vehicle Type</Form.Label><Form.Control type="text" value={getVehicleTypeText(cardData.vehicle_type)} disabled readOnly /></Form.Group>
-                         <Form.Group className="mb-3"><Form.Label>Card User Name</Form.Label><Form.Control type="text" name="card_user_name" value={formData.card_user_name || ''} onChange={handleChange} required /></Form.Group>
-                        {cardData.vehicle_type !== 'bicycle' && (<Form.Group className="mb-3"><Form.Label>License Plate</Form.Label><Form.Control type="text" name="license_plate" value={formData.license_plate || ''} onChange={handleChange} required /></Form.Group>)}
+                        <Form.Group className="mb-3"><Form.Label>Vehicle Type</Form.Label><Form.Control type="text" value={getVehicleTypeText(cardData.vehicle_type)} disabled readOnly /></Form.Group>
+                        <Form.Group className="mb-3"><Form.Label>Card User Name</Form.Label><Form.Control type="text" name="card_user_name" value={formData.card_user_name || ''} onChange={handleChange} required /></Form.Group>
+                       {cardData.vehicle_type !== 'bicycle' && (<Form.Group className="mb-3"><Form.Label>License Plate</Form.Label><Form.Control type="text" name="license_plate" value={formData.license_plate || ''} onChange={handleChange} required /></Form.Group>)}
                         <Row>
                             <Col><Form.Group className="mb-3"><Form.Label>Brand</Form.Label><Form.Control type="text" name="brand" value={formData.brand || ''} onChange={handleChange} required /></Form.Group></Col>
                             <Col><Form.Group className="mb-3"><Form.Label>Color</Form.Label><Form.Control type="text" name="color" value={formData.color || ''} onChange={handleChange} required /></Form.Group></Col>
@@ -57,9 +57,9 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
                 ) : <div className="text-center"><Spinner animation="border" /></div>}
             </Modal.Body>
             <Modal.Footer>
-                 <Button variant="secondary" onClick={handleClose} disabled={loading}>Cancel</Button>
-                 <Button variant="primary" onClick={handleSaveChanges} disabled={loading}>{loading ? <Spinner as="span" size="sm" /> : 'Save Changes'}</Button>
-             </Modal.Footer>
+               <Button variant="secondary" onClick={handleClose} disabled={loading}>Cancel</Button>
+               <Button variant="primary" onClick={handleSaveChanges} disabled={loading}>{loading ? <Spinner as="span" size="sm" /> : 'Save Changes'}</Button>
+            </Modal.Footer>
         </Modal>
     );
 };
@@ -85,7 +85,7 @@ const VehicleManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [cardToEditDetails, setCardToEditDetails] = useState(null);
     const [editLoading, setEditLoading] = useState(false);
-
+    const [sortRequestsBy, setSortRequestsBy] = useState('newest'); // <-- THÊM STATE MỚI
 
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('adminToken');
@@ -98,11 +98,12 @@ const VehicleManagement = () => {
         if (!config) return;
         setLoadingRequests(true); setError('');
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/admin/vehicle-requests?status=pending`, config);
+            // SỬA DÒNG SAU: Thêm tham số sortBy
+            const res = await axios.get(`${API_BASE_URL}/api/admin/vehicle-requests?status=pending&sortBy=${sortRequestsBy}`, config);
             setPendingRequests(res.data);
         } catch (err) { setError(err.response?.data?.message || 'Failed load pending.'); }
         finally { setLoadingRequests(false); }
-    }, []); 
+    }, [getAuthConfig, sortRequestsBy]); // <-- SỬA: Thêm dependency
 
     const fetchAllCards = useCallback(async () => {
         const config = getAuthConfig();
@@ -113,12 +114,17 @@ const VehicleManagement = () => {
             setAllCards(res.data);
         } catch (err) { setError(err.response?.data?.message || 'Failed load cards.'); }
         finally { setLoadingCards(false); }
-    }, []); 
+    }, [getAuthConfig]); // Sửa: chỉ phụ thuộc getAuthConfig
 
     useEffect(() => {
-        fetchPendingRequests();
+        // Tách ra để fetchAllCards không bị gọi lại khi sort
         fetchAllCards();
-    }, [fetchPendingRequests, fetchAllCards]);
+    }, [fetchAllCards]);
+
+    useEffect(() => {
+        // useEffect này sẽ chạy khi component mount VÀ khi sortRequestsBy thay đổi
+        fetchPendingRequests();
+    }, [fetchPendingRequests]);
 
     const handleApprove = async (requestId) => {
          const config = getAuthConfig(); if (!config) return;
@@ -133,7 +139,7 @@ const VehicleManagement = () => {
 
     const openRejectModal = (request) => {
         setRequestToReject(request); setRejectReason(''); setShowRejectModal(true);
-     };
+    };
 
     const handleReject = async () => {
          const config = getAuthConfig(); if (!config) return;
@@ -201,10 +207,28 @@ const VehicleManagement = () => {
             <Tabs id="vehicle-management-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
                 {/* --- Tab Pending Requests --- */}
                 <Tab eventKey="pending" title={`Requests (${loadingRequests ? '...' : pendingRequests.length})`}>
+                    
+                    {/* --- (THÊM BỘ LỌC SẮP XẾP) --- */}
+                    <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortRequestsBy">
+                        <Form.Label column sm="auto" className="mb-0">
+                            Sắp xếp theo:
+                        </Form.Label>
+                        <Col sm="4" md="3" lg="2">
+                            <Form.Select
+                                value={sortRequestsBy}
+                                onChange={(e) => setSortRequestsBy(e.target.value)}
+                            >
+                                <option value="newest">Yêu cầu mới nhất</option>
+                                <option value="oldest">Yêu cầu cũ nhất</option>
+                            </Form.Select>
+                        </Col>
+                    </Form.Group>
+                    {/* --- (KẾT THÚC BỘ LỌC) --- */}
+
                     {loadingRequests ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                      pendingRequests.length === 0 ? <Alert variant="info">No pending requests.</Alert> : (
                         <Table striped bordered hover responsive size="sm">
-                           <thead><tr><th>ID</th><th>Resident</th><th>Req. Type</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Proof/Reason</th><th>Time</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Resident</th><th>Req. Type</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Proof/Reason</th><th>Time</th><th>Actions</th></tr></thead>
                             <tbody>{pendingRequests.map(req => (
                                 <tr key={req.id}>
                                     <td>{req.id}</td><td>{req.resident_name || `ID:${req.resident_id}`}</td>

@@ -76,3 +76,17 @@
     font-size: 0.8rem;
     font-weight: bold;
 }
+
+/* --- (SỬA LỖI FONT CHỮ) --- */
+.news-item-title {
+    color: #ffffff; /* Đổi tiêu đề thành màu trắng */
+    font-weight: 500;
+    margin-bottom: 0.25rem; /* Giảm khoảng cách */
+}
+
+.news-item-meta {
+    color: #adb5bd; /* Đổi màu meta (tác giả, ngày) thành xám nhạt */
+    font-size: 0.8rem; /* Giữ nguyên kích thước nhỏ */
+    margin-bottom: 0.25rem; /* Thêm khoảng cách với status */
+}
+/* --- (KẾT THÚC SỬA FONT) --- */
