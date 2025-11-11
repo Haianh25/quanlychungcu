@@ -105,3 +105,34 @@
 .modal-body .form-label {
      color: #495057; /* Sửa luôn cho modal Cấp lại/Hủy thẻ */
 }
+.price-table-card {
+    background-color: #f8f9fa; /* Nền sáng */
+    border: 1px solid #dee2e6;
+    color: #212529; /* Chữ đen */
+}
+
+.price-table-card .card-header {
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+    color: #000; /* Chữ tiêu đề đen */
+    font-weight: 500;
+}
+
+.price-table-card .table {
+    margin-bottom: 0.5rem; /* Giảm margin dưới của bảng */
+    color: #212529; /* Chữ đen cho nội dung bảng */
+}
+
+.price-table-card .table thead.table-dark {
+    background-color: #343a40; /* Nền header bảng (tối) */
+    color: #fff; /* Chữ header bảng (trắng) */
+}
+
+.price-table-card .table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.03); /* Màu sọc vằn nhạt */
+}
+
+.price-table-card .table td,
+.price-table-card .table th {
+    vertical-align: middle;
+}

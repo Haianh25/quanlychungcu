@@ -2,22 +2,19 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-// Import both middlewares
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
 // GET /api/admin/vehicle-requests?status=pending
 router.get('/vehicle-requests', protect, isAdmin, async (req, res) => {
-    const { status, sortBy } = req.query; // <-- SỬA: Lấy thêm sortBy
+    const { status, sortBy } = req.query; 
     if (!status || !['pending', 'approved', 'rejected'].includes(status)) {
         return res.status(400).json({ message: 'Invalid or missing status query parameter' });
     }
 
-    // --- (THÊM LOGIC SẮP XẾP) ---
-    let orderByClause = 'ORDER BY vr.requested_at DESC'; // Mặc định: Mới nhất
+    let orderByClause = 'ORDER BY vr.requested_at DESC'; 
     if (sortBy === 'oldest') {
-        orderByClause = 'ORDER BY vr.requested_at ASC'; // Cũ nhất
+        orderByClause = 'ORDER BY vr.requested_at ASC'; 
     }
-    // --- (KẾT THÚC THÊM) ---
 
     try {
         const query = `
@@ -25,7 +22,7 @@ router.get('/vehicle-requests', protect, isAdmin, async (req, res) => {
             FROM vehicle_card_requests vr JOIN users u ON vr.resident_id = u.id
             WHERE vr.status = $1
             ${orderByClause}
-        `; // <-- SỬA: Dùng biến orderByClause
+        `; 
         const { rows } = await db.query(query, [status]);
         res.json(rows);
     } catch (err) {
@@ -54,76 +51,65 @@ router.get('/vehicle-cards', protect, isAdmin, async (req, res) => {
 router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) => {
     const requestId = parseInt(req.params.id);
     if (!req.user || !req.user.id) {
-        console.error('[APPROVE] Error: req.user or req.user.id is missing. Check protect middleware.');
         return res.status(401).json({ message: 'User information missing in request.' });
     }
     const adminUserId = req.user.id;
-    console.log(`[APPROVE] Received request for ID: ${requestId} by Admin ID: ${adminUserId}`);
     const pool = db.getPool();
     const client = await pool.connect();
-    console.log('[APPROVE] DB client connected.');
 
     try {
-        console.log('[APPROVE] Starting transaction...');
         await client.query('BEGIN');
-        console.log('[APPROVE] Transaction started.');
 
-        console.log(`[APPROVE] Fetching request ID: ${requestId}`);
         const requestRes = await client.query('SELECT * FROM vehicle_card_requests WHERE id = $1 AND status = $2', [requestId, 'pending']);
         if (requestRes.rows.length === 0) {
-            console.log(`[APPROVE] Request ID: ${requestId} not found or not pending. Rolling back.`);
             await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Yêu cầu không tồn tại hoặc đã được xử lý' });
         }
         const request = requestRes.rows[0];
-        console.log(`[APPROVE] Found request:`, request);
 
-        console.log(`[APPROVE] Updating request status to 'approved' for ID: ${requestId}`);
         await client.query(
             'UPDATE vehicle_card_requests SET status = $1, reviewed_by = $2, reviewed_at = NOW() WHERE id = $3',
             ['approved', adminUserId, requestId]
         );
-        console.log(`[APPROVE] Request status updated.`);
 
-        console.log(`[APPROVE] Processing action for type: ${request.request_type}`);
+        let notificationMessage = ''; // <-- (THÊM MỚI)
+        const linkTo = '/services'; // Link cho Cư dân
+
         if (request.request_type === 'register') {
-            console.log('[APPROVE] Inserting new card into vehicle_cards...');
             await client.query(
                 `INSERT INTO vehicle_cards (resident_id, card_user_name, vehicle_type, license_plate, brand, color, status, created_from_request_id)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
                 [request.resident_id, request.full_name, request.vehicle_type, request.license_plate, request.brand, request.color, 'active', requestId]
             );
-            console.log('[APPROVE] New card inserted.');
+            notificationMessage = `Yêu cầu đăng ký thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã được duyệt.`;
+        
         } else if (request.request_type === 'reissue' && request.target_card_id) {
-            console.log(`[APPROVE] Updating old card status to 'lost' for ID: ${request.target_card_id}`);
             await client.query('UPDATE vehicle_cards SET status = $1 WHERE id = $2', ['lost', request.target_card_id]);
-            console.log(`[APPROVE] Old card status updated.`);
-        } else if (request.request_type === 'cancel' && request.target_card_id) {
-            console.log(`[APPROVE] Updating old card status to 'canceled' for ID: ${request.target_card_id}`);
-            await client.query('UPDATE vehicle_cards SET status = $1 WHERE id = $2', ['canceled', request.target_card_id]);
-            console.log(`[APPROVE] Old card status updated.`);
-        }
-        console.log('[APPROVE] Action processed.');
+            notificationMessage = `Yêu cầu cấp lại thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã được duyệt.`;
 
-        console.log('[APPROVE] Committing transaction...');
+        } else if (request.request_type === 'cancel' && request.target_card_id) {
+            await client.query('UPDATE vehicle_cards SET status = $1 WHERE id = $2', ['canceled', request.target_card_id]);
+            notificationMessage = `Yêu cầu hủy thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã được duyệt.`;
+        }
+
+        // --- (THÊM MỚI: TẠO THÔNG BÁO CHO CƯ DÂN) ---
+        if (notificationMessage) {
+            await client.query(
+                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                [request.resident_id, notificationMessage, linkTo] // Gửi cho Cư dân
+            );
+        }
+        // --- (KẾT THÚC THÊM MỚI) ---
+
         await client.query('COMMIT');
-        console.log('[APPROVE] Transaction committed.');
         res.json({ message: 'Request approved successfully' });
 
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('[APPROVE] ERROR during transaction:', err);
-        console.log('[APPROVE] Rolling back transaction...');
-        try {
-            await client.query('ROLLBACK');
-            console.log('[APPROVE] Transaction rolled back due to error.');
-        } catch (rollbackErr) {
-            console.error('[APPROVE] Error during ROLLBACK:', rollbackErr);
-        }
         res.status(500).json({ message: err.message || 'Server error approving request' });
     } finally {
-        console.log('[APPROVE] Releasing DB client.');
         client.release();
-        console.log('[APPROVE] DB client released.');
     }
 });
 
@@ -131,33 +117,54 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
 router.post('/vehicle-requests/:id/reject', protect, isAdmin, async (req, res) => {
     const requestId = parseInt(req.params.id);
     if (!req.user || !req.user.id) {
-        console.error('[REJECT] Error: req.user or req.user.id is missing. Check protect middleware.');
         return res.status(401).json({ message: 'User information missing in request.' });
     }
     const adminUserId = req.user.id;
-    const { admin_notes } = req.body;
-    console.log(`[REJECT] Received request for ID: ${requestId} by Admin ID: ${adminUserId} with reason: ${admin_notes}`);
+    const { admin_notes } = req.body; 
 
     if (!admin_notes || admin_notes.trim() === '') {
-        console.log(`[REJECT] Reject reason missing for ID: ${requestId}`);
         return res.status(400).json({ message: 'Reject reason is required' });
     }
 
+    const pool = db.getPool(); 
+    const client = await pool.connect();
+
     try {
-        console.log(`[REJECT] Updating request status to 'rejected' for ID: ${requestId}`);
-        const result = await db.query(
+        await client.query('BEGIN');
+
+        // Lấy thông tin request TRƯỚC KHI reject
+        const requestRes = await client.query('SELECT * FROM vehicle_card_requests WHERE id = $1 AND status = $2', [requestId, 'pending']);
+        if (requestRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Request not found or already processed' });
+        }
+        const request = requestRes.rows[0];
+
+        // Cập nhật request
+        await client.query(
             'UPDATE vehicle_card_requests SET status = $1, reviewed_by = $2, reviewed_at = NOW(), admin_notes = $3 WHERE id = $4 AND status = $5 RETURNING id',
             ['rejected', adminUserId, admin_notes, requestId, 'pending']
         );
-        if (result.rowCount === 0) {
-             console.log(`[REJECT] Request ID: ${requestId} not found or not pending.`);
-             return res.status(404).json({ message: 'Request not found or already processed' });
-        }
-        console.log(`[REJECT] Request ID: ${requestId} rejected successfully.`);
+
+        // --- (THÊM MỚI: TẠO THÔNG BÁO CHO CƯ DÂN) ---
+        const notificationMessage = `Yêu cầu (${request.request_type}) cho thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã bị từ chối. Lý do: ${admin_notes}`;
+        const linkTo = '/services'; // Link cho Cư dân
+
+        await client.query(
+            "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+            [request.resident_id, notificationMessage, linkTo]
+        );
+        // --- (KẾT THÚC THÊM MỚI) ---
+        
+        await client.query('COMMIT');
         res.json({ message: 'Request rejected' });
+
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(`[REJECT] ERROR rejecting request ID: ${requestId}:`, err);
         res.status(500).json({ message: err.message || 'Server error rejecting request' });
+    } finally {
+        client.release();
     }
 });
 

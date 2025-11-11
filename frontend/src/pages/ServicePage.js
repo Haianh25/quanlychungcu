@@ -1,6 +1,7 @@
 // frontend/src/pages/ServicePage.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Container, Tabs, Tab, Card, Button, Form, Row, Col, Modal, Spinner, Alert } from 'react-bootstrap';
+// Sửa: Thêm Table
+import { Container, Tabs, Tab, Card, Button, Form, Row, Col, Modal, Spinner, Alert, Table } from 'react-bootstrap';
 import axios from 'axios';
 import './ServicePage.css'; // Import CSS
 
@@ -16,6 +17,49 @@ const initialRegFormData = {
     brand: '',
     color: ''
 };
+
+// --- (BỔ SUNG) Bảng báo giá ---
+const VehiclePriceTable = () => {
+    return (
+        <Card className="mb-4 price-table-card">
+            <Card.Header as="h5">Bảng giá Dịch vụ Gửi xe</Card.Header>
+            <Card.Body>
+                <Table striped bordered hover responsive>
+                    <thead className="table-dark">
+                        <tr>
+                            <th>Loại xe</th>
+                            <th>Phí làm thẻ (VND)</th>
+                            <th>Phí gửi xe (VND/tháng)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Ô tô (Car)</td>
+                            <td>200,000</td>
+                            <td>1,200,000</td>
+                        </tr>
+                        <tr>
+                            <td>Xe máy (Motorbike)</td>
+                            <td>100,000</td>
+                            <td>100,000</td>
+                        </tr>
+                        <tr>
+                            <td>Xe đạp (Bicycle)</td>
+                            <td>50,000</td>
+                            <td>Miễn phí</td>
+                        </tr>
+                    </tbody>
+                </Table>
+                <small className="text-muted">
+                    * Phí làm thẻ chỉ áp dụng cho đăng ký mới hoặc cấp lại.
+                    * Phí gửi xe hàng tháng sẽ được tự động thêm vào hóa đơn dịch vụ của bạn.
+                </small>
+            </Card.Body>
+        </Card>
+    );
+};
+// --- (KẾT THÚC BỔ SUNG) ---
+
 
 const ServicePage = () => {
     const [key, setKey] = useState('register'); // State for Tab
@@ -43,12 +87,12 @@ const ServicePage = () => {
 
     // Get User Auth Token
      const getUserAuthConfig = useCallback(() => {
-        const token = localStorage.getItem('token');
-         if (!token) {
-             setFetchError("Please log in to use this service.");
-             return null;
-        }
-        return { headers: { 'Authorization': `Bearer ${token}` } };
+         const token = localStorage.getItem('token');
+          if (!token) {
+               setFetchError("Please log in to use this service.");
+               return null;
+         }
+         return { headers: { 'Authorization': `Bearer ${token}` } };
     }, []);
 
     // Fetch user's cards
@@ -86,7 +130,7 @@ const ServicePage = () => {
             }
             if (type === 'motorbike') {
                  if (card.status === 'active' || card.status === 'inactive' || card.status === 'pending_register') {
-                    counts.motorbike++;
+                     counts.motorbike++;
                 }
             }
         });
@@ -165,41 +209,41 @@ const ServicePage = () => {
 
      // Render Registration Form
      const renderRegisterForm = () => {
-        if (!regVehicleType) return null;
-        const typeName = getVehicleTypeText(regVehicleType);
-        return (
+         if (!regVehicleType) return null;
+         const typeName = getVehicleTypeText(regVehicleType);
+         return (
              <Container className="registration-form-container">
                  <h4 className="mb-3">Register Card for {typeName}</h4>
                  <Form onSubmit={handleRegisterSubmit}>
                      <Row>
-                        <Col md={4}><Form.Group className="mb-3"><Form.Label>Card User's Full Name</Form.Label><Form.Control type="text" name="fullName" value={regFormData.fullName} onChange={handleRegFormChange} required /></Form.Group></Col>
+                         <Col md={4}><Form.Group className="mb-3"><Form.Label>Card User's Full Name</Form.Label><Form.Control type="text" name="fullName" value={regFormData.fullName} onChange={handleRegFormChange} required /></Form.Group></Col>
                          <Col md={4}><Form.Group className="mb-3"><Form.Label>Date of Birth</Form.Label><Form.Control type="date" name="dob" value={regFormData.dob} onChange={handleRegFormChange} required /></Form.Group></Col>
                          <Col md={4}><Form.Group className="mb-3"><Form.Label>Phone Number</Form.Label><Form.Control type="tel" name="phone" value={regFormData.phone} onChange={handleRegFormChange} required /></Form.Group></Col>
                      </Row>
                      <Row>
-                        <Col md={4}><Form.Group className="mb-3"><Form.Label>Relationship to Owner</Form.Label><Form.Control type="text" name="relationship" value={regFormData.relationship} onChange={handleRegFormChange} required /></Form.Group></Col>
-                        <Col md={4}><Form.Group className="mb-3"><Form.Label>Brand</Form.Label><Form.Control type="text" name="brand" value={regFormData.brand} onChange={handleRegFormChange} required /></Form.Group></Col>
-                        <Col md={4}><Form.Group className="mb-3"><Form.Label>Color</Form.Label><Form.Control type="text" name="color" value={regFormData.color} onChange={handleRegFormChange} required /></Form.Group></Col>
-                    </Row>
+                         <Col md={4}><Form.Group className="mb-3"><Form.Label>Relationship to Owner</Form.Label><Form.Control type="text" name="relationship" value={regFormData.relationship} onChange={handleRegFormChange} required /></Form.Group></Col>
+                         <Col md={4}><Form.Group className="mb-3"><Form.Label>Brand</Form.Label><Form.Control type="text" name="brand" value={regFormData.brand} onChange={handleRegFormChange} required /></Form.Group></Col>
+                         <Col md={4}><Form.Group className="mb-3"><Form.Label>Color</Form.Label><Form.Control type="text" name="color" value={regFormData.color} onChange={handleRegFormChange} required /></Form.Group></Col>
+                     </Row>
                      <Row>
-                        {regVehicleType !== 'bicycle' && (
-                            <Col md={6}><Form.Group className="mb-3"><Form.Label>License Plate</Form.Label><Form.Control type="text" name="licensePlate" value={regFormData.licensePlate} onChange={handleRegFormChange} required /></Form.Group></Col>
-                        )}
-                        <Col md={regVehicleType !== 'bicycle' ? 6 : 12}><Form.Group className="mb-3"><Form.Label>Proof Document (Vehicle/Plate Photo)</Form.Label><Form.Control type="file" name="proofImage" onChange={handleFileChange} accept="image/*" required /></Form.Group></Col>
+                         {regVehicleType !== 'bicycle' && (
+                             <Col md={6}><Form.Group className="mb-3"><Form.Label>License Plate</Form.Label><Form.Control type="text" name="licensePlate" value={regFormData.licensePlate} onChange={handleRegFormChange} required /></Form.Group></Col>
+                         )}
+                         <Col md={regVehicleType !== 'bicycle' ? 6 : 12}><Form.Group className="mb-3"><Form.Label>Proof Document (Vehicle/Plate Photo)</Form.Label><Form.Control type="file" name="proofImage" onChange={handleFileChange} accept="image/*" required /></Form.Group></Col>
                      </Row>
 
-                    {regError && <Alert variant="danger">{regError}</Alert>}
-                    {regSuccess && <Alert variant="success">{regSuccess}</Alert>}
-                    <div className="d-flex justify-content-end gap-2 mt-3">
-                        <Button variant="secondary" onClick={() => setRegVehicleType(null)}>Back</Button>
-                        <Button variant="primary" type="submit" disabled={regLoading}>
-                            {regLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Submit Registration'}
-                        </Button>
-                    </div>
-                </Form>
-            </Container>
-        );
-      };
+                     {regError && <Alert variant="danger">{regError}</Alert>}
+                     {regSuccess && <Alert variant="success">{regSuccess}</Alert>}
+                     <div className="d-flex justify-content-end gap-2 mt-3">
+                         <Button variant="secondary" onClick={() => setRegVehicleType(null)}>Back</Button>
+                         <Button variant="primary" type="submit" disabled={regLoading}>
+                             {regLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Submit Registration'}
+                         </Button>
+                     </div>
+                 </Form>
+             </Container>
+         );
+     };
 
     // --- Tab 2 Logic: Manage Cards ---
     const openModal = (mode, card) => {
@@ -301,114 +345,120 @@ const ServicePage = () => {
 
     // --- Main JSX Render ---
     return (
-        <Container className="service-page my-4">
-            <h2 className="mb-4">Parking Card Services</h2>
+        // Sửa: Xóa container ở đây vì ResidentLayout đã có
+        <div className="service-page my-4"> 
+            <Container> {/* Bọc nội dung trong Container */}
+                <h2 className="mb-4">Parking Card Services</h2>
 
-            {fetchError && <Alert variant="danger">{fetchError}</Alert>}
-            {manageSuccess && <Alert variant="success" onClose={() => setManageSuccess('')} dismissible>{manageSuccess}</Alert>}
+                {/* --- (BỔ SUNG) Bảng báo giá --- */}
+                <VehiclePriceTable />
+                
+                {fetchError && <Alert variant="danger">{fetchError}</Alert>}
+                {manageSuccess && <Alert variant="success" onClose={() => setManageSuccess('')} dismissible>{manageSuccess}</Alert>}
 
-            <Tabs id="service-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
-                {/* --- Tab 1: Register --- */}
-                <Tab eventKey="register" title="Register New Card">
-                    {!regVehicleType ? (
-                         <>
-                            <h4 className="mb-3">Select vehicle type:</h4>
-                            <Row>
-                                {/* Car Card (with new limit) */}
-                                {canRegisterCar ? (
+                <Tabs id="service-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
+                    {/* --- Tab 1: Register --- */}
+                    <Tab eventKey="register" title="Register New Card">
+                        {!regVehicleType ? (
+                             <>
+                                <h4 className="mb-3">Select vehicle type:</h4>
+                                <Row>
+                                    {/* Car Card (with new limit) */}
+                                    {canRegisterCar ? (
+                                        <Col md={4} className="mb-3">
+                                            <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('car')}>
+                                                <Card.Body>
+                                                    <i className="bi bi-car-front-fill"></i>
+                                                    <Card.Title className="mt-3">Car</Card.Title>
+                                                    <Card.Text className="text-muted">(Slots left: {2 - vehicleCounts.car})</Card.Text>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    ) : (
+                                        <Col md={4} className="mb-3">
+                                            <Card className="text-center text-muted bg-light" style={{ cursor: 'not-allowed' }}>
+                                                <Card.Body>
+                                                    <i className="bi bi-car-front-fill text-muted"></i>
+                                                    <Card.Title className="mt-3">Car</Card.Title>
+                                                    <Card.Text>(Limit of 2 reached)</Card.Text>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    )}
+                                    {/* Motorbike Card (with new limit) */}
+                                    {canRegisterMotorbike ? (
+                                        <Col md={4} className="mb-3">
+                                            <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('motorbike')}>
+                                                <Card.Body>
+                                                    <i className="bi bi-scooter"></i>
+                                                    <Card.Title className="mt-3">Motorbike</Card.Title>
+                                                    <Card.Text className="text-muted">(Slots left: {2 - vehicleCounts.motorbike})</Card.Text>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    ) : (
+                                         <Col md={4} className="mb-3">
+                                            <Card className="text-center text-muted bg-light" style={{ cursor: 'not-allowed' }}>
+                                                <Card.Body>
+                                                    <i className="bi bi-scooter text-muted"></i>
+                                                    <Card.Title className="mt-3">Motorbike</Card.Title>
+                                                    <Card.Text>(Limit of 2 reached)</Card.Text>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    )}
+                                    {/* Bicycle Card */}
                                     <Col md={4} className="mb-3">
-                                        <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('car')}>
+                                        <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('bicycle')}>
                                             <Card.Body>
-                                                <i className="bi bi-car-front-fill"></i>
-                                                <Card.Title className="mt-3">Car</Card.Title>
-                                                <Card.Text className="text-muted">(Slots left: {2 - vehicleCounts.car})</Card.Text>
+                                                <i className="bi bi-bicycle"></i>
+                                                <Card.Title className="mt-3">Bicycle</Card.Title>
+                                                <Card.Text className="text-muted">(Unlimited)</Card.Text>
                                             </Card.Body>
                                         </Card>
                                     </Col>
-                                ) : (
-                                    <Col md={4} className="mb-3">
-                                        <Card className="text-center text-muted bg-light" style={{ cursor: 'not-allowed' }}>
-                                            <Card.Body>
-                                                <i className="bi bi-car-front-fill text-muted"></i>
-                                                <Card.Title className="mt-3">Car</Card.Title>
-                                                <Card.Text>(Limit of 2 reached)</Card.Text>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                )}
-                                {/* Motorbike Card (with new limit) */}
-                                {canRegisterMotorbike ? (
-                                    <Col md={4} className="mb-3">
-                                        <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('motorbike')}>
-                                            <Card.Body>
-                                                <i className="bi bi-scooter"></i>
-                                                <Card.Title className="mt-3">Motorbike</Card.Title>
-                                                <Card.Text className="text-muted">(Slots left: {2 - vehicleCounts.motorbike})</Card.Text>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                ) : (
-                                     <Col md={4} className="mb-3">
-                                        <Card className="text-center text-muted bg-light" style={{ cursor: 'not-allowed' }}>
-                                            <Card.Body>
-                                                <i className="bi bi-scooter text-muted"></i>
-                                                <Card.Title className="mt-3">Motorbike</Card.Title>
-                                                <Card.Text>(Limit of 2 reached)</Card.Text>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                )}
-                                {/* Bicycle Card */}
-                                <Col md={4} className="mb-3">
-                                    <Card className="text-center vehicle-selection-card" onClick={() => handleVehicleSelect('bicycle')}>
-                                        <Card.Body>
-                                            <i className="bi bi-bicycle"></i>
-                                            <Card.Title className="mt-3">Bicycle</Card.Title>
-                                            <Card.Text className="text-muted">(Unlimited)</Card.Text>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            </Row>
-                         </>
-                    ) : ( renderRegisterForm() )}
-                </Tab>
+                                </Row>
+                             </>
+                        ) : ( renderRegisterForm() )}
+                    </Tab>
 
-                {/* --- Tab 2: Manage Cards --- */}
-                <Tab eventKey="manage" title="Manage Existing Cards">
-                    {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
-                     !fetchError && existingCards.length === 0 ? <p>You have no cards or pending requests.</p> :
-                     existingCards.map(card => renderCardItem(card))
-                    }
-                </Tab>
+                    {/* --- Tab 2: Manage Cards --- */}
+                    <Tab eventKey="manage" title="Manage Existing Cards">
+                        {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
+                         !fetchError && existingCards.length === 0 ? <p>You have no cards or pending requests.</p> :
+                         existingCards.map(card => renderCardItem(card))
+                        }
+                    </Tab>
 
-                {/* --- Tab 3: Card History --- */}
-                <Tab eventKey="history" title="Card History">
-                    {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
-                     !fetchError && historyCards.length === 0 ? <p>No canceled or lost cards in your history.</p> :
-                     historyCards.map(card => renderCardItem(card))
-                    }
-                </Tab>
-            </Tabs>
+                    {/* --- Tab 3: Card History --- */}
+                    <Tab eventKey="history" title="Card History">
+                        {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> :
+                         !fetchError && historyCards.length === 0 ? <p>No canceled or lost cards in your history.</p> :
+                         historyCards.map(card => renderCardItem(card))
+                        }
+                    </Tab>
+                </Tabs>
 
-             {/* --- Modals --- */}
-            <Modal show={showModal} onHide={closeModal}>
-                 <Modal.Header closeButton><Modal.Title>{modalMode === 'reissue' ? 'Request Card Reissue' : 'Request Card Cancellation'}</Modal.Title></Modal.Header>
-                 <Modal.Body>
-                     {selectedCard && <p>Card: <strong>{selectedCard.brand} - {selectedCard.license_plate || 'N/A'}</strong></p>}
-                     <Form.Group>
-                         <Form.Label>Reason:</Form.Label>
-                         <Form.Control as="textarea" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setManageError('');}} isInvalid={!!manageError} />
-                         <Form.Control.Feedback type="invalid">{manageError}</Form.Control.Feedback>
-                     </Form.Group>
-                 </Modal.Body>
-                 <Modal.Footer>
-                     <Button variant="secondary" onClick={closeModal}>Close</Button>
-                     <Button variant="primary" onClick={handleManageSubmit} disabled={manageLoading}>
-                          {manageLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Submit Request'}
-                     </Button>
-                 </Modal.Footer>
-             </Modal>
-        </Container>
+                 {/* --- Modals --- */}
+                <Modal show={showModal} onHide={closeModal}>
+                     <Modal.Header closeButton><Modal.Title>{modalMode === 'reissue' ? 'Request Card Reissue' : 'Request Card Cancellation'}</Modal.Title></Modal.Header>
+                     <Modal.Body>
+                         {selectedCard && <p>Card: <strong>{selectedCard.brand} - {selectedCard.license_plate || 'N/A'}</strong></p>}
+                         <Form.Group>
+                             <Form.Label>Reason:</Form.Label>
+                             <Form.Control as="textarea" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setManageError('');}} isInvalid={!!manageError} />
+                             <Form.Control.Feedback type="invalid">{manageError}</Form.Control.Feedback>
+                         </Form.Group>
+                     </Modal.Body>
+                     <Modal.Footer>
+                         <Button variant="secondary" onClick={closeModal}>Close</Button>
+                         <Button variant="primary" onClick={handleManageSubmit} disabled={manageLoading}>
+                             {manageLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Submit Request'}
+                         </Button>
+                     </Modal.Footer>
+                 </Modal>
+            </Container>
+        </div>
     );
 };
 

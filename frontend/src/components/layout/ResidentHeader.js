@@ -1,20 +1,72 @@
 // frontend/src/components/layout/ResidentHeader.js
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-// import './ResidentHeader.css'; // (Bạn có thể đã có file này)
+import '../../pages/Homepage.css'; // Import CSS từ Homepage
+import axios from 'axios'; 
+import { Dropdown, ListGroup, Badge } from 'react-bootstrap'; 
+
+// Hàm tính thời gian tương đối
+function timeAgo(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " năm trước";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " tháng trước";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " ngày trước";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " giờ trước";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " phút trước";
+    return Math.floor(seconds) + " giây trước";
+}
 
 const ResidentHeader = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
-    // const [userAvatar, setUserAvatar] = useState('/images/default-avatar.jpg'); // Bỏ userAvatar
-
+    
     const navigate = useNavigate();
+    const location = useLocation(); 
 
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    const getAuthToken = (tokenType = 'token') => { // Giữ nguyên 'token'
+        return localStorage.getItem(tokenType);
+    }
+
+    // Hàm lấy thông báo
+    const fetchNotifications = useCallback(async () => {
+        const token = getAuthToken(); 
+        if (!token) return;
+
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const res = await axios.get('http://localhost:5000/api/notifications', config);
+            setNotifications(res.data);
+        } catch (err) {
+            console.error("Failed to fetch notifications:", err);
+            if (err.response && err.response.status === 401) {
+                handleLogout(); // Tự động logout nếu token hỏng
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); 
+
+    const handleLogout = () => {
+        localStorage.removeItem('token'); 
+        setIsLoggedIn(false);
+        setUserRole(null);
+        setUserName('');
+        setNotifications([]); 
+        navigate('/login'); 
+    };
+    
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = getAuthToken(); 
         if (token) {
             setIsLoggedIn(true);
             try {
@@ -23,10 +75,7 @@ const ResidentHeader = () => {
                 
                 if (decodedToken.exp < currentTime) {
                     console.log("Token expired");
-                    localStorage.removeItem('token');
-                    setIsLoggedIn(false);
-                    setUserRole(null);
-                    setUserName('');
+                    handleLogout(); 
                 } else {
                     const rawRole = decodedToken?.role ?? decodedToken?.roles ?? decodedToken?.user?.role;
                     let normalizedRole = null;
@@ -39,10 +88,15 @@ const ResidentHeader = () => {
                     }
                     setUserRole(normalizedRole);
                     setUserName(decodedToken.full_name || decodedToken.email);
-                    // setUserAvatar(decodedToken.avatar_url || '/images/default-avatar.jpg'); // Bỏ
+                    
+                    fetchNotifications(); 
+                    
+                    const intervalId = setInterval(fetchNotifications, 60000);
+                    return () => clearInterval(intervalId);
                 }
             } catch (error) {
                 console.error("Invalid token:", error);
+                localStorage.removeItem('token'); 
                 setIsLoggedIn(false); 
                 setUserRole(null);
                 setUserName('');
@@ -51,24 +105,62 @@ const ResidentHeader = () => {
             setIsLoggedIn(false);
             setUserRole(null);
             setUserName('');
+            setNotifications([]); 
         }
-    }, []);
+    // Sửa: Thêm location.pathname và fetchNotifications
+    }, [location.pathname, fetchNotifications]); 
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        setIsLoggedIn(false);
-        setUserRole(null);
-        setUserName('');
-        navigate('/login'); 
-    };
-
+    // --- (SỬA LOGIC Ở ĐÂY) ---
+    // Click chuông chỉ bật/tắt
     const handleBellClick = () => {
-        alert('Show notifications!'); // Placeholder
+        setShowNotifications(!showNotifications); 
+    };
+    // --- (KẾT THÚC SỬA) ---
+
+    const handleProfileClick = () => {
+        navigate('/profile'); 
     };
 
-    // Đổi tên hàm cho rõ nghĩa
-    const handleProfileClick = () => {
-        navigate('/profile'); // Chuyển đến trang Profile
+    // Đánh dấu TẤT CẢ là đã đọc (khi click nút)
+    const markAllAsRead = async () => {
+        const token = getAuthToken();
+        if (!token) return;
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.post('http://localhost:5000/api/notifications/mark-read', {}, config);
+            // Cập nhật UI ngay lập tức
+            setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+        } catch (err) {
+            console.error("Failed to mark notifications as read:", err);
+        }
+    };
+
+    // --- (THÊM MỚI) Đánh dấu MỘT là đã đọc (khi click vào thông báo) ---
+    const markOneAsRead = async (notificationId) => {
+        const token = getAuthToken();
+        if (!token) return;
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            await axios.post('http://localhost:5000/api/notifications/mark-read', { notificationId }, config);
+            // Cập nhật UI
+            setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        } catch (err) {
+            console.error("Failed to mark one notification as read:", err);
+        }
+    };
+
+    // SỬA: Hàm click 1 thông báo
+    const handleNotificationClick = (notification) => {
+        markOneAsRead(notification.id); // Đánh dấu 1 cái đã đọc
+        setShowNotifications(false); // Đóng dropdown
+        navigate(notification.link_to || '/'); 
+    };
+    // --- (KẾT THÚC SỬA) ---
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+    const isResident = isLoggedIn && userRole === 'resident';
+    const isNavLinkActive = (path) => { 
+        return location.pathname === path;
     };
 
     return (
@@ -89,25 +181,25 @@ const ResidentHeader = () => {
                 <div className="collapse navbar-collapse" id="residentNavbar">
                     <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li className="nav-item">
-                            <Link className="nav-link" aria-current="page" to="/">Homepage</Link>
+                            <Link className={`nav-link ${isNavLinkActive('/') ? 'active' : ''}`} aria-current="page" to="/">Homepage</Link>
                         </li>
                         <li className="nav-item">
-                            {isLoggedIn && userRole === 'resident' ? (
-                                <Link className="nav-link" to="/services">Services</Link>
+                            {isResident ? (
+                                <Link className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`} to="/services">Services</Link>
                             ) : (
                                 <span className="nav-link disabled" title="Available for residents only">Services</span>
                             )}
                         </li>
                         <li className="nav-item">
-                            {isLoggedIn && userRole === 'resident' ? (
-                                <Link className="nav-link" to="/bill">Bill</Link>
+                            {isResident ? (
+                                <Link className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`} to="/bill">Bill</Link>
                             ) : (
                                 <span className="nav-link disabled" title="Available for residents only">Bill</span>
                             )}
                         </li>
                         <li className="nav-item">
-                            {isLoggedIn && userRole === 'resident' ? (
-                                <Link className="nav-link" to="/news">News</Link>
+                            {isResident ? (
+                                <Link className={`nav-link ${isNavLinkActive('/news') ? 'active' : ''}`} to="/news">News</Link>
                             ) : (
                                 <span className="nav-link disabled" title="Available for residents only">News</span>
                             )}
@@ -116,20 +208,54 @@ const ResidentHeader = () => {
                 </div>
 
                 {/* Right side items */}
-                {/* Thêm 'd-flex align-items-center' để icon và nút logout thẳng hàng */}
                 <div className="header-right-items ms-auto d-flex align-items-center">
                     {isLoggedIn ? (
                         <>
-                            <button className="icon-btn" onClick={handleBellClick} title="Notifications">
-                                <i className="bi bi-bell-fill"></i>
-                            </button>
+                            {/* --- Nút chuông thông báo (DÙNG DROPDOWN) --- */}
+                            <Dropdown show={showNotifications} onToggle={handleBellClick}>
+                                <Dropdown.Toggle as="button" className="icon-btn notification-bell" title="Notifications">
+                                    <i className="bi bi-bell-fill"></i>
+                                    {unreadCount > 0 && (
+                                        <span className="notification-badge">{unreadCount}</span>
+                                    )}
+                                </Dropdown.Toggle>
 
-                            {/* --- (ĐÃ THAY ĐỔI Ở ĐÂY) --- */}
-                            {/* Thay thế <img> bằng <button> chứa icon */}
+                                <Dropdown.Menu as="div" className="notification-dropdown" align="end">
+                                    <div className="notification-header">
+                                        <h6>Thông báo</h6>
+                                        {/* SỬA: Chỉ hiện nút này nếu có thông báo chưa đọc */}
+                                        {unreadCount > 0 && (
+                                            <button className="mark-all-read" onClick={markAllAsRead}>
+                                                Đánh dấu tất cả đã đọc
+                                            </button>
+                                        )}
+                                    </div>
+                                    <ListGroup variant="flush">
+                                        {notifications.length === 0 ? (
+                                            <div className="notification-empty">Không có thông báo mới.</div>
+                                        ) : (
+                                            notifications.map(noti => (
+                                                <ListGroup.Item 
+                                                    key={noti.id} 
+                                                    action 
+                                                    onClick={() => handleNotificationClick(noti)} 
+                                                    className="notification-item"
+                                                    // SỬA: Thêm style cho thông báo chưa đọc
+                                                    style={{ background: noti.is_read ? '' : '#3a414f' }} 
+                                                >
+                                                    <p className="mb-1">{noti.message}</p>
+                                                    <small>{timeAgo(noti.created_at)}</small>
+                                                </ListGroup.Item>
+                                            ))
+                                        )}
+                                    </ListGroup>
+                                </Dropdown.Menu>
+                            </Dropdown>
+                            {/* --- (KẾT THÚC SỬA) --- */}
+
                             <button className="icon-btn ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
                                 <i className="bi bi-person-circle" style={{ fontSize: '1.5rem' }}></i>
                             </button>
-                            {/* --- (KẾT THÚC THAY ĐỔI) --- */}
                             
                             <button className="btn btn-auth ms-2" onClick={handleLogout}>Logout</button>
                         </>
