@@ -1,17 +1,25 @@
-/* frontend/src/pages/admin/BillManagement.css */
-.status-unpaid {
-    background-color: #fff3cd; /* Vàng nhạt */
-    color: #664d03;
+/* BillManagement.css */
+.bill-management-container .bill-actions {
+    min-width: 160px; /* Đảm bảo các nút không bị vỡ dòng */
+    text-align: center;
 }
-.status-paid {
-    background-color: #d1e7dd; /* Xanh nhạt */
-    color: #0f5132;
+
+/* Thêm màu nền dựa trên trạng thái */
+.bill-management-container .status-unpaid {
+    background-color: rgba(255, 193, 7, 0.1);
 }
-.status-overdue {
-    background-color: #f8d7da; /* Đỏ nhạt */
-    color: #842029;
+.bill-management-container .status-overdue {
+    background-color: rgba(220, 53, 69, 0.1);
 }
-.bill-actions {
-    min-width: 150px;
-    text-align: right;
+.bill-management-container .status-paid {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bill-info-summary p {
+    margin-bottom: 0.25rem;
+}
+.bill-info-summary {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
 }

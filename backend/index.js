@@ -1,8 +1,7 @@
-// backend/index.js
 // Import các thư viện cần thiết
 const express = require('express');
 const cors = require('cors');
-const db = require('./db'); // Import module database của chúng ta
+const db = require('./db'); 
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const newsRoutes = require('./routes/news');
@@ -13,13 +12,14 @@ const path = require('path');
 const profileRoutes = require('./routes/profile');
 const billUserRoutes = require('./routes/billUser');
 const notificationRoutes = require('./routes/notifications');
-// highlight-start
-// 1. Sửa lại cách import (vì billAdmin.js giờ export object)
-const billAdmin = require('./routes/billAdmin'); 
 
-// 2. Import file cron.js để khởi chạy (phải đặt SAU billAdmin vì cron.js cần hàm từ billAdmin)
-require('./cron'); 
-// highlight-end
+// --- CÁC ROUTE ĐÃ THÊM/SỬA ---
+const billAdminRoutes = require('./routes/billAdmin'); 
+const feeAdminRoutes = require('./routes/feeAdmin'); // Đã thêm
+const paymentRoutes = require('./routes/payment'); // Đã thêm
+
+// 2. Import file cron.js để khởi chạy
+require('./cron'); // Đã thêm (chứa logic tạo hóa đơn & phí phạt)
 
 // Tạo một ứng dụng Express
 const app = express();
@@ -36,32 +36,30 @@ const uploadsDir = path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsDir));
 console.log(`Serving static files from ${uploadsDir} at /uploads`);
 
-// --- SỬA LỖI 404 VÀ LỖI HIỆN TẠI Ở ĐÂY ---
+// --- ĐỊNH TUYẾN (SỬA LẠI) ---
+
 // 1. Tạo MỘT Router chính cho admin
 const adminMasterRouter = express.Router();
 
-
-// 2. Bảo router chính SỬ DỤNG cả 3 file route con
-adminMasterRouter.use(adminRoutes); // Chứa các route: /dashboard, /user-management...
-adminMasterRouter.use(vehicleAdminRoutes); // Chứa các route: /vehicle-requests, /vehicle-cards...
-// highlight-start
-// 3. Sửa lại cách sử dụng (dùng .router)
-adminMasterRouter.use(billAdmin.router); // Chứa các route: /bills, /bills/generate...
-// highlight-end
+// 2. Gắn các route con vào router chính
+adminMasterRouter.use(adminRoutes); // Gắn các route trong admin.js
+adminMasterRouter.use(vehicleAdminRoutes); // Gắn các route trong vehicleAdmin.js
+adminMasterRouter.use('/bills', billAdminRoutes); // Gắn route bill
+adminMasterRouter.use('/fees', feeAdminRoutes); // Gắn route fee
 
 // 3. Đăng ký các route KHÔNG phải admin
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/profile', profileRoutes);
-
-// 4. Chỉ gọi app.use('/api/admin', ...) MỘT LẦN duy nhất
-app.use('/api/admin', adminMasterRouter); 
-app.use('/api/bills', billUserRoutes);
+app.use('/api/bills', billUserRoutes); // Route cho user
 app.use('/api/notifications', notificationRoutes);
-// --- KẾT THÚC SỬA ---
+app.use('/api/payment', paymentRoutes); // Gắn route payment mới
 
-// (Các dòng 'app.use('/api/admin', ...)' riêng lẻ cũ đã bị xóa)
+// 4. Đăng ký router chính của admin vào '/api/admin'
+app.use('/api/admin', adminMasterRouter); 
+
+// --- KẾT THÚC SỬA ---
 
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
@@ -84,7 +82,6 @@ app.get('/test-db', async (req, res) => {
         });
     }
 });
-
 
 // Lắng nghe server ở một cổng (port) nào đó
 const PORT = process.env.PORT || 5000;

@@ -62,6 +62,14 @@ const AdminSidebar = () => {
                 Bill Management
             </NavLink>
             
+            {/* --- (BỔ SUNG) --- */}
+            <NavLink
+                to="/admin/fee-management"
+                className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
+            >
+                Fee Management
+            </NavLink>
+            {/* --- (KẾT THÚC BỔ SUNG) --- */}
 
         </div>
     );

@@ -1,33 +1,36 @@
-
 const cron = require('node-cron');
-const { generateBillsForMonth } = require('./routes/billAdmin'); 
+const { generateBillsForMonth } = require('./utils/billService');
+// THÊM: Import dịch vụ phí phạt
+const { applyLateFees } = require('./utils/penaltyService');
+
 console.log('[Cron] Scheduler initialized. Waiting for tasks...');
 
-// --- TỰ ĐỘNG TẠO HÓA ĐƠN ---
-// Chạy vào 00:05 (5 phút sáng) ngày 1 hàng tháng
-// Cú pháp: (phút giờ ngày-trong-tháng tháng ngày-trong-tuần)
-// '5 0 1 * *' = 5 phút, 0 giờ, ngày 1, mọi tháng, mọi ngày trong tuần
-cron.schedule('5 0 1 * *', async () => {
-    const now = new Date();
-    
-    const month = now.getUTCMonth() + 1;
-    const year = now.getUTCFullYear();
-    
-    console.log(`[Cron Job] Auto-generating bills for ${month}/${year}...`);
-    
+// Tác vụ này chạy vào 00:00 ngày 1 hàng tháng
+cron.schedule('0 0 1 * *', async () => {
+    console.log('[Cron] Running monthly bill generation task...');
     try {
-        const result = await generateBillsForMonth(month, year);
-        if (result.success) {
-            console.log(`[Cron Job] Successfully generated ${result.count} new bills.`);
-        } else {
-          
-            console.error('[Cron Job] Failed to generate bills:', result.error);
-        }
+        // Lấy ngày/tháng/năm của múi giờ Việt Nam (Asia/Ho_Chi_Minh)
+        // Điều này đảm bảo nó chạy đúng ngày 1/Tháng theo giờ Việt Nam
+        const localDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+        const month = localDate.getMonth() + 1; 
+        const year = localDate.getFullYear(); 
+        
+        console.log(`[Cron] Generating bills for ${month}/${year}`);
+        // Gọi hàm logic từ billService
+        await generateBillsForMonth(month, year); 
+        console.log('[Cron] Monthly bill generation task finished.');
     } catch (err) {
-        console.error('[Cron Job] CRITICAL ERROR during automated bill generation:', err);
+        console.error('[Cron] Error during monthly bill generation:', err);
     }
-}, {
-    scheduled: true,
-    timezone: "Asia/Ho_Chi_Minh" 
 });
 
+// THÊM: Tác vụ kiểm tra phí phạt
+// Chạy vào 1:00 sáng mỗi ngày
+cron.schedule('0 1 * * *', async () => {
+    console.log('[Cron] Running daily late fee check...');
+    try {
+        await applyLateFees();
+    } catch (err) {
+        console.error('[Cron] Error during daily late fee check:', err);
+    }
+});

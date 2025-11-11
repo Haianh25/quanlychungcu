@@ -1,4 +1,3 @@
-// backend/routes/billUser.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -7,34 +6,37 @@ const { protect } = require('../middleware/authMiddleware'); // Chỉ cần 'pro
 // --- API LẤY TẤT CẢ HÓA ĐƠN & CHI TIẾT CỦA USER ---
 // GET /api/bills/my-bills-detailed
 router.get('/my-bills-detailed', protect, async (req, res) => {
-    const residentId = req.user.id;
+    const residentId = req.user.id; // Đã đúng (UUID)
     try {
         // 1. Lấy tất cả hóa đơn (sắp xếp cái mới nhất/chưa trả lên đầu)
         const billsRes = await db.query(
             `SELECT * FROM bills WHERE user_id = $1 
              ORDER BY 
-                CASE status WHEN 'unpaid' THEN 1 WHEN 'overdue' THEN 2 WHEN 'paid' THEN 3 ELSE 4 END, 
-                month_for DESC`,
+                 CASE status WHEN 'unpaid' THEN 1 WHEN 'overdue' THEN 2 WHEN 'paid' THEN 3 ELSE 4 END, 
+                 issue_date DESC`,
             [residentId]
         );
         if (billsRes.rows.length === 0) {
-            return res.json({ bills: [] }); // Trả về mảng rỗng nếu không có bill
+            return res.json({ bills: [] }); 
         }
 
         const bills = billsRes.rows;
-        const billIds = bills.map(b => b.id); // Lấy danh sách ID
+        const billIds = bills.map(b => b.bill_id); // SỬA: dùng bill_id
 
-        // 2. Lấy TẤT CẢ chi tiết (line items) của các hóa đơn đó trong 1 lần gọi
+        // 2. Lấy TẤT CẢ chi tiết (line items)
+        // ==========================================================
+        // SỬA LỖI 500 Ở ĐÂY: Phải truy vấn bảng 'bill_items' (bảng mới)
+        // ==========================================================
         const lineItemsRes = await db.query(
-            'SELECT * FROM bill_line_items WHERE bill_id = ANY($1::int[])',
+            'SELECT * FROM bill_items WHERE bill_id = ANY($1::int[])',
             [billIds]
         );
 
         // 3. Gộp chi tiết vào hóa đơn tương ứng
         const billsWithDetails = bills.map(bill => ({
             ...bill,
-            // Tìm tất cả line_items có bill_id khớp
-            line_items: lineItemsRes.rows.filter(item => item.bill_id === bill.id) 
+            // SỬA: đổi tên thuộc tính để khớp với frontend
+            line_items: lineItemsRes.rows.filter(item => item.bill_id === bill.bill_id) 
         }));
 
         res.json({ bills: billsWithDetails });
@@ -49,8 +51,9 @@ router.get('/my-bills-detailed', protect, async (req, res) => {
 router.get('/my-transactions', protect, async (req, res) => {
     const residentId = req.user.id;
     try {
+        // SỬA: Đọc từ bảng 'transactions' mới
         const transRes = await db.query(
-            'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50', // Lấy 50 giao dịch gần nhất
+            'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50', 
             [residentId]
         );
         res.json(transRes.rows);
@@ -61,36 +64,37 @@ router.get('/my-transactions', protect, async (req, res) => {
 });
 
 // --- API MOCK (GIẢ LẬP) THANH TOÁN ---
+// (API này sẽ được thay thế bằng PayPal, nhưng chúng ta giữ lại để đảm bảo không lỗi)
 // POST /api/bills/create-payment
 router.post('/create-payment', protect, async (req, res) => {
     const residentId = req.user.id;
     const { bill_id, payment_method } = req.body;
 
-    const pool = db.getPool();
+    const pool = db.getPool ? db.getPool() : db;
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
-        // 1. Lấy thông tin hóa đơn
+        // 1. Lấy thông tin hóa đơn (SỬA: dùng bill_id)
         const billRes = await client.query(
-            "SELECT * FROM bills WHERE id = $1 AND user_id = $2 AND status IN ('unpaid', 'overdue')",
+            "SELECT * FROM bills WHERE bill_id = $1 AND user_id = $2 AND status IN ('unpaid', 'overdue')",
             [bill_id, residentId]
         );
         if (billRes.rows.length === 0) {
             throw new Error('Hóa đơn không hợp lệ hoặc đã được thanh toán.');
         }
         const bill = billRes.rows[0];
-        const amountToPay = bill.total_amount; // Lấy số tiền từ bill
+        const amountToPay = bill.total_amount; 
 
-        // 2. Tạo giao dịch (transaction) mới
+        // 2. Tạo giao dịch (transaction) mới (SỬA: dùng bảng transactions)
         const transCode = `${payment_method.toUpperCase()}-${Date.now()}`;
         const transRes = await client.query(
-            `INSERT INTO transactions (bill_id, user_id, transaction_code, amount, payment_method, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING id`,
+            `INSERT INTO transactions (bill_id, user_id, paypal_transaction_id, amount, payment_method, status, created_at)
+             VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING transaction_id`, // SỬA: dùng paypal_transaction_id
             [bill_id, residentId, transCode, amountToPay, payment_method]
         );
-        const newTransactionId = transRes.rows[0].id;
+        const newTransactionId = transRes.rows[0].transaction_id; // SỬA: dùng transaction_id
 
         // 3. (GIẢ LẬP) Chờ 2 giây xử lý
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -99,25 +103,25 @@ router.post('/create-payment', protect, async (req, res) => {
         const isSuccess = Math.random() < 0.9; 
 
         if (isSuccess) {
-            // 5a. Thanh toán thành công
+            // 5a. Thanh toán thành công (SỬA: dùng transaction_id)
             await client.query(
-                "UPDATE transactions SET status = 'success', processed_at = NOW() WHERE id = $1",
+                "UPDATE transactions SET status = 'success', message = 'Thanh toán giả lập thành công' WHERE transaction_id = $1",
                 [newTransactionId]
             );
-            // 5b. Cập nhật hóa đơn
+            // 5b. Cập nhật hóa đơn (SỬA: dùng bill_id)
             await client.query(
-                "UPDATE bills SET status = 'paid', paid_at = NOW() WHERE id = $1",
+                "UPDATE bills SET status = 'paid', updated_at = NOW() WHERE bill_id = $1",
                 [bill_id]
             );
             await client.query('COMMIT');
             res.json({ success: true, message: 'Thanh toán thành công!', transaction_code: transCode });
         } else {
-            // 5a. Thanh toán thất bại
+            // 5a. Thanh toán thất bại (SỬA: dùng transaction_id)
             await client.query(
-                "UPDATE transactions SET status = 'failed', processed_at = NOW() WHERE id = $1",
+                "UPDATE transactions SET status = 'failed', message = 'Thanh toán giả lập thất bại' WHERE transaction_id = $1",
                 [newTransactionId]
             );
-            await client.query('COMMIT'); // Vẫn commit để lưu lại giao dịch thất bại
+            await client.query('COMMIT'); 
             res.status(400).json({ success: false, message: 'Thanh toán thất bại. Ngân hàng từ chối.', transaction_code: transCode });
         }
     } catch (err) {

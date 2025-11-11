@@ -1,90 +1,104 @@
-/* frontend/src/pages/BillPage.css */
-
-.bill-page-container .nav-tabs .nav-link {
-    color: #adb5bd;
-    background-color: transparent;
-    border-bottom: 2px solid transparent;
-}
-.bill-page-container .nav-tabs .nav-link.active {
-    color: #ffffff;
-    background-color: transparent;
-    border-bottom: 2px solid var(--bs-primary);
-}
-.bill-page-container .nav-tabs {
-    border-bottom: 1px solid #495057;
+/* BillPage.css */
+.bill-page-container {
+    max-width: 900px;
+    margin: auto;
 }
 
-/* Giao diện cho hóa đơn chưa thanh toán */
+/* Tùy chỉnh màu cho Tabs */
+.bill-tabs-nav .nav-link {
+    color: #ccc;
+}
+.bill-tabs-nav .nav-link.active {
+    color: #000;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+/* Thẻ hóa đơn chưa thanh toán */
 .unpaid-bill-card {
-    background-color: #ffffff;
-    color: #212529;
-    border-radius: 0.5rem;
+    background-color: #343a40;
+    border: 1px solid #495057;
+    color: #fff;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .unpaid-bill-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #495057;
+    border-bottom: 1px solid #6c757d;
 }
-
 .unpaid-bill-header h4 {
-    margin: 0;
-    color: var(--bs-primary);
-}
-
-.unpaid-bill-body {
-    padding: 1.5rem;
+    margin-bottom: 0;
+    font-size: 1.25rem;
 }
 
 .unpaid-bill-body .line-item {
     display: flex;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px dashed #5a6268;
 }
 .unpaid-bill-body .line-item:last-child {
-    border-bottom: 0;
+    border-bottom: none;
 }
 
 .unpaid-bill-body .line-item-total {
     display: flex;
     justify-content: space-between;
-    padding-top: 1rem;
+    padding: 0.75rem 0;
     margin-top: 0.5rem;
-    border-top: 2px solid #212529;
-    font-size: 1.2rem;
+    border-top: 1px solid #6c757d;
     font-weight: bold;
+    font-size: 1.1rem;
 }
 
 .unpaid-bill-footer {
-    padding: 1.5rem;
-    background-color: #f8f9fa;
-    border-top: 1px solid #dee2e6;
-    text-align: right;
+    background-color: #495057;
+    border-top: 1px solid #6c757d;
+}
+.unpaid-bill-footer p {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 0.5rem;
 }
 
-.payment-loading {
-    padding: 2rem;
+/* PayPal Button Container */
+.paypal-button-container {
+    position: relative;
+    max-width: 300px; /* Giới hạn chiều rộng nút */
+}
+
+/* Lớp phủ loading cho thanh toán */
+.payment-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(52, 58, 64, 0.8);
+    z-index: 10;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    gap: 1rem;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 0.5rem;
+    align-items: center;
+    color: #fff;
+    border-radius: inherit; /* Bo góc theo thẻ cha */
+}
+.unpaid-bill-card .payment-loading-overlay {
+    /* Áp dụng cho toàn bộ thẻ khi loading */
+    border-radius: var(--bs-card-border-radius);
 }
 
-/* Tab lịch sử */
+
+/* Bảng lịch sử giao dịch */
 .history-table .status-success {
-    color: var(--bs-success);
-    font-weight: 500;
+    color: #198754;
+    font-weight: bold;
 }
 .history-table .status-failed {
-    color: var(--bs-danger);
-    font-weight: 500;
+    color: #dc3545;
+    font-weight: bold;
 }

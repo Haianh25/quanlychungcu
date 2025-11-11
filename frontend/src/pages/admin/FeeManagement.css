@@ -1,0 +1,130 @@
+/* --- Tiêu đề trang --- */
+.admin-page-content h3 {
+    color: #e9ecef; /* Sửa: Màu trắng sáng hơn một chút */
+    font-weight: 600;
+}
+
+/* --- Nút Thêm Phí Mới (chính) --- */
+.admin-page-content .btn-primary {
+    background: linear-gradient(45deg, #0d6efd, #0d65fd);
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.admin-page-content .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* --- THÊM: Style cho Card bọc bảng --- */
+.admin-page-content .card {
+    background-color: #2a3038; /* Nền tối hơn một chút */
+    border: 1px solid #495057;
+    border-radius: 0.5rem; /* Bo góc */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden; /* Đảm bảo bảng bên trong cũng bo góc */
+}
+.admin-page-content .card-body {
+    padding: 0; /* Bỏ padding mặc định của card */
+}
+
+/* --- Bảng Dữ liệu --- */
+.admin-page-content .admin-table {
+    color: #ced4da;
+    background-color: #2a3038; /* Giống nền card */
+    border-color: #495057;
+    vertical-align: middle;
+    margin-bottom: 0; /* Bỏ margin-bottom của table */
+}
+
+.admin-page-content .admin-table th {
+    color: #f8f9fa;
+    background-color: #343a40;
+    /* SỬA: Thêm gạch chân màu xanh cho header */
+    border-bottom: 2px solid #0d6efd; 
+    font-weight: 600;
+}
+
+/* SỬA: Bỏ sọc vằn, chỉ giữ hover */
+.admin-page-content .table-hover > tbody > tr:hover > * {
+    background-color: #3a414f;
+    color: #fff;
+    cursor: default;
+}
+
+/* --- Badge Mã Phí --- */
+.fee-code-badge {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+    background-color: #0d6efd; /* Sửa: Dùng màu xanh chính */
+    padding: 0.4em 0.6em;
+    font-weight: 600;
+}
+
+/* --- THÊM: Nút Sửa/Xóa trong bảng --- */
+.admin-table .btn {
+    transition: all 0.2s ease;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+}
+.admin-table .btn:hover {
+    transform: scale(1.05); /* Hiệu ứng phóng to nhẹ */
+}
+.admin-table .btn-outline-light {
+    border-color: #6c757d;
+    color: #ced4da;
+}
+.admin-table .btn-outline-light:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+.admin-table .btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+.admin-table .btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+
+/* --- Tùy chỉnh Modal cho nền tối (Giữ nguyên) --- */
+.modal-content {
+    background-color: #343a40;
+    color: #f8f9fa;
+    border: 1px solid #495057;
+}
+.modal-header {
+    border-bottom: 1px solid #495057;
+}
+.modal-footer {
+    border-top: 1px solid #495057;
+}
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+.form-control:disabled, .form-control[readonly] {
+    background-color: #495057;
+    color: #adb5bd;
+}
+.form-control {
+    background-color: #212529;
+    color: #f8f9fa;
+    border: 1px solid #495057;
+}
+.form-control:focus {
+    background-color: #212529;
+    color: #f8f9fa;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+.form-text.text-muted {
+    color: #adb5bd !important;
+}
+.input-group-text {
+    background-color: #495057;
+    border: 1px solid #495057;
+    color: #f8f9fa;
+}
