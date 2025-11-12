@@ -38,6 +38,10 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
             await client.query('ROLLBACK');
             return res.status(404).json({ message: 'User not found.' });
         }
+        
+        // Lấy role cũ để so sánh
+        const oldRole = userResult.rows[0].role;
+
         const setClauses = [];
         const queryParams = [];
         let paramIndex = 1;
@@ -66,6 +70,26 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         queryParams.push(id);
         const updateQuery = `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
         const updatedUser = await client.query(updateQuery, queryParams);
+
+        // --- (Logic gửi thông báo chào mừng cư dân - ĐÃ CÓ) ---
+        const newRole = updatedUser.rows[0].role;
+        if (newRole === 'resident' && oldRole !== 'resident') {
+            try {
+                const residentName = updatedUser.rows[0].full_name;
+                const residentId = updatedUser.rows[0].id;
+                const message = `Chào mừng ${residentName}! Bạn đã chính thức trở thành cư dân của PTIT Apartment.`;
+                
+                await client.query(
+                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                    [residentId, message, '/profile'] // Link tới trang profile
+                );
+            } catch (notifyError) {
+                console.error('Lỗi khi gửi thông báo chào mừng cư dân:', notifyError);
+            }
+        }
+        // --- (KẾT THÚC Logic) ---
+
+
         await client.query('COMMIT');
         res.status(200).json({ message: 'Update successful!', user: updatedUser.rows[0] });
     } catch (error) {
@@ -141,6 +165,19 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
         await client.query("UPDATE rooms SET resident_id = $1 WHERE id = $2", [residentId, roomId]);
         const apartmentFullName = `${roomInfo.rows[0].block_name} - ${roomInfo.rows[0].room_number}`;
         await client.query("UPDATE users SET apartment_number = $1 WHERE id = $2", [apartmentFullName, residentId]);
+
+        // --- (Logic gửi thông báo chào mừng chủ phòng - ĐÃ CÓ) ---
+        try {
+            const message = `Chào mừng chủ phòng! Bạn đã được gán vào căn hộ ${apartmentFullName}.`;
+            await client.query(
+                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                [residentId, message, '/profile'] // Link tới trang profile (hoặc /bill)
+            );
+        } catch (notifyError) {
+            console.error('Lỗi khi gửi thông báo gán phòng:', notifyError);
+        }
+        // --- (KẾT THÚC Logic) ---
+
         await client.query('COMMIT');
         res.status(200).json({ message: 'Room assigned successfully!' });
     } catch (error) {
@@ -187,11 +224,38 @@ router.post('/news', protect, isAdmin, async (req, res) => {
     }
 
     try {
+        // 1. Tạo bài đăng
         const newNewsItem = await query(
             "INSERT INTO news (title, content, image_url, author_id, status) VALUES ($1, $2, $3, $4, $5) RETURNING *",
             [title, content, imageUrl || null, authorId, status || 'active']
         );
-        res.status(201).json(newNewsItem.rows[0]);
+        
+        const createdPost = newNewsItem.rows[0];
+
+        // --- (THÊM MỚI 3) Gửi thông báo cho User/Resident nếu bài đăng active ---
+        // Chỉ gửi nếu bài đăng được công khai (active)
+        if (createdPost.status === 'active') {
+            try {
+                // Rút gọn tiêu đề để hiển thị thông báo
+                const message = `Tin tức mới: ${createdPost.title.substring(0, 50)}...`; 
+                const linkTo = `/news/${createdPost.id}`;
+                
+                // Tạo thông báo cho tất cả user và resident (hiệu quả cao)
+                await query(
+                    `INSERT INTO notifications (user_id, message, link_to)
+                     SELECT id, $1, $2 FROM users WHERE role IN ('user', 'resident')`,
+                    [message, linkTo]
+                );
+            } catch (notifyError) {
+                console.error('Lỗi khi tạo thông báo tin tức cho người dùng:', notifyError);
+                // Không dừng lại, vẫn trả về 201
+            }
+        }
+        // --- (KẾT THÚC THÊM MỚI 3) ---
+
+        // 2. Trả về thành công
+        res.status(201).json(createdPost);
+
     } catch (error) {
         console.error('Error creating news:', error);
         res.status(500).json({ message: 'Server error while creating news.' });
@@ -199,13 +263,12 @@ router.post('/news', protect, isAdmin, async (req, res) => {
 });
 
 // LẤY TẤT CẢ TIN TỨC (Cho trang quản lý)
-// --- (SỬA Ở ĐÂY) ---
 router.get('/news', protect, isAdmin, async (req, res) => {
-    const { sortBy } = req.query; // Lấy tham số sortBy
+    const { sortBy } = req.query; 
     
-    let orderByClause = 'ORDER BY n.created_at DESC'; // Mặc định: Mới nhất
+    let orderByClause = 'ORDER BY n.created_at DESC'; 
     if (sortBy === 'oldest') {
-        orderByClause = 'ORDER BY n.created_at ASC'; // Cũ nhất
+        orderByClause = 'ORDER BY n.created_at ASC'; 
     }
 
     try {
@@ -213,7 +276,7 @@ router.get('/news', protect, isAdmin, async (req, res) => {
             `SELECT n.id, n.title, n.status, n.image_url, n.created_at, u.full_name as author_name 
              FROM news n 
              LEFT JOIN users u ON n.author_id = u.id 
-             ${orderByClause}` // Thêm mệnh đề ORDER BY
+             ${orderByClause}` 
         );
         res.status(200).json(news.rows);
     } catch (error) {
@@ -221,7 +284,6 @@ router.get('/news', protect, isAdmin, async (req, res) => {
         res.status(500).json({ message: 'Server error fetching news.' });
     }
 });
-// --- (KẾT THÚC SỬA) ---
 
 // LẤY CHI TIẾT 1 TIN TỨC
 router.get('/news/:id', protect, isAdmin, async (req, res) => {

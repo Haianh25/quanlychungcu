@@ -1,4 +1,3 @@
-// frontend/src/components/layout/ResidentHeader.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
@@ -38,7 +37,7 @@ const ResidentHeader = () => {
         return localStorage.getItem(tokenType);
     }
 
-    // Hàm lấy thông báo
+    // Hàm lấy thông báo (API backend đã được sửa để lấy 10 tin mới nhất)
     const fetchNotifications = useCallback(async () => {
         const token = getAuthToken(); 
         if (!token) return;
@@ -107,15 +106,11 @@ const ResidentHeader = () => {
             setUserName('');
             setNotifications([]); 
         }
-    // Sửa: Thêm location.pathname và fetchNotifications
     }, [location.pathname, fetchNotifications]); 
 
-    // --- (SỬA LOGIC Ở ĐÂY) ---
-    // Click chuông chỉ bật/tắt
     const handleBellClick = () => {
         setShowNotifications(!showNotifications); 
     };
-    // --- (KẾT THÚC SỬA) ---
 
     const handleProfileClick = () => {
         navigate('/profile'); 
@@ -128,22 +123,27 @@ const ResidentHeader = () => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post('http://localhost:5000/api/notifications/mark-read', {}, config);
-            // Cập nhật UI ngay lập tức
+            // SỬA: Cập nhật UI ngay lập tức: Dùng .map để cập nhật is_read = true cho tất cả
             setNotifications(notifications.map(n => ({ ...n, is_read: true })));
         } catch (err) {
             console.error("Failed to mark notifications as read:", err);
         }
     };
 
-    // --- (THÊM MỚI) Đánh dấu MỘT là đã đọc (khi click vào thông báo) ---
+    // --- (SỬA LOGIC) Đánh dấu MỘT là đã đọc (khi click vào thông báo) ---
     const markOneAsRead = async (notificationId) => {
         const token = getAuthToken();
         if (!token) return;
+
+        // SỬA: Cập nhật state ngay lập tức dùng .map() để giữ thông báo trong danh sách
+        setNotifications(prev => 
+            prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+        );
+
+        // Gửi request trong nền
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post('http://localhost:5000/api/notifications/mark-read', { notificationId }, config);
-            // Cập nhật UI
-            setNotifications(prev => prev.filter(n => n.id !== notificationId));
         } catch (err) {
             console.error("Failed to mark one notification as read:", err);
         }
@@ -151,7 +151,10 @@ const ResidentHeader = () => {
 
     // SỬA: Hàm click 1 thông báo
     const handleNotificationClick = (notification) => {
-        markOneAsRead(notification.id); // Đánh dấu 1 cái đã đọc
+        // Đánh dấu đã đọc (trước khi chuyển trang)
+        if (!notification.is_read) {
+            markOneAsRead(notification.id); 
+        }
         setShowNotifications(false); // Đóng dropdown
         navigate(notification.link_to || '/'); 
     };
@@ -223,7 +226,6 @@ const ResidentHeader = () => {
                                 <Dropdown.Menu as="div" className="notification-dropdown" align="end">
                                     <div className="notification-header">
                                         <h6>Thông báo</h6>
-                                        {/* SỬA: Chỉ hiện nút này nếu có thông báo chưa đọc */}
                                         {unreadCount > 0 && (
                                             <button className="mark-all-read" onClick={markAllAsRead}>
                                                 Đánh dấu tất cả đã đọc
@@ -239,9 +241,9 @@ const ResidentHeader = () => {
                                                     key={noti.id} 
                                                     action 
                                                     onClick={() => handleNotificationClick(noti)} 
-                                                    className="notification-item"
-                                                    // SỬA: Thêm style cho thông báo chưa đọc
-                                                    style={{ background: noti.is_read ? '' : '#3a414f' }} 
+                                                    // SỬA: Thay thế style bằng className
+                                                    // CSS cho các class này nằm trong Homepage.css
+                                                    className={`notification-item ${noti.is_read ? 'is-read' : 'is-unread'}`} 
                                                 >
                                                     <p className="mb-1">{noti.message}</p>
                                                     <small>{timeAgo(noti.created_at)}</small>
@@ -251,7 +253,6 @@ const ResidentHeader = () => {
                                     </ListGroup>
                                 </Dropdown.Menu>
                             </Dropdown>
-                            {/* --- (KẾT THÚC SỬA) --- */}
 
                             <button className="icon-btn ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
                                 <i className="bi bi-person-circle" style={{ fontSize: '1.5rem' }}></i>

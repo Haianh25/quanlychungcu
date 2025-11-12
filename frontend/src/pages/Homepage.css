@@ -361,3 +361,100 @@ body {
 .icon-btn:hover {
     color: #ffffff; /* Màu trắng khi hover */
 }
+.notification-bell {
+    position: relative;
+    /* Kế thừa style từ .icon-btn */
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #dc3545; /* Màu đỏ */
+    color: white;
+    border-radius: 50%;
+    padding: 0.2em 0.5em;
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Container Dropdown */
+.notification-dropdown {
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #2f343e; /* Nền tối */
+    border: 1px solid #4a4a4a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-top: 10px !important;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #4a4a4a;
+}
+
+.notification-header h6 {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.mark-all-read {
+    background: none;
+    border: none;
+    color: #0d6efd; /* Màu xanh link */
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0;
+}
+.mark-all-read:hover {
+    text-decoration: underline;
+}
+
+.notification-empty {
+    padding: 1rem;
+    text-align: center;
+    color: #adb5bd; /* Màu xám nhạt */
+}
+
+/* Phần tử Thông báo */
+.notification-item {
+    background-color: #2f343e !important;
+    border-bottom: 1px solid #4a4a4a !important;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+}
+
+.notification-item p {
+    color: #e0e0e0 !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.95rem;
+}
+
+.notification-item small {
+    color: #adb5bd !important;
+    font-size: 0.8rem;
+}
+
+/* 1. Trạng thái CHƯA ĐỌC: Nổi bật */
+.notification-item.is-unread {
+    background-color: #3a414f !important; /* Nền đậm hơn */
+    opacity: 1;
+}
+.notification-item.is-unread p {
+    font-weight: 600;
+    color: #ffffff !important;
+}
+
+/* 2. Trạng thái ĐÃ ĐỌC: Mờ đi */
+.notification-item.is-read {
+    opacity: 0.7; /* Làm mờ */
+}
+.notification-item.is-read p {
+    font-weight: normal;
+}

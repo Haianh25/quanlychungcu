@@ -57,14 +57,42 @@ router.post('/register', async (req, res) => {
 router.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
     try {
-        const user = await db.query('SELECT * FROM users WHERE verification_token = $1', [token]);
-        if (user.rows.length === 0) {
+        // SỬA: Đổi tên biến 'user' thành 'userResult' để tránh trùng lặp
+        const userResult = await db.query('SELECT * FROM users WHERE verification_token = $1', [token]);
+        
+        if (userResult.rows.length === 0) {
              // Changed message to English (as requested previously)
             return res.status(400).json({ message: 'Invalid or expired token.' });
         }
-        await db.query('UPDATE users SET is_verified = TRUE, verification_token = NULL WHERE id = $1', [user.rows[0].id]);
+        
+        // SỬA: Lấy thông tin user
+        const user = userResult.rows[0];
+
+        // 1. Cập nhật user là đã xác thực
+        await db.query('UPDATE users SET is_verified = TRUE, verification_token = NULL WHERE id = $1', [user.id]);
+
+        // --- (THÊM MỚI) GỬI THÔNG BÁO CHO ADMIN ---
+        try {
+            const admins = await db.query("SELECT id FROM users WHERE role = 'admin'");
+            const notificationMessage = `Tài khoản mới '${user.full_name}' (email: ${user.email}) vừa xác thực email.`;
+            const linkTo = '/admin/user-management'; // Link tới trang quản lý User
+
+            for (const admin of admins.rows) {
+                await db.query(
+                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                    [admin.id, notificationMessage, linkTo]
+                );
+            }
+        } catch (notifyError) {
+            // Nếu gửi thông báo lỗi, cũng không cần dừng tiến trình chính
+            console.error('Lỗi khi tạo thông báo cho admin:', notifyError);
+        }
+        // --- (KẾT THÚC THÊM MỚI) ---
+
+        // 2. Trả về thông báo thành công
         // Changed message to English
         res.status(200).json({ message: 'Account verification successful!' });
+
     } catch (error) {
         // Changed console log to English
         console.error('Error during email verification:', error);
