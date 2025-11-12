@@ -1,5 +1,7 @@
-// NỘI DUNG TỆP HOÀN TOÀN MỚI
+// NỘI DUNG TỆP ĐÃ CẬP NHẬT
 const db = require('../db'); // Đảm bảo bạn đang export 'pool' từ db.js
+// --- (THÊM MỚI 1) Import mailer ---
+const { sendNewBillEmail } = require('./mailer');
 
 /**
  * Hàm tạo hóa đơn tự động cho tất cả các phòng có người ở (resident)
@@ -24,9 +26,16 @@ async function generateBillsForMonth(month, year) {
         const prevMonthStartDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
         const currentMonthStartDate = `${year}-${String(month).padStart(2, '0')}-01`;
 
-        // 1. Lấy tất cả các phòng có người ở (SỬA: Dùng đúng tên cột)
+        // --- (CẬP NHẬT 2) Lấy thông tin phòng VÀ thông tin user (email, name) ---
         const resRooms = await client.query(
-            'SELECT id AS room_id, resident_id AS user_id FROM rooms WHERE resident_id IS NOT NULL'
+            `SELECT 
+                r.id AS room_id, 
+                r.resident_id AS user_id, 
+                u.email, 
+                u.full_name 
+             FROM rooms r
+             JOIN users u ON r.resident_id = u.id
+             WHERE r.resident_id IS NOT NULL`
         );
         
         if (resRooms.rows.length === 0) {
@@ -46,7 +55,8 @@ async function generateBillsForMonth(month, year) {
 
         // 3. Tạo hóa đơn cho từng phòng
         for (const room of resRooms.rows) {
-            const { room_id, user_id } = room;
+            // SỬA: Lấy thêm email và full_name
+            const { room_id, user_id, email, full_name } = room;
 
             // Kiểm tra xem hóa đơn tháng này đã được tạo chưa
             const resCheck = await client.query(
@@ -181,6 +191,24 @@ async function generateBillsForMonth(month, year) {
             if (requestIdsToUpdate.length > 0) {
                 await client.query('UPDATE vehicle_card_requests SET billed_in_bill_id = $1 WHERE id = ANY($2::int[])', [billId, requestIdsToUpdate]);
             }
+
+            // --- (THÊM MỚI 3) Gửi Email thông báo hóa đơn ---
+            if (email && full_name) {
+                const billDetails = {
+                    billId: billId,
+                    monthYear: `${month}/${year}`,
+                    totalAmount: totalAmount,
+                    dueDate: dueDate.toLocaleDateString('vi-VN') // Format: "10/11/2025"
+                };
+                try {
+                    await sendNewBillEmail(email, full_name, billDetails);
+                    console.log(`Sent new bill email to ${email} for bill ${billId}`);
+                } catch (emailError) {
+                    console.error(`Failed to send bill email to ${email} (Bill ${billId}):`, emailError.message);
+                    // Không dừng vòng lặp, chỉ log lỗi
+                }
+            }
+            // --- (KẾT THÚC THÊM MỚI 3) ---
             
             generatedCount++;
             console.log(`Generated bill ${billId} for room ${room_id}`);

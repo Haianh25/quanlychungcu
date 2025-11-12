@@ -62,4 +62,62 @@ const sendPasswordResetEmail = async (email, token) => {
     }
 };
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail };
+// --- (THÊM MỚI) Hàm gửi email thông báo hóa đơn ---
+/**
+ * Gửi email thông báo hóa đơn mới.
+ * @param {string} email - Email người nhận
+ * @param {string} fullName - Tên người nhận
+ * @param {object} billDetails - Chi tiết hóa đơn
+ * @param {number} billDetails.billId - ID hóa đơn
+ * @param {string} billDetails.monthYear - Tháng/Năm của hóa đơn (ví dụ: "11/2025")
+ * @param {number} billDetails.totalAmount - Tổng số tiền
+ * @param {string} billDetails.dueDate - Ngày hết hạn (đã format)
+ */
+const sendNewBillEmail = async (email, fullName, billDetails) => {
+    const { billId, monthYear, totalAmount, dueDate } = billDetails;
+    
+    // Format số tiền cho đẹp
+    const formattedAmount = totalAmount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+    const paymentLink = `http://localhost:3000/bill`; // Link tới trang hóa đơn
+
+    const mailOptions = {
+        from: '"Quản Lý Chung Cư" <no-reply@quanlychungcu.com>',
+        to: email,
+        subject: `Thông báo hóa đơn tháng ${monthYear} - Mã HĐ #${billId}`,
+        html: `
+            <p>Chào ${fullName},</p>
+            <p>Ban quản lý xin thông báo hóa đơn dịch vụ tháng <b>${monthYear}</b> của bạn đã được phát hành.</p>
+            
+            <div style="padding: 15px; background-color: #f4f4f4; border-radius: 5px;">
+                <p><b>Mã hóa đơn:</b> #${billId}</p>
+                <p><b>Tổng số tiền:</b> <span style="color: #dc3545; font-weight: bold;">${formattedAmount}</span></p>
+                <p><b>Hạn thanh toán:</b> ${dueDate}</p>
+            </div>
+            
+            <p>Vui lòng truy cập cổng thông tin cư dân để xem chi tiết và thanh toán trước ngày hết hạn.</p>
+            
+            <a href="${paymentLink}" target="_blank" style="display: inline-block; padding: 12px 25px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">
+                Xem và thanh toán hóa đơn
+            </a>
+            
+            <p style="margin-top: 20px; font-size: 0.9em; color: #777;">
+                Xin cảm ơn.<br>
+                Ban Quản Lý PTIT Apartment
+            </p>
+        `,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email thông báo hóa đơn #${billId} đã gửi đến:`, email);
+    } catch (error) {
+        console.error(`Lỗi khi gửi email hóa đơn #${billId} cho ${email}:`, error);
+        // Ném lỗi để billService có thể xử lý (hoặc không)
+        throw new Error('Không thể gửi email thông báo hóa đơn.');
+    }
+};
+// --- (KẾT THÚC THÊM MỚI) ---
+
+
+// SỬA: Thêm hàm mới vào exports
+module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendNewBillEmail };
