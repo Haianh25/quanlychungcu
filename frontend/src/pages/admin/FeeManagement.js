@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Button, Spinner, Alert, Modal, Form, InputGroup, Badge, Card } from 'react-bootstrap';
 import axios from 'axios';
-// SỬA: Thêm icon Add (PlusCircleFill) và Edit (PencilSquare)
-import { PencilSquare, PlusCircleFill } from 'react-bootstrap-icons';
-import './FeeManagement.css'; // Import CSS
+// SỬA: Thêm icon Trash (Thùng rác)
+import { PencilSquare, PlusCircleFill, Trash } from 'react-bootstrap-icons';
+import './FeeManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
@@ -13,14 +13,14 @@ const FeeManagement = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     
-    // SỬA: Tách state cho 2 modal
     const [showEditModal, setShowEditModal] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
+    // THÊM: State cho Modal Xóa
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     
     const [modalLoading, setModalLoading] = useState(false);
-    const [currentFee, setCurrentFee] = useState(null); // Fee đang được sửa
+    const [currentFee, setCurrentFee] = useState(null); // Fee đang được sửa hoặc XÓA
     
-    // SỬA: Tách formData cho Edit và Add
     const [editFormData, setEditFormData] = useState({ fee_name: '', price: 0, description: '' });
     const [newFeeData, setNewFeeData] = useState({
         fee_name: '',
@@ -44,7 +44,6 @@ const FeeManagement = () => {
         
         setLoading(true);
         try {
-            // SỬA: API route là /api/admin/fees
             const res = await axios.get(`${API_BASE_URL}/api/admin/fees`, config);
             setFees(res.data);
         } catch (err) {
@@ -63,16 +62,16 @@ const FeeManagement = () => {
     const handleClose = () => {
         setShowEditModal(false);
         setShowAddModal(false);
+        setShowDeleteModal(false); // SỬA: Thêm vào
         setCurrentFee(null);
         setModalLoading(false);
-        setError(''); // Xóa lỗi trong modal
+        setError(''); 
     };
 
     // --- LOGIC CHỈNH SỬA (EDIT) ---
-
+    // (Giữ nguyên không đổi)
     const handleShowEditModal = (fee) => {
         setCurrentFee(fee);
-        // SỬA: Dùng đúng tên cột từ bảng 'fees'
         setEditFormData({
             fee_name: fee.fee_name,
             price: fee.price,
@@ -82,11 +81,9 @@ const FeeManagement = () => {
         setSuccess(''); 
         setShowEditModal(true);
     };
-
     const handleEditFormChange = (e) => {
         setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
     };
-
     const handleEditSave = async (e) => {
         e.preventDefault();
         const config = getAuthConfig();
@@ -97,11 +94,10 @@ const FeeManagement = () => {
         setSuccess('');
 
         try {
-            // SỬA: API route là /api/admin/fees/:id (dùng fee_id)
             await axios.put(`${API_BASE_URL}/api/admin/fees/${currentFee.fee_id}`, editFormData, config);
             setSuccess('Cập nhật phí thành công!');
             handleClose();
-            fetchFees(); // Tải lại danh sách
+            fetchFees(); 
         } catch (err) {
             setError(err.response?.data?.message || 'Cập nhật thất bại.');
         } finally {
@@ -110,18 +106,16 @@ const FeeManagement = () => {
     };
 
     // --- LOGIC THÊM MỚI (ADD) ---
-
+    // (Giữ nguyên không đổi)
     const handleShowAddModal = () => {
         setNewFeeData({ fee_name: '', fee_code: '', price: '', description: '' });
         setError('');
         setSuccess('');
         setShowAddModal(true);
     };
-
     const handleNewFeeChange = (e) => {
         setNewFeeData({ ...newFeeData, [e.target.name]: e.target.value });
     };
-
     const handleAddNewSave = async (e) => {
         e.preventDefault();
         const config = getAuthConfig();
@@ -132,13 +126,43 @@ const FeeManagement = () => {
         setSuccess('');
 
         try {
-            // SỬA: API route là POST /api/admin/fees
             await axios.post(`${API_BASE_URL}/api/admin/fees`, newFeeData, config);
             setSuccess('Thêm phí mới thành công!');
             handleClose();
-            fetchFees(); // Tải lại danh sách
+            fetchFees(); 
         } catch (err) {
             setError(err.response?.data?.message || 'Thêm mới thất bại.');
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    // --- (THÊM MỚI) LOGIC XÓA (DELETE) ---
+
+    const handleShowDeleteModal = (fee) => {
+        setCurrentFee(fee);
+        setError('');
+        setSuccess('');
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        const config = getAuthConfig();
+        if (!config || !currentFee) return;
+
+        setModalLoading(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            // Gọi API DELETE mới
+            await axios.delete(`${API_BASE_URL}/api/admin/fees/${currentFee.fee_id}`, config);
+            setSuccess('Đã xóa phí thành công!');
+            handleClose();
+            fetchFees(); // Tải lại danh sách
+        } catch (err) {
+            // Hiển thị lỗi trong Modal Xóa
+            setError(err.response?.data?.message || 'Xóa thất bại.');
         } finally {
             setModalLoading(false);
         }
@@ -154,25 +178,22 @@ const FeeManagement = () => {
         <Container fluid className="p-3 admin-page-content">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="mb-0">Quản lý Phí Dịch vụ</h3>
-                {/* THÊM: Nút thêm mới */}
                 <Button variant="primary" onClick={handleShowAddModal}>
                     <PlusCircleFill className="me-2" /> Thêm Phí Mới
                 </Button>
             </div>
             
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
-            {error && !showEditModal && !showAddModal && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
+            {error && !showEditModal && !showAddModal && !showDeleteModal && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
 
             {loading ? (
                 <div className="text-center"><Spinner animation="border" /></div>
             ) : (
-                // SỬA: Dùng Card để bọc bảng
                 <Card bg="dark" text="white" className="shadow-sm">
                     <Card.Body>
                         <Table striped bordered hover responsive className="admin-table">
                             <thead className="table-dark">
                                 <tr>
-                                    {/* SỬA: Cập nhật cột theo bảng 'fees' */}
                                     <th>Tên Phí (Hiển thị)</th>
                                     <th>Mã Phí (Key)</th>
                                     <th>Giá Tiền</th>
@@ -190,8 +211,12 @@ const FeeManagement = () => {
                                         <td>{formatCurrency(fee.price)} VND</td>
                                         <td>{fee.description}</td>
                                         <td>
-                                            <Button variant="outline-light" size="sm" onClick={() => handleShowEditModal(fee)}>
+                                            <Button variant="outline-light" size="sm" onClick={() => handleShowEditModal(fee)} className="me-2">
                                                 <PencilSquare className="me-1" /> Sửa
+                                            </Button>
+                                            {/* THÊM: Nút Xóa */}
+                                            <Button variant="outline-danger" size="sm" onClick={() => handleShowDeleteModal(fee)}>
+                                                <Trash className="me-1" /> Xóa
                                             </Button>
                                         </td>
                                     </tr>
@@ -203,6 +228,7 @@ const FeeManagement = () => {
             )}
 
             {/* Modal chỉnh sửa (EDIT) */}
+            {/* (Giữ nguyên không đổi) */}
             <Modal show={showEditModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Chỉnh sửa Phí</Modal.Title>
@@ -212,7 +238,6 @@ const FeeManagement = () => {
                         {error && showEditModal && <Alert variant="danger">{error}</Alert>}
                         <Form.Group className="mb-3">
                             <Form.Label>Mã Phí (Key)</Form.Label>
-                            {/* SỬA: Không cho sửa fee_code */}
                             <Form.Control 
                                 type="text" 
                                 value={currentFee?.fee_code || ''} 
@@ -267,7 +292,8 @@ const FeeManagement = () => {
                 </Form>
             </Modal>
 
-            {/* THÊM: Modal Thêm Mới (ADD) */}
+            {/* Modal Thêm Mới (ADD) */}
+            {/* (Giữ nguyên không đổi) */}
             <Modal show={showAddModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Thêm Phí Mới</Modal.Title>
@@ -337,6 +363,30 @@ const FeeManagement = () => {
                     </Modal.Footer>
                 </Form>
             </Modal>
+
+            {/* THÊM: Modal Xác nhận Xóa (DELETE) */}
+            <Modal show={showDeleteModal} onHide={handleClose} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Xác nhận Xóa</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {error && showDeleteModal && <Alert variant="danger">{error}</Alert>}
+                    Bạn có chắc chắn muốn xóa phí <strong>"{currentFee?.fee_name}"</strong> (Mã: {currentFee?.fee_code}) không?
+                    <br />
+                    <small className="text-warning">
+                        Lưu ý: Phí này có thể không xóa được nếu đã được sử dụng trong các hóa đơn cũ.
+                    </small>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose} disabled={modalLoading}>
+                        Hủy
+                    </Button>
+                    <Button variant="danger" onClick={handleDeleteConfirm} disabled={modalLoading}>
+                        {modalLoading ? <Spinner as="span" size="sm" /> : 'Xác nhận Xóa'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
         </Container>
     );
 };

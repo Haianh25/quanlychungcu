@@ -1,138 +1,165 @@
-/* frontend/src/pages/ServicePage.css */
+.service-page h2 {
+    color: #e9ecef;
+    font-weight: 600;
+}
 
-/* Định dạng chung cho trang, đồng bộ với theme */
+/* --- (MỚI) CSS cho Bảng giá --- */
+.price-table-card {
+    background-color: #2a3038; /* Nền tối cho card */
+    border: 1px solid #495057;
+    border-radius: 0.5rem;
+    color: #e0e0e0;
+    margin-bottom: 2rem !important;
+}
+
+.price-table-card .card-header {
+    background-color: #343a40; /* Nền header tối hơn */
+    color: #fff;
+    font-weight: 500;
+    border-bottom: 1px solid #495057;
+}
+
+.price-table-card .table {
+    color: #e0e0e0; /* Chữ màu sáng */
+    background-color: #2a3038;
+    border-color: #3a414f;
+    margin-bottom: 0.5rem; /* Giảm khoảng cách dưới */
+    vertical-align: middle;
+}
+
+.price-table-card .table thead.table-dark th {
+    background-color: #212529; /* Nền header bảng */
+    color: #fff;
+    border-color: #3a414f;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.price-table-card .table tbody tr {
+    background-color: #2a3038;
+}
+
+/* Sọc vằn (nếu dùng striped) */
+.price-table-card .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: #e0e0e0;
+}
+
+.price-table-card .table-hover > tbody > tr:hover > * {
+    background-color: #3a414f;
+    color: #fff;
+}
+
+.price-table-card .card-body small {
+    color: #adb5bd !important; /* Chữ nhỏ màu xám nhạt */
+}
+/* --- (Kết thúc CSS Bảng giá) --- */
+
+
+/* --- CSS cho các Tab --- */
 .service-page .nav-tabs .nav-link {
     color: #adb5bd;
     background-color: transparent;
-    border-bottom: 2px solid transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
 }
 
 .service-page .nav-tabs .nav-link.active {
-    color: #ffffff;
+    color: #fff;
     background-color: transparent;
-    border-bottom: 2px solid var(--bs-primary);
+    border-bottom: 3px solid #0d6efd;
 }
 
 .service-page .nav-tabs {
     border-bottom: 1px solid #495057;
 }
 
-/* Card chọn loại xe */
+/* --- Card Chọn Loại xe --- */
 .vehicle-selection-card {
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    background-color: #f8f9fa; /* Màu sáng cho card */
+    background-color: #fff;
     border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .vehicle-selection-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Khi được chọn, viền xanh */
-.vehicle-selection-card.selected {
-    border: 2px solid var(--bs-primary);
-    box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.25);
-    background-color: #e6f7ff; /* Màu xanh nhạt */
+.vehicle-selection-card .card-body {
+    padding: 2rem;
 }
 
 .vehicle-selection-card i {
     font-size: 3rem;
-    color: var(--bs-primary);
+    color: #0d6efd;
 }
 
-/* Giao diện danh sách thẻ hiện có */
+.vehicle-selection-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+/* --- Form Đăng ký --- */
+.registration-form-container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    margin-top: 1.5rem;
+}
+.registration-form-container h4 {
+    color: #212529;
+}
+.registration-form-container .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* --- Card Quản lý Thẻ --- */
 .existing-card-item {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-    padding: 1.25rem;
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
     margin-bottom: 1rem;
     display: flex;
-    flex-wrap: wrap; /* Cho responsive */
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    border: 1px solid #dee2e6;
 }
 
 .existing-card-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .existing-card-info i {
     font-size: 2.5rem;
-    color: var(--bs-primary);
+    color: #495057;
 }
 
 .existing-card-info h5 {
+    font-weight: 600;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: #212529;
 }
 
 .existing-card-info p {
     margin-bottom: 0;
     color: #6c757d;
-    font-weight: 500;
 }
 
-.existing-card-info span {
-    font-weight: bold;
+.existing-card-info p span {
+    font-weight: 500;
     color: #495057;
 }
 
 .existing-card-actions {
     display: flex;
     gap: 0.5rem;
-}
-
-/* CSS cho Form đăng ký */
-.registration-form-container {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 0.5rem;
-    margin-top: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-.registration-form-container .form-label {
-    color: #495057; /* Một màu tối, dễ đọc (màu xám đậm của Bootstrap) */
-    font-weight: 500; /* Hơi đậm một chút cho rõ */
-}
-
-/* (Tùy chọn) Sửa cả màu chữ của modal */
-.modal-body .form-label {
-     color: #495057; /* Sửa luôn cho modal Cấp lại/Hủy thẻ */
-}
-.price-table-card {
-    background-color: #f8f9fa; /* Nền sáng */
-    border: 1px solid #dee2e6;
-    color: #212529; /* Chữ đen */
-}
-
-.price-table-card .card-header {
-    background-color: #e9ecef;
-    border-bottom: 1px solid #dee2e6;
-    color: #000; /* Chữ tiêu đề đen */
-    font-weight: 500;
-}
-
-.price-table-card .table {
-    margin-bottom: 0.5rem; /* Giảm margin dưới của bảng */
-    color: #212529; /* Chữ đen cho nội dung bảng */
-}
-
-.price-table-card .table thead.table-dark {
-    background-color: #343a40; /* Nền header bảng (tối) */
-    color: #fff; /* Chữ header bảng (trắng) */
-}
-
-.price-table-card .table tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.03); /* Màu sọc vằn nhạt */
-}
-
-.price-table-card .table td,
-.price-table-card .table th {
-    vertical-align: middle;
 }

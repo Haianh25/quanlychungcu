@@ -59,5 +59,31 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
         res.status(500).json({ message: 'Lỗi server' });
     }
 });
+router.delete('/:id', protect, isAdmin, async (req, res) => {
+    const { id } = req.params;
 
+    try {
+        // (An toàn) Kiểm tra xem phí này có phải là phí cốt lõi không
+        const feeCheck = await db.query('SELECT fee_code FROM fees WHERE fee_id = $1', [id]);
+        if (feeCheck.rows.length > 0 && 
+            (feeCheck.rows[0].fee_code === 'MANAGEMENT_FEE' || feeCheck.rows[0].fee_code === 'ADMIN_FEE')) {
+            return res.status(400).json({ message: 'Không thể xóa các loại phí hệ thống cốt lõi.' });
+        }
+
+        // Tiến hành xóa
+        const { rowCount } = await db.query('DELETE FROM fees WHERE fee_id = $1', [id]);
+
+        if (rowCount === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy phí này để xóa.' });
+        }
+        res.json({ message: 'Đã xóa phí thành công.' });
+    } catch (err) {
+        console.error('Lỗi khi xóa phí:', err.message);
+        // Kiểm tra lỗi khóa ngoại (nếu phí đã được dùng trong hóa đơn cũ)
+        if (err.code === '23503') { 
+            return res.status(400).json({ message: 'Xóa thất bại. Phí này đã được sử dụng trong các hóa đơn cũ và không thể xóa.' });
+        }
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+});
 module.exports = router;

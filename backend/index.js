@@ -6,20 +6,18 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const newsRoutes = require('./routes/news');
 const vehicleAdminRoutes = require('./routes/vehicleAdmin');
-const serviceRoutes = require('./routes/services');
 const fs = require('fs');
 const path = require('path');
 const profileRoutes = require('./routes/profile');
 const billUserRoutes = require('./routes/billUser');
 const notificationRoutes = require('./routes/notifications');
-
-// --- CÁC ROUTE ĐÃ THÊM/SỬA ---
 const billAdminRoutes = require('./routes/billAdmin'); 
-const feeAdminRoutes = require('./routes/feeAdmin'); // Đã thêm
-const paymentRoutes = require('./routes/payment'); // Đã thêm
+const feeAdminRoutes = require('./routes/feeAdmin'); 
+const paymentRoutes = require('./routes/payment'); 
+const serviceRoutes = require('./routes/services'); // Route cho Bảng giá Dịch vụ
 
-// 2. Import file cron.js để khởi chạy
-require('./cron'); // Đã thêm (chứa logic tạo hóa đơn & phí phạt)
+// Import file cron.js để khởi chạy
+require('./cron'); 
 
 // Tạo một ứng dụng Express
 const app = express();
@@ -36,30 +34,30 @@ const uploadsDir = path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsDir));
 console.log(`Serving static files from ${uploadsDir} at /uploads`);
 
-// --- ĐỊNH TUYẾN (SỬA LẠI) ---
+// --- ĐỊNH TUYẾN ---
 
 // 1. Tạo MỘT Router chính cho admin
 const adminMasterRouter = express.Router();
 
 // 2. Gắn các route con vào router chính
-adminMasterRouter.use(adminRoutes); // Gắn các route trong admin.js
-adminMasterRouter.use(vehicleAdminRoutes); // Gắn các route trong vehicleAdmin.js
-adminMasterRouter.use('/bills', billAdminRoutes); // Gắn route bill
+adminMasterRouter.use(adminRoutes); 
+adminMasterRouter.use(vehicleAdminRoutes); 
+adminMasterRouter.use('/bills', billAdminRoutes); 
 adminMasterRouter.use('/fees', feeAdminRoutes); // Gắn route fee
 
 // 3. Đăng ký các route KHÔNG phải admin
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
-app.use('/api/services', serviceRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/bills', billUserRoutes); // Route cho user
+app.use('/api/bills', billUserRoutes); 
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/payment', paymentRoutes); // Gắn route payment mới
+app.use('/api/payment', paymentRoutes); 
+app.use('/api/services', serviceRoutes); // Gắn route services (cho bảng giá)
 
 // 4. Đăng ký router chính của admin vào '/api/admin'
 app.use('/api/admin', adminMasterRouter); 
 
-// --- KẾT THÚC SỬA ---
+// --- KẾT THÚC ---
 
 // Định nghĩa một route (đường dẫn) cơ bản để kiểm tra
 app.get('/', (req, res) => {
