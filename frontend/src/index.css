@@ -1,11 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+/* --- CÀI ĐẶT FONT CHỮ VÀ THEME CHUNG (THEME RESIDEM MỚI) --- */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
 
+:root {
+    --font-primary: 'Be Vietnam Pro', sans-serif;
+    
+    /* --- Bảng màu "Residem" mới --- */
+    --color-bg-dark-teal: #224246;     /* Nền Footer & Nền mục "Discover Room" */
+    --color-bg-light: #f8f6f3;         /* Nền chính (Trắng kem) */
+    --color-primary-accent: #b99a7b;     /* Nút "Schedule a Visit" (Vàng đồng) */
+    --color-primary-accent-hover: #a98a6b;
+    --color-text-dark: #333333;           /* Chữ chính (màu tối) */
+    --color-text-muted-dark: #555555;    /* Chữ phụ (màu tối) */
+    --color-text-light: #FFFFFF;         /* Chữ trên nền tối */
+    --color-text-muted-light: #c2c2c2;   /* Chữ phụ trên nền tối */
+    --color-border-light: #e0e0e0;
+}
+
+/* THAY ĐỔI LỚN: Chuyển sang nền sáng (trắng kem) */
 body {
-    background: linear-gradient(to right bottom, #1a2a44, #0f1c3a, #0b1527);
-    background-size: cover;
-    background-attachment: fixed;
-    color: #ccc;
-    font-family: 'Poppins', sans-serif;
+    background-color: var(--color-bg-light) !important; 
+    color: var(--color-text-dark); /* Chữ màu tối */
+    font-family: var(--font-primary);
+    line-height: 1.6;
     min-height: 100vh;
 }
 
@@ -13,6 +29,129 @@ html {
   overflow-y: scroll;
 }
 
+/* Tiêu đề cũng đổi sang màu tối */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-dark);
+    font-family: var(--font-primary);
+    font-weight: 700;
+}
+
+/* Link đổi sang màu vàng đồng */
+a {
+    color: var(--color-primary-accent);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-accent-hover);
+    text-decoration: none;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+/* --- STYLES CHO THÔNG BÁO (Dropdown) --- */
+/* (Giữ nguyên style dropdown nền tối, vì nó vẫn đẹp) */
+.notification-bell {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0px;
+    right: 5px;
+    background-color: var(--color-primary-accent); /* Đổi sang màu vàng đồng */
+    color: var(--color-text-light);
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 20px;
+    height: 20px;
+    line-height: 1;
+}
+
+.notification-dropdown {
+    background-color: var(--color-bg-dark-teal);
+    border: 1px solid #3a5c60;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1050;
+    padding: 0;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #3a5c60;
+}
+.notification-header h6 {
+    margin: 0;
+    color: var(--color-text-light); /* Chữ sáng */
+    font-weight: 600;
+}
+.notification-header .mark-all-read {
+    background: none;
+    border: none;
+    color: var(--color-primary-accent);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+.notification-header .mark-all-read:hover {
+    color: var(--color-primary-accent-hover);
+}
+.notification-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--color-text-muted-light);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+.notification-item {
+    background-color: var(--color-bg-dark-teal) !important;
+    border-color: #3a5c60 !important;
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #3a5c60 !important;
+    transition: background-color 0.2s ease;
+    white-space: normal;
+}
+.notification-item:last-child {
+    border-bottom: none !important;
+}
+.notification-item.is-unread {
+    background-color: #2a5054 !important; /* Màu teal nhạt hơn */
+}
+.notification-item:hover {
+    background-color: #3d6a6f !important;
+}
+.notification-item p {
+    color: #e0e0e0 !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.95rem;
+}
+.notification-item.is-unread p {
+    font-weight: 600;
+    color: #ffffff !important;
+}
+.notification-item small {
+    color: #adb5bd !important;
+    font-size: 0.8rem;
+}
+
+
+/* --- (Giữ nguyên các style .admin- cũ của bạn ở đây) --- */
 .admin-content-wrapper {
   display: flex;
   flex-direction: column;
@@ -43,20 +182,20 @@ html {
 }
 .admin-header-bell {
     position: relative;
-    margin-right: 15px; /* Khoảng cách với nút Logout */
+    margin-right: 15px; 
 }
 
 .admin-notification-btn {
     background: none;
     border: none;
-    color: #6c757d; /* Màu xám của icon */
-    font-size: 1.25rem; /* Kích thước icon */
+    color: #6c757d; 
+    font-size: 1.25rem; 
     padding: 0;
     line-height: 1;
     transition: color 0.2s ease;
 }
 .admin-notification-btn:hover {
-    color: #000; /* Màu đen khi hover */
+    color: #000; 
 }
 
 .admin-notification-badge {
@@ -65,21 +204,21 @@ html {
     right: -10px;
     padding: 3px 6px;
     border-radius: 50%;
-    background-color: #dc3545; /* Màu đỏ */
+    background-color: #dc3545; 
     color: white;
     font-size: 0.65rem;
     font-weight: bold;
-    border: 1px solid #f8f9fa; /* Viền trắng (màu nền header) */
+    border: 1px solid #f8f9fa; 
 }
 
 .admin-notification-dropdown {
     position: absolute;
-    top: 150%; /* Hiện dưới nút chuông */
+    top: 150%; 
     right: 0;
     width: 350px;
     max-height: 400px;
     overflow-y: auto;
-    background-color: #ffffff; /* Nền trắng */
+    background-color: #ffffff; 
     border: 1px solid #dee2e6;
     border-radius: 5px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -90,12 +229,12 @@ html {
     padding: 10px 15px;
     border-bottom: 1px solid #dee2e6;
     font-size: 0.9rem;
-    color: #212529; /* Chữ đen */
+    color: #212529; 
     text-decoration: none;
     display: block;
 }
 .admin-notification-item:hover {
-    background-color: #f8f9fa; /* Nền xám nhạt khi hover */
+    background-color: #f8f9fa; 
     color: #000;
 }
 .admin-notification-item:last-child {
@@ -103,7 +242,7 @@ html {
 }
 
 .admin-notification-item small {
-    color: #6c757d; /* Màu xám cho thời gian */
+    color: #6c757d; 
     font-size: 0.75rem;
 }
 
@@ -130,7 +269,7 @@ html {
 }
 .admin-notification-header .mark-all-read {
     font-size: 0.75rem;
-    color: #0d6efd; /* Màu xanh dương */
+    color: #0d6efd; 
     cursor: pointer;
     background: none;
     border: none;
@@ -145,98 +284,196 @@ html {
     text-align: center;
     color: #6c757d;
 }
+/* --- CÀI ĐẶT FONT CHỮ VÀ THEME CHUNG (THEME RESIDEM MỚI) --- */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --font-primary: 'Be Vietnam Pro', sans-serif;
+    
+    /* --- Bảng màu "Residem" mới --- */
+    --color-bg-dark-teal: #224246;     /* Nền Footer & Nền mục "Discover Room" */
+    --color-bg-light: #f8f6f3;         /* Nền chính (Trắng kem) */
+    --color-primary-accent: #b99a7b;     /* Nút "Schedule a Visit" (Vàng đồng) */
+    --color-primary-accent-hover: #a98a6b;
+    --color-text-dark: #333333;           /* Chữ chính (màu tối) */
+    --color-text-muted-dark: #555555;    /* Chữ phụ (màu tối) */
+    --color-text-light: #FFFFFF;         /* Chữ trên nền tối */
+    --color-text-muted-light: #c2c2c2;   /* Chữ phụ trên nền tối */
+    --color-border-light: #e0e0e0;
+
+    /* Màu mới cho Highlights Nearby */
+    --color-highlights-card-bg: #e0e0e0; /* Nền card highlights */
+    --color-highlights-card-hover: #d0d0d0; /* Hover card highlights */
+}
+
+body {
+    background-color: var(--color-bg-light) !important; 
+    color: var(--color-text-dark); /* Chữ màu tối */
+    font-family: var(--font-primary) !important; /* Đảm bảo font được ưu tiên */
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-dark);
+    font-family: var(--font-primary) !important; /* Đảm bảo font được ưu tiên */
+    font-weight: 700;
+}
+
+a {
+    color: var(--color-primary-accent);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-accent-hover);
+    text-decoration: none;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+/* --- (Giữ nguyên các style .admin- cũ của bạn ở đây) --- */
+/* ... (Tất cả .admin- content, .pagination, .admin-notification ... giữ nguyên) ... */
+
+.admin-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 75vh;
+}
+/* ... (v.v.) ... */
+.admin-notification-empty {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+/* --- (Kết thúc style admin) --- */
+
+
+/* --- STYLES CHO THÔNG BÁO (Dropdown) --- */
+/* (Giữ nguyên style dropdown nền tối, vì nó vẫn đẹp) */
 .notification-bell {
     position: relative;
 }
-
+/* ... (Toàn bộ style .notification-badge, .notification-dropdown, .notification-item ... giữ nguyên) ... */
 .notification-badge {
     position: absolute;
-    top: -5px;      /* Căn chỉnh cho icon của resident */
-    right: -10px;   /* Căn chỉnh cho icon của resident */
-    padding: 3px 6px;
+    top: 0px;
+    right: 5px;
+    background-color: var(--color-primary-accent); /* Đổi sang màu vàng đồng */
+    color: var(--color-text-light);
     border-radius: 50%;
-    background-color: #dc3545; /* Màu đỏ */
-    color: white;
-    font-size: 0.65rem;
+    padding: 2px 6px;
+    font-size: 0.7rem;
     font-weight: bold;
-    border: 1px solid #242933; /* Viền trùng màu nền header */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 20px;
+    height: 20px;
+    line-height: 1;
 }
 
-/* Dropdown cho nền tối */
 .notification-dropdown {
-    position: absolute;
-    top: 150%; 
-    right: 0;
+    background-color: var(--color-bg-dark-teal);
+    border: 1px solid #3a5c60;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     width: 350px;
     max-height: 400px;
     overflow-y: auto;
-    background-color: #2f343e; /* Nền tối */
-    border: 1px solid #3a414f; /* Viền tối */
-    border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 1050;
-    /* Ngăn dropdown bị cắt bởi 'sticky-top' (nếu cần) */
-    transform: translate3d(0, 0, 0); 
-}
-
-.notification-item {
-    padding: 10px 15px;
-    border-bottom: 1px solid #3a414f; /* Viền tối */
-    font-size: 0.9rem;
-    color: #e0e0e0; /* Chữ sáng */
-    text-decoration: none;
-    display: block;
-    white-space: normal; /* Cho phép xuống dòng */
-}
-.notification-item:hover {
-    background-color: #3a414f; /* Nền hover tối */
-    color: #fff;
-}
-.notification-item:last-child {
-    border-bottom: none;
-}
-
-.notification-item small {
-    color: #adb5bd; /* Màu xám cho thời gian */
-    font-size: 0.75rem;
-}
-
-.notification-dropdown .list-group-item {
-     background-color: #2f343e;
-     border-color: #3a414f;
-     color: #e0e0e0;
-     cursor: pointer; /* Thêm con trỏ */
-}
-.notification-dropdown .list-group-item-action:hover {
-     background-color: #3a414f;
-     color: #fff;
+    padding: 0;
 }
 
 .notification-header {
-    padding: 10px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #3a414f;
+    padding: 15px;
+    border-bottom: 1px solid #3a5c60;
 }
 .notification-header h6 {
     margin: 0;
-    color: #fff; /* Chữ trắng */
+    color: var(--color-text-light); /* Chữ sáng */
+    font-weight: 600;
 }
 .notification-header .mark-all-read {
-    font-size: 0.75rem;
-    color: #f0ad4e; /* Màu cam */
-    cursor: pointer;
     background: none;
     border: none;
-    padding: 0;
+    color: var(--color-primary-accent);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
 }
 .notification-header .mark-all-read:hover {
-    text-decoration: underline;
+    color: var(--color-primary-accent-hover);
 }
-
 .notification-empty {
     padding: 20px;
     text-align: center;
-    color: #adb5bd;
+    color: var(--color-text-muted-light);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+.notification-item {
+    background-color: var(--color-bg-dark-teal) !important;
+    border-color: #3a5c60 !important;
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #3a5c60 !important;
+    transition: background-color 0.2s ease;
+    white-space: normal;
+}
+.notification-item:last-child {
+    border-bottom: none !important;
+}
+.notification-item.is-unread {
+    background-color: #2a5054 !important; /* Màu teal nhạt hơn */
+}
+.notification-item:hover {
+    background-color: #3d6a6f !important;
+}
+.notification-item p {
+    color: #e0e0e0 !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.95rem;
+}
+.notification-item.is-unread p {
+    font-weight: 600;
+    color: #ffffff !important;
+}
+.notification-item small {
+    color: #adb5bd !important;
+    font-size: 0.8rem;
+}
+/* --- SỬA LỖI STICKY FOOTER (Thêm vào index.css) --- */
+
+/* Đảm bảo html và body chiếm toàn bộ chiều cao */
+html, body, #root {
+    height: 100%;
+}
+
+/* Giả sử #root là nơi render App.
+  Bạn cần một div wrapper chính (ví dụ <div className="app-wrapper">)
+  bên trong App.js để bọc Header, Page Content, và Footer
+*/
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Quan trọng: Chiều cao tối thiểu là 100% viewport */
+}
+
+/* Class này dành cho vùng nội dung chính (ví dụ: <main className="main-content">)
+  nằm giữa Header và Footer
+*/
+.main-content {
+    flex-grow: 1; /* Quan trọng: Đẩy nội dung chiếm hết không gian thừa */
 }

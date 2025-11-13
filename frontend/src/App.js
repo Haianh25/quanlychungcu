@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 // Layouts & Guards
 import AdminLayout from './components/layout/AdminLayout';
-import ResidentLayout from './components/layout/ResidentLayout'; // <-- 1. IMPORT LAYOUT MỚI
+import ResidentLayout from './components/layout/ResidentLayout'; 
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Public Pages
@@ -28,20 +28,20 @@ import VehicleManagement from './pages/admin/VehicleManagement';
 import BillManagement from './pages/admin/BillManagement';
 import BillPage from './pages/BillPage';
 import FeeManagement from './pages/admin/FeeManagement';
+
 function App() {
   return (
     <Router>
-      <div>
+      {/* THÊM CLASSNAME TẠI ĐÂY */}
+      <div className="app-wrapper"> 
         <Routes>
           {/* === Public & Resident Routes (Sử dụng ResidentLayout) === */}
-          <Route element={<ResidentLayout />}> {/* <-- 2. TẠO ROUTE BỌC (LAYOUT) */}
+          <Route element={<ResidentLayout />}>
             <Route path="/" element={<Homepage />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:id" element={<NewsDetail />} />
-            {/* Thêm các trang khác của resident vào đây, ví dụ: */}
             <Route path="/services" element={<ServicePage />} />
             <Route path="profile" element={<ProfilePage />} />
-            {/* <Route path="/bill" element={<BillPage />} /> */}
             <Route path="/bill" element={<BillPage />} />
           </Route>
 

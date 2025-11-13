@@ -1,4 +1,3 @@
-// frontend/src/components/layout/ResidentLayout.js
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import ResidentHeader from './ResidentHeader';
@@ -9,7 +8,8 @@ const ResidentLayout = () => {
         
         <div className="homepage-container"> 
             <ResidentHeader />
-            <main>
+            {/* THAY ĐỔI: Thêm className="main-content" vào đây */}
+            <main className="main-content">
                 {/* Outlet sẽ render Homepage, News, NewsDetail... */}
                 <Outlet /> 
             </main>

@@ -2,27 +2,28 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import '../../pages/Homepage.css'; // Import CSS từ Homepage
+import '../../pages/Homepage.css'; // Import CSS
 import axios from 'axios'; 
-import { Dropdown, ListGroup, Badge } from 'react-bootstrap'; 
+import { Dropdown, ListGroup } from 'react-bootstrap'; 
 
-// Hàm tính thời gian tương đối
+// --- TOÀN BỘ LOGIC CỦA BẠN (timeAgo, ...các hàm) ĐƯỢC GIỮ NGUYÊN ---
 function timeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " năm trước";
+    if (interval > 1) return Math.floor(interval) + " years ago";
     interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " tháng trước";
+    if (interval > 1) return Math.floor(interval) + " months ago";
     interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " ngày trước";
+    if (interval > 1) return Math.floor(interval) + " days ago";
     interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " giờ trước";
+    if (interval > 1) return Math.floor(interval) + " hours ago";
     interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " phút trước";
-    return Math.floor(seconds) + " giây trước";
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return Math.floor(seconds) + " seconds ago";
 }
 
 const ResidentHeader = () => {
+    // --- Toàn bộ logic state và các hàm của bạn (isLoggedIn, fetchNotifications, v.v.) giữ nguyên ---
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
@@ -33,15 +34,13 @@ const ResidentHeader = () => {
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
 
-    const getAuthToken = (tokenType = 'token') => { // Giữ nguyên 'token'
+    const getAuthToken = (tokenType = 'token') => { 
         return localStorage.getItem(tokenType);
     }
 
-    // Hàm lấy thông báo (API backend đã được sửa để lấy 10 tin mới nhất)
     const fetchNotifications = useCallback(async () => {
         const token = getAuthToken(); 
         if (!token) return;
-
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const res = await axios.get('http://localhost:5000/api/notifications', config);
@@ -49,7 +48,7 @@ const ResidentHeader = () => {
         } catch (err) {
             console.error("Failed to fetch notifications:", err);
             if (err.response && err.response.status === 401) {
-                handleLogout(); // Tự động logout nếu token hỏng
+                handleLogout(); 
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,6 +105,7 @@ const ResidentHeader = () => {
             setUserName('');
             setNotifications([]); 
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.pathname, fetchNotifications]); 
 
     const handleBellClick = () => {
@@ -116,31 +116,24 @@ const ResidentHeader = () => {
         navigate('/profile'); 
     };
 
-    // Đánh dấu TẤT CẢ là đã đọc (khi click nút)
     const markAllAsRead = async () => {
         const token = getAuthToken();
         if (!token) return;
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post('http://localhost:5000/api/notifications/mark-read', {}, config);
-            // SỬA: Cập nhật UI ngay lập tức: Dùng .map để cập nhật is_read = true cho tất cả
             setNotifications(notifications.map(n => ({ ...n, is_read: true })));
         } catch (err) {
             console.error("Failed to mark notifications as read:", err);
         }
     };
 
-    // --- (SỬA LOGIC) Đánh dấu MỘT là đã đọc (khi click vào thông báo) ---
     const markOneAsRead = async (notificationId) => {
         const token = getAuthToken();
         if (!token) return;
-
-        // SỬA: Cập nhật state ngay lập tức dùng .map() để giữ thông báo trong danh sách
         setNotifications(prev => 
             prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
         );
-
-        // Gửi request trong nền
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post('http://localhost:5000/api/notifications/mark-read', { notificationId }, config);
@@ -149,16 +142,13 @@ const ResidentHeader = () => {
         }
     };
 
-    // SỬA: Hàm click 1 thông báo
     const handleNotificationClick = (notification) => {
-        // Đánh dấu đã đọc (trước khi chuyển trang)
         if (!notification.is_read) {
             markOneAsRead(notification.id); 
         }
-        setShowNotifications(false); // Đóng dropdown
+        setShowNotifications(false); 
         navigate(notification.link_to || '/'); 
     };
-    // --- (KẾT THÚC SỬA) ---
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const isResident = isLoggedIn && userRole === 'resident';
@@ -166,57 +156,66 @@ const ResidentHeader = () => {
         return location.pathname === path;
     };
 
+    // --- PHẦN JSX ĐÃ ĐƯỢC CẬP NHẬT ---
     return (
-        <header className="resident-header sticky-top">
-            <nav className="container navbar navbar-expand-lg navbar-dark">
-                {/* Logo & Site Name */}
-                <Link className="navbar-brand" to={isLoggedIn ? "/" : "/login"}>
-                    <img src="/images/logo.png" alt="PTIT Apartment Logo" style={{ height: '100px' }} />
-                    PTIT Apartment
+        // THAY ĐỔI: Thêm class 'residem-header-light'
+        <header className="resident-header residem-header-light sticky-top">
+            <nav className="container navbar navbar-expand-lg"> 
+                
+                {/* THAY ĐỔI: Sử dụng logo của bạn từ public/images/logoo.png */}
+                <Link className="navbar-brand-custom" to={isLoggedIn ? "/" : "/login"}>
+                    {/* Đảm bảo bạn có file 'logoo.png' trong folder 'public/images/' */}
+                    <img src="/images/logoo.png" alt="PTIT Apartment Logo" className="new-logo" />
+                    <span>PTIT Apartment</span>
                 </Link>
 
-                {/* Navbar Toggler (for mobile) */}
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#residentNavbar" aria-controls="residentNavbar" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
                 </button>
 
-                {/* Navbar Links */}
                 <div className="collapse navbar-collapse" id="residentNavbar">
+                    {/* GIỮ NGUYÊN: Các link tính năng của bạn */}
                     <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li className="nav-item">
-                            <Link className={`nav-link ${isNavLinkActive('/') ? 'active' : ''}`} aria-current="page" to="/">Homepage</Link>
+                            <Link className={`nav-link ${isNavLinkActive('/') ? 'active' : ''}`} aria-current="page" to="/">Home</Link>
                         </li>
                         <li className="nav-item">
                             {isResident ? (
                                 <Link className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`} to="/services">Services</Link>
                             ) : (
-                                <span className="nav-link disabled" title="Available for residents only">Services</span>
+                                // CẬP NHẬT LOGIC: Thêm class 'disabled'
+                                <span className="nav-link disabled" title="Login to access">Services</span>
                             )}
                         </li>
                         <li className="nav-item">
                             {isResident ? (
                                 <Link className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`} to="/bill">Bill</Link>
                             ) : (
-                                <span className="nav-link disabled" title="Available for residents only">Bill</span>
+                                // CẬP NHẬT LOGIC: Thêm class 'disabled'
+                                <span className="nav-link disabled" title="Login to access">Bill</span>
                             )}
                         </li>
                         <li className="nav-item">
+                            {/* CẬP NHẬT LOGIC: Thêm điều kiện isResident cho 'News' */}
                             {isResident ? (
                                 <Link className={`nav-link ${isNavLinkActive('/news') ? 'active' : ''}`} to="/news">News</Link>
                             ) : (
-                                <span className="nav-link disabled" title="Available for residents only">News</span>
+                                <span className="nav-link disabled" title="Login to access">News</span>
                             )}
+                        </li>
+                        <li className="nav-item">
+                            <Link className={`nav-link ${isNavLinkActive('/about') ? 'active' : ''}`} to="/about">About Us</Link>
                         </li>
                     </ul>
                 </div>
 
-                {/* Right side items */}
+                {/* GIỮ NGUYÊN: Logic (Bell, Profile, Login/Logout) */}
                 <div className="header-right-items ms-auto d-flex align-items-center">
                     {isLoggedIn ? (
                         <>
-                            {/* --- Nút chuông thông báo (DÙNG DROPDOWN) --- */}
+                            {/* THAY ĐỔI: Thêm class 'icon-btn-light' */}
                             <Dropdown show={showNotifications} onToggle={handleBellClick}>
-                                <Dropdown.Toggle as="button" className="icon-btn notification-bell" title="Notifications">
+                                <Dropdown.Toggle as="button" className="icon-btn icon-btn-light notification-bell" title="Notifications">
                                     <i className="bi bi-bell-fill"></i>
                                     {unreadCount > 0 && (
                                         <span className="notification-badge">{unreadCount}</span>
@@ -225,24 +224,22 @@ const ResidentHeader = () => {
 
                                 <Dropdown.Menu as="div" className="notification-dropdown" align="end">
                                     <div className="notification-header">
-                                        <h6>Thông báo</h6>
+                                        <h6>Notifications</h6>
                                         {unreadCount > 0 && (
                                             <button className="mark-all-read" onClick={markAllAsRead}>
-                                                Đánh dấu tất cả đã đọc
+                                                Mark all as read
                                             </button>
                                         )}
                                     </div>
                                     <ListGroup variant="flush">
                                         {notifications.length === 0 ? (
-                                            <div className="notification-empty">Không có thông báo mới.</div>
+                                            <div className="notification-empty">No new notifications.</div>
                                         ) : (
                                             notifications.map(noti => (
                                                 <ListGroup.Item 
                                                     key={noti.id} 
                                                     action 
                                                     onClick={() => handleNotificationClick(noti)} 
-                                                    // SỬA: Thay thế style bằng className
-                                                    // CSS cho các class này nằm trong Homepage.css
                                                     className={`notification-item ${noti.is_read ? 'is-read' : 'is-unread'}`} 
                                                 >
                                                     <p className="mb-1">{noti.message}</p>
@@ -254,14 +251,17 @@ const ResidentHeader = () => {
                                 </Dropdown.Menu>
                             </Dropdown>
 
-                            <button className="icon-btn ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
-                                <i className="bi bi-person-circle" style={{ fontSize: '1.5rem' }}></i>
+                            {/* THAY ĐỔI: Thêm class 'icon-btn-light' */}
+                            <button className="icon-btn icon-btn-light ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
+                                <i className="bi bi-person-circle"></i>
                             </button>
                             
-                            <button className="btn btn-auth ms-2" onClick={handleLogout}>Logout</button>
+                            {/* THAY ĐỔI: Style nút 'btn-residem-primary' mới */}
+                            <button className="btn btn-residem-primary ms-3" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (
-                        <Link className="btn btn-auth btn-login-visible" to="/login">Login</Link>
+                        // THAY ĐỔI: Style nút 'btn-residem-primary' mới
+                        <Link className="btn btn-residem-primary btn-login-visible" to="/login">Login</Link>
                     )}
                 </div>
             </nav>

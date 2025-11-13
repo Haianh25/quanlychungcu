@@ -1,47 +1,68 @@
-// frontend/src/components/layout/ResidentFooter.js
 import React from 'react';
-// Bạn có thể tạo file CSS riêng cho Footer nếu muốn
-// import './ResidentFooter.css'; 
+import { Link } from 'react-router-dom';
+import '../../pages/Homepage.css'; // Import CSS
 
 const ResidentFooter = () => {
     return (
-        <footer className="resident-footer mt-5">
+        <footer className="resident-footer new-footer-compact mt-5">
             <div className="container">
                 <div className="row">
-                    <div className="col-md-4">
-                        <div className="footer-logo">PTIT Apartment</div>
-                        <p>Placeholder text about the apartment complex. Lorem ipsum dolor sit amet...</p>
-                        <div className="social-icons">
-                            {/* Thay <i> bằng icon thật nếu dùng FontAwesome/Bootstrap */}
-                            <a href="#!"><i className="fab fa-facebook-f"></i></a>
-                            <a href="#!"><i className="fab fa-twitter"></i></a>
-                            <a href="#!"><i className="fab fa-instagram"></i></a>
+                    
+                    {/* CỘT 1: LOGO VÀ ĐỊA CHỈ */}
+                    <div className="col-lg-5 col-md-12 mb-4 mb-lg-0">
+                        <div className="footer-logo-compact">
+                            <img src="/images/logoo.png" alt="PTIT Apartment Logo" className="new-logo" />
+                            <span>PTIT Apartment</span>
                         </div>
+                        <p className="footer-address-compact">
+                            Học viện Công nghệ Bưu chính Viễn thông (PTIT)
+                            <br />
+                            Km10, Đường Nguyễn Trãi, Q. Hà Đông, Hà Nội
+                        </p>
                     </div>
-                    <div className="col-md-2">
-                        <h5>Accommodations</h5>
-                        <ul>
-                            <li><a href="#!">Deluxe Room</a></li>
-                            <li><a href="#!">Premium Suite</a></li>
+
+                    {/* CỘT 2: LINK NHANH */}
+                    <div className="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                        <h5 className="footer-heading-compact">Quick Links</h5>
+                        <ul className="footer-links-list">
+                            <li><Link to="/">Home</Link></li>
+                            <li><Link to="/services">Services</Link></li>
+                            {/* Đã giữ lại các link bạn có */}
+                            <li><Link to="/bill">Bill</Link></li> 
+                            <li><Link to="/news">News</Link></li>
+                            <li><Link to="/about">About Us</Link></li>
                         </ul>
                     </div>
-                    <div className="col-md-2">
-                        <h5>Support</h5>
-                        <ul>
-                            <li><a href="#!">Customer Support</a></li>
-                            <li><a href="#!">Privacy Policy</a></li>
-                            <li><a href="#!">Contact Us</a></li>
+
+                    {/* CỘT 3: LIÊN HỆ (Đã bỏ "Call Us" và "Opening Hours" để gọn hơn, giữ Email) */}
+                    <div className="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                        <h5 className="footer-heading-compact">Contact Us</h5>
+                        <ul className="footer-contact-list">
+                            {/* Đã bỏ "Call Us" để gọn hơn */}
+                            <li>
+                                <i className="bi bi-envelope-fill"></i>
+                                <span>contact.ptit@apartment.com</span>
+                            </li>
+                             {/* Chỉ giữ số điện thoại và email, bỏ giờ mở cửa để gọn hơn */}
+                            <li>
+                                <i className="bi bi-telephone-fill"></i>
+                                <span>(024) 3352 8122</span>
+                            </li>
                         </ul>
-                    </div>
-                    <div className="col-md-4">
-                        <h5>Information</h5>
-                        <p>Number: 012-345-6789</p>
-                        <p>Email: info@ptitapartment.com</p>
-                        <p>Address: km 10 đường nguyễn trãi quận thanh xuân tp hà nội</p>
                     </div>
                 </div>
-                <div className="copyright">
-                    Copyright © {new Date().getFullYear()} PTIT Apartment. All Rights Reserved.
+
+                {/* THANH COPYRIGHT */}
+                <div className="footer-bottom-bar">
+                    <span className="copyright-text">
+                        Copyright © {new Date().getFullYear()} PTIT Apartment. Đã đăng ký bản quyền.
+                    </span>
+                    <div className="social-icons-compact">
+                        <a href="#!" aria-label="Facebook"><i className="bi bi-facebook"></i></a>
+                        <a href="#!" aria-label="Twitter"><i className="bi bi-twitter"></i></a>
+                        <a href="#!" aria-label="Instagram"><i className="bi bi-instagram"></i></a>
+                        <a href="#!" aria-label="YouTube"><i className="bi bi-youtube"></i></a>
+                    </div>
                 </div>
             </div>
         </footer>

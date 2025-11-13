@@ -1,33 +1,114 @@
-/* frontend/src/pages/ProfilePage.css */
+/* --- BIẾN MÀU (TỪ index.css) ---
+:root {
+    --color-bg-light: #f8f6f3;
+    --color-primary-accent: #b99a7b;
+    --color-primary-accent-hover: #a98a6b;
+    --color-text-dark: #333333;
+    --color-text-muted-dark: #555555;
+    --color-border-light: #e0e0e0;
+}
+-------------------------------- */
+
 .profile-page-container {
-    max-width: 900px; /* Giới hạn chiều rộng */
-    margin: 2rem auto; /* Căn giữa */
+    max-width: 900px; /* Giới hạn chiều rộng, làm nội dung thành trọng tâm */
+    margin: 3rem auto; /* Căn giữa và thêm khoảng cách */
 }
 
-/* Đồng bộ style tab với trang ServicePage */
-.profile-page-container .nav-tabs .nav-link {
-    color: #adb5bd;
+.profile-page-title {
+    color: var(--color-text-dark);
+    font-weight: 700;
+}
+
+/* --- TABS STYLE (THEME RESIDEM) --- */
+.residem-tabs .nav-tabs {
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.residem-tabs .nav-tabs .nav-link {
+    color: var(--color-text-muted-dark);
     background-color: transparent;
+    border: none;
     border-bottom: 2px solid transparent;
-}
-.profile-page-container .nav-tabs .nav-link.active {
-    color: #ffffff;
-    background-color: transparent;
-    border-bottom: 2px solid var(--bs-primary);
-}
-.profile-page-container .nav-tabs {
-    border-bottom: 1px solid #495057;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: color 0.2s ease, border-color 0.2s ease;
+    border-top-left-radius: 5px; /* Bo tròn góc trên của tab */
+    border-top-right-radius: 5px;
 }
 
-/* Làm cho form rõ nét hơn trên nền tối */
+.residem-tabs .nav-tabs .nav-link:hover {
+    color: var(--color-text-dark);
+    border-bottom-color: var(--color-border-light);
+}
+
+.residem-tabs .nav-tabs .nav-link.active {
+    color: var(--color-primary-accent);
+    background-color: transparent;
+    border-bottom: 2px solid var(--color-primary-accent);
+    font-weight: 600;
+}
+
+/* --- CARD STYLE (THEME SÁNG) --- */
 .profile-form-card {
-    background-color: #fff; 
+    background-color: #FFFFFF; /* Nền card trắng tinh */
     padding: 2rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem; /* Bo tròn card */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    /* Bỏ border-top của card khi đi với tabs */
+    border-top: none; 
+    border-top-left-radius: 0; /* Giữ góc trên thẳng với tab */
+    border-top-right-radius: 0;
 }
 
 .profile-form-card .form-label {
-    color: #495057; /* Chữ label màu xám đậm */
+    color: var(--color-text-muted-dark);
     font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+/* --- FORM CONTROL (GIỐNG LOGIN, CÓ BO VIỀN) --- */
+.profile-form-card .form-control {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-dark);
+    border-radius: 5px; /* Bo tròn input */
+    padding: 10px 15px;
+    box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-form-card .form-control:focus {
+    background-color: #FFFFFF;
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-dark);
+    box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
+}
+
+/* --- NÚT BẤM (GIỐNG LOGIN, CÓ BO VIỀN) --- */
+.btn-residem-primary {
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-light);
+    padding: 10px 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 5px; /* Bo tròn nút */
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+}
+
+.btn-residem-primary:hover {
+    background-color: var(--color-primary-accent-hover);
+    border-color: var(--color-primary-accent-hover);
+    color: var(--color-text-light);
+    transform: translateY(-2px);
+}
+
+.btn-residem-primary:disabled {
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-light);
+    opacity: 0.65;
 }

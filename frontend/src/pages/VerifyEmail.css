@@ -1,66 +1,110 @@
-/* frontend/src/pages/VerifyEmail.css */
+/* --- BIẾN MÀU (TỪ index.css) ---
+:root {
+    --color-bg-light: #f8f6f3;
+    --color-primary-accent: #b99a7b;
+    --color-primary-accent-hover: #a98a6b;
+    --color-text-dark: #333333;
+    --color-text-muted-dark: #555555;
+    --color-border-light: #e0e0e0;
+}
+-------------------------------- */
 
-.verify-container {
+/* Bố cục 2 cột toàn màn hình */
+.login-page-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: var(--font-primary);
+}
+
+/* 1. CỘT ẢNH NỀN (BÊN TRÁI) */
+.login-image-panel {
+    flex: 1;
+    background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEzfHxsaXZpbmclMjByb29tfGVufDB8fHx8MTcwMTU4NTYyMnww&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEzfHxsaXZpbmclMjByb29tfGVufDB8fHx8MTcwMTU4NTYyMnww&ixlib-rb-4.0.3&q=80&w=1000');
+    background-size: cover;
+    background-position: center;
+}
+
+/* 2. CỘT FORM (BÊN PHẢI) */
+.login-form-panel {
+    flex: 1;
+    background-color: var(--color-bg-light); /* Nền trắng kem */
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    background-color: transparent; /* Makes sure gradient from body shows */
-    color: #ccc;
-    font-family: 'Poppins', sans-serif; /* Ensure font consistency */
+    padding: 2rem;
+    overflow-y: auto; /* Cho phép cuộn nếu form quá dài */
 }
 
-.verify-frame { /* Changed class name for clarity */
-    background-color: #21314b;
-    padding: 40px;
-    border-radius: 10px;
-    text-align: center;
-    max-width: 600px; /* allow wider form to fit larger logo */
+.login-form-content {
+    max-width: 450px;
     width: 100%;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: left; /* Căn trái nội dung */
 }
 
-/* Added Logo Placeholder styles */
-.logo-placeholder {
-    height: 140px; /* Larger container for logo */
-    margin-bottom: 30px;
+/* Logo (Giống Header) */
+.login-logo {
     display: flex;
-    justify-content: center;
     align-items: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 1.5rem;
+    text-decoration: none;
 }
 
-.logo-placeholder img {
-    max-height: 100%;
-    max-width: 280px;
+.login-logo img {
+    height: 40px;
     width: auto;
-    height: auto;
-    object-fit: contain;
+    margin-right: 10px;
 }
 
-.verify-frame h1 {
-    color: #fff;
-    margin-bottom: 30px;
-    font-size: 1.8em; /* Adjusted font size */
-    font-weight: 500; /* Adjusted font weight */
+/* Tiêu đề */
+.login-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin-bottom: 0.5rem;
 }
 
-.verify-frame .alert {
-    margin-bottom: 25px;
-    font-size: 1.1em;
+.login-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-muted-dark);
+    margin-bottom: 2rem;
 }
 
-.verify-frame .btn-primary {
-    background-color: #3d88ec;
-    border-color: #3d88ec;
-    padding: 12px; /* Match login/register button padding */
-    font-weight: bold;
+/* Nút bấm (Style lại từ btn-residem-primary) */
+.login-form-content .btn-residem-primary {
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-light);
+    padding: 12px;
+    font-weight: 600;
+    font-size: 1rem;
     border-radius: 5px;
-    /* width: 100%; /* Optional: Make button full width */
-    margin-top: 10px; /* Add some top margin */
+    width: 100%;
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+    text-align: center; /* Đảm bảo chữ căn giữa */
 }
 
-.verify-frame .btn-primary:hover {
-    background-color: #2a70c8;
-    border-color: #2a70c8;
+.login-form-content .btn-residem-primary:hover {
+    background-color: var(--color-primary-accent-hover);
+    border-color: var(--color-primary-accent-hover);
+    transform: translateY(-2px);
+}
+
+/* Responsive cho điện thoại */
+@media (max-width: 992px) {
+    /* Ẩn cột ảnh bên trái */
+    .login-image-panel {
+        display: none;
+    }
+    
+    /* Cột form chiếm 100% */
+    .login-form-panel {
+        flex: auto;
+        width: 100%;
+    }
 }

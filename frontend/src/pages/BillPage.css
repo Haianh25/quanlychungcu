@@ -1,99 +1,170 @@
-/* BillPage.css */
+/* --- BIẾN MÀU (TỪ index.css) --- */
+:root {
+    --color-bg-light: #f8f6f3;
+    --color-primary-accent: #b99a7b;
+    --color-primary-accent-hover: #a98a6b;
+    --color-text-dark: #333333;
+    --color-text-muted-dark: #555555;
+    --color-border-light: #e0e0e0;
+}
+/* -------------------------------- */
+
+/* Container chính (giờ là 1200px) */
 .bill-page-container {
-    max-width: 900px;
-    margin: auto;
+    max-width: 1200px;
 }
 
-/* Tùy chỉnh màu cho Tabs */
-.bill-tabs-nav .nav-link {
-    color: #ccc;
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-.bill-tabs-nav .nav-link.active {
-    color: #000;
-    background-color: #fff;
-    border-color: #dee2e6 #dee2e6 #fff;
+.fadeIn {
+    animation: fadeIn 0.5s ease-out;
 }
 
-/* Thẻ hóa đơn chưa thanh toán */
+/* Tiêu đề trang */
+.page-main-title {
+    color: var(--color-text-dark);
+    font-weight: 700;
+}
+
+/* --- TABS STYLE (THEME RESIDEM) --- */
+.residem-tabs .nav-tabs {
+    border-bottom: 1px solid var(--color-border-light);
+}
+.residem-tabs .nav-tabs .nav-link {
+    color: var(--color-text-muted-dark);
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+.residem-tabs .nav-tabs .nav-link:hover {
+    color: var(--color-text-dark);
+    border-bottom-color: var(--color-border-light);
+}
+.residem-tabs .nav-tabs .nav-link.active {
+    color: var(--color-primary-accent);
+    background-color: transparent;
+    border-bottom: 2px solid var(--color-primary-accent);
+    font-weight: 600;
+}
+
+/* --- THẺ HÓA ĐƠN CHƯA THANH TOÁN (THEME SÁNG) --- */
 .unpaid-bill-card {
-    background-color: #343a40;
-    border: 1px solid #495057;
-    color: #fff;
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-dark);
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-radius: 0.5rem;
 }
-
 .unpaid-bill-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #495057;
-    border-bottom: 1px solid #6c757d;
+    background-color: #fdfdfd;
+    border-bottom: 1px solid var(--color-border-light);
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
 }
 .unpaid-bill-header h4 {
     margin-bottom: 0;
     font-size: 1.25rem;
+    color: var(--color-text-dark);
 }
-
+.unpaid-bill-header .due-date-text {
+    font-size: 0.9rem;
+    color: var(--color-text-muted-dark);
+    font-weight: 500;
+}
 .unpaid-bill-body .line-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px dashed #5a6268;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--color-border-light);
 }
 .unpaid-bill-body .line-item:last-child {
     border-bottom: none;
 }
-
 .unpaid-bill-body .line-item-total {
     display: flex;
     justify-content: space-between;
     padding: 0.75rem 0;
     margin-top: 0.5rem;
-    border-top: 1px solid #6c757d;
+    border-top: 1px solid var(--color-border-light);
     font-weight: bold;
     font-size: 1.1rem;
+    color: var(--color-text-dark);
 }
-
 .unpaid-bill-footer {
-    background-color: #495057;
-    border-top: 1px solid #6c757d;
+    background-color: #fdfdfd;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
 }
-.unpaid-bill-footer p {
+.unpaid-bill-footer .payment-note {
     font-size: 0.9rem;
-    color: #ccc;
-    margin-bottom: 0.5rem;
+    color: var(--color-text-muted-dark);
+    margin-bottom: 0.75rem;
 }
 
 /* PayPal Button Container */
 .paypal-button-container {
     position: relative;
-    max-width: 300px; /* Giới hạn chiều rộng nút */
+    max-width: 300px;
 }
-
-/* Lớp phủ loading cho thanh toán */
 .payment-loading-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(52, 58, 64, 0.8);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
     z-index: 10;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #fff;
-    border-radius: inherit; /* Bo góc theo thẻ cha */
+    color: var(--color-text-dark);
+    border-radius: inherit;
 }
 .unpaid-bill-card .payment-loading-overlay {
-    /* Áp dụng cho toàn bộ thẻ khi loading */
     border-radius: var(--bs-card-border-radius);
 }
 
+/* --- BẢNG (ĐÃ THANH TOÁN & LỊCH SỬ) (THEME SÁNG) --- */
+.table-wrapper {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 0.5rem;
+    overflow: hidden; /* Giúp bo góc cho table */
+}
 
-/* Bảng lịch sử giao dịch */
+/* Ghi đè variant="dark" của Bootstrap */
+.residem-table.table {
+    --bs-table-bg: #FFFFFF;
+    --bs-table-border-color: var(--color-border-light);
+    --bs-table-color: var(--color-text-dark);
+    --bs-table-striped-bg: var(--color-bg-light);
+    --bs-table-striped-color: var(--color-text-dark);
+    --bs-table-hover-bg: #e9e5e0;
+    --bs-table-hover-color: var(--color-text-dark);
+    margin-bottom: 0; /* Bỏ margin cuối của table */
+}
+
+.residem-table thead th {
+    font-weight: 600;
+    color: var(--color-text-muted-dark);
+    border-bottom-width: 2px;
+}
+.residem-table .transaction-id {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--color-text-muted-dark);
+}
 .history-table .status-success {
     color: #198754;
     font-weight: bold;
@@ -101,4 +172,85 @@
 .history-table .status-failed {
     color: #dc3545;
     font-weight: bold;
+}
+
+/* Thông báo khi không có bill */
+.alert-residem-info {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-muted-dark);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    font-style: italic;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* --- CSS CHO SIDEBAR MỚI (Giống News.css) --- */
+.sidebar-widget {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+@media (max-width: 991.98px) {
+    .bill-sidebar {
+        margin-top: 3rem;
+    }
+}
+
+.widget-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+/* Widget Hỗ trợ */
+.faq-list .list-group-item {
+    border: none;
+    padding: 0.5rem 0;
+    background: none;
+}
+.faq-list .list-group-item strong {
+    color: var(--color-text-dark);
+}
+.faq-list .list-group-item p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted-dark);
+    margin-bottom: 0;
+    margin-top: 0.25rem;
+}
+
+/* Widget Hoạt động gần đây */
+.recent-activity-list .list-group-item {
+    border: none;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--color-border-light);
+    background: none;
+}
+.recent-activity-list .list-group-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.activity-info span {
+    display: block;
+    font-weight: 500;
+    color: var(--color-text-dark);
+}
+.activity-info small {
+    font-size: 0.85rem;
+}
+.activity-amount {
+    font-weight: 600;
+}
+.activity-amount.status-success {
+    color: #198754;
+}
+.activity-amount.status-failed {
+    color: #dc3545;
 }

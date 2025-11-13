@@ -1,10 +1,10 @@
-// frontend/src/pages/Register.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import './Register.css';
+import './Register.css'; // Import CSS mới
 
 const Register = () => {
+    // --- LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -29,58 +29,87 @@ const Register = () => {
         }
     };
 
+    // --- GIAO DIỆN JSX ĐÃ ĐƯỢC THAY ĐỔI THEO THEME MỚI ---
     return (
-        <div className="form-container">
-            {/* THÊM KHUNG BAO QUANH */}
-            <div className="form-frame">
-                {/* THÊM CHỖ ĐỂ LOGO */}
-                <div className="logo-placeholder">
-                    <img src="/images/logo.png" alt="PTIT Apartment Logo" />
-                </div>
+        <div className="login-page-wrapper">
+            {/* 1. CỘT ẢNH NỀN BÊN TRÁI */}
+            <div className="login-image-panel">
+                {/* Ảnh nền được đặt trong CSS */}
+            </div>
 
-                <div className="page-links mb-4">
-                    <Link to="/login">Login</Link>
-                    <Link to="/register" className="active">Register</Link>
-                </div>
-
-                <form onSubmit={onSubmit}>
-                    <input
-                        type="text"
-                        className="form-control"
-                        name="fullName"
-                        placeholder="Full Name"
-                        value={fullName}
-                        onChange={onChange}
-                        required
-                    />
-                    <input
-                        type="email"
-                        className="form-control"
-                        name="email"
-                        placeholder="E-mail Address"
-                        value={email}
-                        onChange={onChange}
-                        required
-                    />
-                    <input
-                        type="password"
-                        className="form-control"
-                        name="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={onChange}
-                        required
-                    />
-                    {message && <div className="alert alert-success mt-3">{message}</div>}
-                    {error && <div className="alert alert-danger mt-3">{error}</div>}
-
-                    <div className="d-grid mt-3">
-                        <button type="submit" className="btn btn-primary">Register</button>
+            {/* 2. CỘT FORM BÊN PHẢI */}
+            <div className="login-form-panel">
+                <div className="login-form-content">
+                    
+                    {/* Logo và Tên (Giống Header) */}
+                    <div className="login-logo">
+                        <img src="/images/logoo.png" alt="PTIT Apartment Logo" />
+                        <span>PTIT Apartment</span>
                     </div>
-                </form>
 
-                 <div className="text-center mt-4">
-                    <span>Already have an account? <Link to="/login" className="login-link">Login here</Link></span>
+                    {/* Tiêu đề chào mừng */}
+                    <h2 className="login-title">Create Your Account</h2>
+                    <p className="login-subtitle">Join our community. It's fast and free.</p>
+
+                    {/* Form đăng ký (Giữ nguyên logic) */}
+                    <form onSubmit={onSubmit} className="mt-4">
+                        <div className="form-group mb-3">
+                            <label htmlFor="fullName">Full Name</label>
+                            <input
+                                id="fullName"
+                                type="text"
+                                className="form-control"
+                                name="fullName"
+                                placeholder="Full Name"
+                                value={fullName}
+                                onChange={onChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group mb-3">
+                            <label htmlFor="email">E-mail Address</label>
+                            <input
+                                id="email"
+                                type="email"
+                                className="form-control"
+                                name="email"
+                                placeholder="E-mail Address"
+                                value={email}
+                                onChange={onChange}
+                                required
+                            />
+                        </div>
+                        
+                        <div className="form-group mb-3">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                id="password"
+                                type="password"
+                                className="form-control"
+                                name="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={onChange}
+                                required
+                            />
+                        </div>
+
+                        {message && <div className="alert alert-success mt-3">{message}</div>}
+                        {error && <div className="alert alert-danger mt-3">{error}</div>}
+
+                        <div className="d-grid mt-4">
+                            {/* Nút bấm đã được đổi style */}
+                            <button type="submit" className="btn btn-residem-primary">
+                                Register
+                            </button>
+                        </div>
+
+                        {/* Link sang trang Login (Giữ nguyên) */}
+                        <div className="text-center mt-4 register-link">
+                            <span>Already have an account? <Link to="/login">Login here</Link></span>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

@@ -1,460 +1,490 @@
-/* frontend/src/pages/Homepage.css */
-
-/* --- General Styles --- */
-body {
-    background-color: #1a1a1a; /* Nền tối cho toàn bộ trang */
-    color: #e0e0e0;
+/* --- HEADER (THEME RESIDEM SÁNG - GIỐNG MẪU NHẤT) --- */
+.resident-header.residem-header-light {
+    background-color: var(--color-bg-light);
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--color-border-light);
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
-.homepage-container {
-    /* Đảm bảo không có padding/margin tổng thể thừa */
-    margin: 0;
+
+.residem-header-light .navbar-brand-custom {
+    color: var(--color-text-dark); /* Chữ màu tối */
+    font-weight: 600;
+    font-size: 1.5rem; 
+    display: flex; 
+    align-items: center;
     padding: 0;
-    box-sizing: border-box;
+    /* margin-right: 2rem; */ /* Bỏ margin-right để nó gần các link hơn nếu cần */
+    text-decoration: none;
+    white-space: nowrap; 
 }
 
-/* --- Header (Cập nhật) --- */
-.resident-header {
-    background-color: #242933; /* Màu nền header mới, đậm hơn */
-    padding: 1rem 0;
-    border-bottom: 1px solid #3a414f; /* Đường kẻ phân cách */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Đổ bóng nhẹ */
+.residem-header-light .new-logo {
+    height: 35px; /* Nhỏ hơn một chút so với trước để khớp mẫu */
+    width: auto;
+    margin-right: 8px; /* Giảm khoảng cách */
 }
 
-.resident-header .navbar-brand {
-    color: #fff;
-    font-weight: bold;
-    font-size: 1.5rem; /* Tăng kích thước logo */
-    display: flex; /* Dùng flexbox cho logo + text */
-    align-items: center;
-}
-.resident-header .navbar-brand img {
-    margin-right: 10px; /* Khoảng cách giữa logo và text */
+/* THAY ĐỔI LỚN: Cấu trúc Navbar để khớp mẫu 'Residem' */
+.residem-header-light .navbar-nav {
+    flex-grow: 1; /* Cho phép các nav-item co giãn */
+    justify-content: flex-start; /* Căn trái các mục nav */
+    margin-left: 2rem; /* Thêm khoảng cách với logo */
 }
 
-/* Allow a larger navbar logo on homepage and ensure header is tall enough */
-.resident-header .navbar {
-    min-height: 140px; /* make room for taller logo */
-    align-items: center;
-}
-.resident-header .navbar-brand img {
-    height: 100px; /* match the inline size on Homepage.js */
+.residem-header-light .navbar-nav .nav-item {
+    margin: 0 10px; /* Giữ nguyên khoảng cách */
 }
 
-.resident-header .nav-link {
-    color: #bbb;
-    margin: 0 15px; /* Tăng khoảng cách giữa các mục */
+.residem-header-light .navbar-nav .nav-link {
+    color: var(--color-text-muted-dark); /* Chữ phụ màu tối */
     font-weight: 500;
-    transition: color 0.3s ease; /* Hiệu ứng hover mềm mại */
-}
-.resident-header .nav-link:hover,
-.resident-header .nav-link.active {
-    color: #f0ad4e; /* Màu cam nổi bật khi hover/active */
+    font-size: 1.05rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    border-radius: 5px;
 }
 
-/* Disabled nav link style */
-.resident-header .nav-link.disabled {
-    color: #6b6b6b;
+.residem-header-light .navbar-nav .nav-link:hover,
+.residem-header-light .navbar-nav .nav-link.active {
+    color: var(--color-primary-accent); /* Hover ra màu vàng đồng */
+    background-color: transparent;
+}
+
+.residem-header-light .nav-link.disabled {
+    color: #999;
     cursor: default;
     pointer-events: none;
     opacity: 0.7;
 }
 
-/* Các button và icon ở phía phải */
-.header-right-items {
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Khoảng cách giữa các item */
-    justify-content: flex-end;
-    min-width: 120px; /* small reserve so items don't cram, but not too large */
+/* Toggler cho theme sáng */
+.residem-header-light .navbar-toggler {
+    border-color: var(--color-border-light);
+}
+.residem-header-light .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* Center the main nav visually and keep it stable regardless of right-side width */
-/* Keep default navbar flow; don't absolutely center the nav to avoid overlap issues. */
-.resident-header .navbar {
-    display: flex;
-    align-items: center;
-}
-.resident-header .navbar-nav {
-    display: flex;
-    align-items: center;
-}
-
-/* On smaller screens, revert to normal flow so collapse works */
-@media (max-width: 991.98px) {
-    .resident-header .navbar-nav {
-        position: static;
-        transform: none;
-        margin-top: 10px;
-        flex-direction: column;
-    }
-    .header-right-items {
-        min-width: auto;
-        justify-content: flex-start;
-    }
-}
-
-.header-right-items .btn-auth {
-    background-color: #f0ad4e;
-    border-color: #f0ad4e;
-    color: #242933; /* Text đậm trên nền cam */
-    font-weight: bold;
-    padding: 8px 18px;
+/* Nút bấm (vàng đồng) - Đặt ở bên phải cuối cùng như mẫu */
+.btn-residem-primary {
+    background-color: var(--color-primary-accent);
+    color: var(--color-text-light);
+    border: none;
+    padding: 10px 25px;
     border-radius: 5px;
-    transition: background-color 0.3s ease;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    white-space: nowrap;
+    text-decoration: none !important; /* Ghi đè */
+    margin-left: 1rem; /* Khoảng cách với các icon */
 }
-.header-right-items .btn-auth:hover {
-    background-color: #e69a00; /* Màu đậm hơn khi hover */
-    border-color: #e69a00;
-    color: #fff;
+.btn-residem-primary:hover {
+    background-color: var(--color-primary-accent-hover);
+    transform: translateY(-2px);
+    color: var(--color-text-light);
 }
 
-.header-right-items .icon-btn {
+/* Icon (chuông, profile) màu tối */
+.residem-header-light .icon-btn-light {
     background: none;
     border: none;
-    color: #bbb;
-    font-size: 1.2rem;
+    color: var(--color-text-muted-dark);
+    font-size: 1.6rem;
+    padding: 5px 10px;
     cursor: pointer;
     transition: color 0.3s ease;
-}
-.header-right-items .icon-btn:hover {
-    color: #f0ad4e;
-}
-
-.header-right-items .avatar {
-    width: 38px; /* Kích thước avatar */
-    height: 38px;
-    border-radius: 50%; /* Bo tròn hoàn toàn */
-    object-fit: cover; /* Đảm bảo ảnh không bị méo */
-    border: 2px solid #f0ad4e; /* Viền cam */
-    cursor: pointer;
-}
-
-/* Ensure the login button has the same visual width as the logout button to avoid shifting */
-.btn-login-visible {
-    min-width: 90px; /* same as the reserved placeholder width */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Hero Section - điều chỉnh margin top để không bị header che */
-.hero-section {
-    margin-top: 50px; /* Đẩy nội dung hero xuống dưới header */
     position: relative;
-    height: 70vh;
-    background-color: #333;
+    border-radius: 50%;
+}
+.residem-header-light .icon-btn-light:hover {
+    color: var(--color-primary-accent);
+}
+.residem-header-light .icon-btn-light.notification-bell {
+    font-size: 1.4rem;
+}
+.residem-header-light .header-right-items {
+    margin-left: auto; /* Đẩy về bên phải */
     display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #fff;
-    margin-bottom: 50px;
-    border-radius: 15px;
-    overflow: hidden;
 }
 
-.hero-overlay {
+
+/* --- HERO SECTION MỚI (THEME RESIDEM) --- */
+.residem-hero {
+    position: relative;
+    height: 85vh; /* Cao hơn 1 chút */
+    background-size: cover;
+    background-position: center center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: left; /* Căn trái như mẫu */
+    color: var(--color-text-light);
+    padding: 0;
+    margin: 0;
+    max-width: 100vw; /* Đảm bảo full width */
+    overflow: hidden; /* Tránh scroll ngang nếu có lỗi nhỏ */
+}
+
+.residem-hero .hero-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.4); /* Lớp phủ tối nhẹ */
     z-index: 1;
 }
 
-.hero-content {
+/* Căn lề nội dung Hero */
+.residem-hero .hero-content-wrapper {
     position: relative;
     z-index: 2;
+    width: 100%;
+    max-width: 1200px; /* Khớp .container */
     padding: 20px;
+    margin-top: auto; /* Đẩy xuống dưới */
+    margin-bottom: 8rem; /* Nâng lên khỏi bottom bar */
 }
-.hero-content .sub-heading {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    letter-spacing: 1px;
+
+.residem-hero .hero-content {
+    max-width: 500px; /* Giới hạn chiều rộng text */
 }
-.hero-content h1 {
+
+.residem-hero .hero-content h1 {
     font-size: 3.5rem;
-    font-weight: bold;
-    margin-bottom: 30px;
+    font-weight: 700;
     line-height: 1.2;
+    margin-bottom: 1rem;
+    color: #FFFFFF; 
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
 }
-.hero-content .btn-talk {
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #333;
-    border: none;
-    padding: 12px 25px;
-    font-weight: bold;
+
+.residem-hero .hero-content p {
+    font-size: 1.15rem;
+    color: #e0e0e0; 
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+.residem-hero .hero-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+/* Nút phụ (viền trắng) */
+.btn-residem-secondary {
+    background-color: transparent;
+    color: var(--color-text-light);
+    border: 2px solid var(--color-text-light);
+    padding: 10px 25px;
     border-radius: 5px;
-    margin-right: 15px;
-}
-.hero-content .btn-play {
-    background-color: #f0ad4e;
-    color: #1f1f1f;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    vertical-align: middle;
-}
-
-/* --- Sections Styles (giữ nguyên hoặc điều chỉnh nhẹ) --- */
-.services-section, .about-section {
-    background-color: #242933; /* Sử dụng màu nền header cho các section chính */
-    padding: 50px 0;
-    border-radius: 15px;
-    margin-bottom: 50px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-.services-section h5, .about-section h5 {
-    color: #f0ad4e; /* Màu cam cho sub-heading */
-    text-align: center;
-    margin-bottom: 10px;
+    font-weight: 600;
     font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.services-section h2, .about-section h2 {
-    color: #fff;
-    text-align: center;
-    margin-bottom: 40px;
-    font-weight: bold;
-}
-.service-card {
-    background-color: #2f343e; /* Nền card tối hơn */
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    color: #bbb;
-    padding: 15px;
-}
-.service-card .img-placeholder {
-    height: 200px;
-    background-color: #444;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #888;
-    font-weight: bold;
-    margin: -15px -15px 15px -15px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-.service-card h4 {
-    color: #fff;
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-.service-card p {
-    font-size: 0.9rem;
-    margin-bottom: 15px;
-}
-.service-card .btn-read-more {
-    background-color: #f0ad4e;
-    border-color: #f0ad4e;
-    color: #1f1f1f;
-    font-weight: bold;
-    font-size: 0.9rem;
-    padding: 8px 15px;
-}
-
-/* About Section Specifics */
-.about-section h5 {
-    text-align: left; /* Căn trái cho about section */
-}
-.about-section h2 {
-    text-align: left; /* Căn trái cho about section */
-}
-.about-section p {
-    color: #bbb;
-    margin-bottom: 20px;
-}
-.about-section .img-placeholder-small {
-    height: 250px;
-    background-color: #444;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #888;
-    font-weight: bold;
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
-.about-section blockquote {
-    font-style: italic;
-    color: #ddd;
-    border-left: 3px solid #f0ad4e;
-    padding-left: 15px;
-    margin-top: 15px;
-}
-.about-section blockquote footer {
-    font-style: normal;
-    color: #aaa;
-    font-size: 0.9rem;
-}
-.about-section .btn-read-more {
-     background-color: #f0ad4e;
-     border-color: #f0ad4e;
-     color: #1f1f1f;
-     font-weight: bold;
-}
-
-/* --- Footer --- */
-.resident-footer {
-    background-color: #1f1f1f;
-    padding: 40px 0 20px;
-    color: #bbb;
-    font-size: 0.9rem;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-}
-.resident-footer .footer-logo {
-    color: #fff;
-    font-weight: bold;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-}
-.resident-footer h5 {
-    color: #fff;
-    margin-bottom: 20px;
-    font-size: 1.1rem;
-}
-.resident-footer ul {
-    list-style: none;
-    padding: 0;
-}
-.resident-footer ul li {
-    margin-bottom: 8px;
-}
-.resident-footer ul li a {
-    color: #bbb;
+    transition: all 0.3s ease;
     text-decoration: none;
 }
-.resident-footer ul li a:hover {
-    color: #f0ad4e; /* Màu cam khi hover footer */
-}
-.resident-footer .social-icons a {
-    color: #f0ad4e;
-    margin-right: 10px;
-    font-size: 1.2rem;
-}
-.resident-footer .copyright {
-    border-top: 1px solid #333;
-    padding-top: 20px;
-    margin-top: 30px;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #888;
-}
-.icon-btn {
-    background: none;
-    border: none;
-    color: #adb5bd; /* Màu xám nhạt, giống các link */
-    padding: 0;
-    font-size: 1.1rem;
-    transition: color 0.2s ease;
+.btn-residem-secondary:hover {
+    background-color: var(--color-text-light);
+    color: var(--color-text-dark);
+    text-decoration: none;
 }
 
-.icon-btn:hover {
-    color: #ffffff; /* Màu trắng khi hover */
+/* Thanh thông tin dưới cùng của Hero */
+.residem-hero .hero-bottom-bar {
+    position: absolute; /* Đặt ở đáy */
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem 0;
+    color: var(--color-text-muted-light);
+    font-size: 0.95rem;
+    backdrop-filter: blur(5px);
 }
-.notification-bell {
-    position: relative;
-    /* Kế thừa style từ .icon-btn */
-}
-
-.notification-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: #dc3545; /* Màu đỏ */
-    color: white;
-    border-radius: 50%;
-    padding: 0.2em 0.5em;
-    font-size: 0.75rem;
-    font-weight: bold;
-    line-height: 1;
-}
-
-/* Container Dropdown */
-.notification-dropdown {
-    width: 350px;
-    max-height: 400px;
-    overflow-y: auto;
-    background-color: #2f343e; /* Nền tối */
-    border: 1px solid #4a4a4a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    margin-top: 10px !important;
-}
-
-.notification-header {
+.residem-hero .hero-bottom-bar .col-md-3 { /* 4 cột như mẫu */
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #4a4a4a;
+    justify-content: center;
+    gap: 10px;
+    color: #f0f0f0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
-.notification-header h6 {
-    margin: 0;
-    color: #ffffff;
+
+/* --- GALLERY SECTION (THEME SÁNG) --- */
+.gallery-section-light {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
+    padding: 5rem 0; /* Thêm padding trên dưới */
+}
+
+/* Sub-heading màu vàng đồng */
+.gallery-section-light .sub-heading,
+.highlights-section-light .sub-heading, /* Thêm cho Highlights */
+.location-section-dark .sub-heading {
+    color: var(--color-primary-accent);
     font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
 }
 
-.mark-all-read {
-    background: none;
-    border: none;
-    color: #0d6efd; /* Màu xanh link */
-    font-size: 0.85rem;
-    cursor: pointer;
-    padding: 0;
+.gallery-section-light h2,
+.highlights-section-light h2, /* Thêm cho Highlights */
+.location-section-dark h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--color-text-dark); /* Chữ tối */
 }
-.mark-all-read:hover {
-    text-decoration: underline;
-}
-
-.notification-empty {
-    padding: 1rem;
-    text-align: center;
-    color: #adb5bd; /* Màu xám nhạt */
+.location-section-dark h2 {
+    color: var(--color-text-light); /* Chữ sáng (cho section tối) */
 }
 
-/* Phần tử Thông báo */
-.notification-item {
-    background-color: #2f343e !important;
-    border-bottom: 1px solid #4a4a4a !important;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
+/* Nút filter (vàng đồng) */
+.gallery-section-light .filter-buttons .btn-residem-filter {
+    background-color: transparent;
+    color: var(--color-text-muted-dark);
+    border: 1px solid var(--color-border-light);
+    border-radius: 20px; /* Bo tròn */
+    padding: 8px 20px;
+    margin: 5px;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-.notification-item p {
-    color: #e0e0e0 !important;
-    margin-bottom: 0.25rem !important;
+.gallery-section-light .filter-buttons .btn-residem-filter.active,
+.gallery-section-light .filter-buttons .btn-residem-filter:hover {
+    background-color: var(--color-primary-accent);
+    color: var(--color-text-light);
+    border-color: var(--color-primary-accent);
+    text-decoration: none;
+}
+
+.gallery-image-wrapper {
+    overflow: hidden;
+    border-radius: 8px; /* Bo góc ảnh */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.gallery-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.gallery-image-wrapper:hover .gallery-image {
+    transform: scale(1.05);
+}
+
+
+/* --- HIGHLIGHTS NEARBY SECTION (MỚI - THEME SÁNG) --- */
+.highlights-section-light {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
+    padding: 5rem 0;
+}
+
+.highlights-section-light .highlight-card {
+    background-color: var(--color-highlights-card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%; /* Đảm bảo chiều cao bằng nhau */
+    display: flex;
+    flex-direction: column;
+}
+
+.highlights-section-light .highlight-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    background-color: var(--color-highlights-card-hover);
+}
+
+.highlights-section-light .highlight-card img {
+    width: 100%;
+    height: 180px; /* Chiều cao cố định cho ảnh */
+    object-fit: cover;
+    display: block;
+}
+
+.highlights-section-light .card-body {
+    padding: 20px;
+    flex-grow: 1; /* Cho phép phần body co giãn */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Đẩy tên và khoảng cách ra 2 đầu */
+}
+
+.highlights-section-light .card-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.highlights-section-light .card-distance {
+    font-size: 0.95rem;
+    color: var(--color-text-muted-dark);
+    font-weight: 500;
+}
+
+
+/* --- LOCATION SECTION (THEME TỐI - f1d423) --- */
+.location-section-dark {
+    background-color: var(--color-bg-dark-teal);
+    padding: 5rem 0;
+    /* Ghi đè container-fluid để nó full-width */
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+}
+
+.location-section-dark p {
+    color: var(--color-text-muted-light);
+}
+
+.location-section-dark .amenities-list {
+    list-style: none;
+    padding-left: 0;
+    color: var(--color-text-light); /* Chữ sáng */
+    font-size: 1rem;
+}
+.location-section-dark .amenities-list li {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+.location-section-dark .amenities-list i {
+    color: var(--color-primary-accent); /* Icon vàng đồng */
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+
+/* --- BIẾN MÀU (Cập nhật biến màu cho footer mới nếu chưa có trong index.css) --- */
+/* Nếu bạn chưa có, hãy thêm vào file index.css hoặc file chứa các biến màu gốc */
+:root {
+    --color-bg-footer-new: #3a342a; /* Màu vàng nâu trầm cho footer */
+    --color-text-footer-light: #f1ede8; /* Chữ sáng trên nền footer */
+    --color-text-footer-muted: #c7bda9; /* Chữ mờ trên nền footer */
+    --color-border-footer: #4d4438; /* Đường kẻ footer */
+}
+
+/* --- FOOTER MỚI (GỌN GÀNG, HIỆN ĐẠI, MÀU VÀNG NÂU) --- */
+
+.resident-footer.new-footer-compact {
+    background-color: var(--color-bg-footer-new); /* SỬ DỤNG MÀU MỚI */
+    padding: 3rem 0 1.5rem 0; 
+    color: var(--color-text-footer-muted);
     font-size: 0.95rem;
 }
 
-.notification-item small {
-    color: #adb5bd !important;
-    font-size: 0.8rem;
-}
-
-/* 1. Trạng thái CHƯA ĐỌC: Nổi bật */
-.notification-item.is-unread {
-    background-color: #3a414f !important; /* Nền đậm hơn */
-    opacity: 1;
-}
-.notification-item.is-unread p {
+/* Cột 1: Logo và Địa chỉ */
+.footer-logo-compact {
+    color: var(--color-text-footer-light);
     font-weight: 600;
-    color: #ffffff !important;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    text-decoration: none;
+}
+.footer-logo-compact .new-logo {
+    height: 40px;
+    width: auto;
+    margin-right: 12px;
+}
+.footer-address-compact {
+    font-size: 0.9rem;
+    color: var(--color-text-footer-muted);
+    line-height: 1.6;
 }
 
-/* 2. Trạng thái ĐÃ ĐỌC: Mờ đi */
-.notification-item.is-read {
-    opacity: 0.7; /* Làm mờ */
+/* Cột 2 & 3: Tiêu đề và List */
+.footer-heading-compact {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-footer-light);
+    margin-bottom: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.notification-item.is-read p {
-    font-weight: normal;
+.footer-links-list,
+.footer-contact-list {
+    list-style: none;
+    padding-left: 0;
+}
+.footer-links-list li,
+.footer-contact-list li {
+    margin-bottom: 0.75rem;
+}
+.footer-links-list li a {
+    color: var(--color-text-footer-muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+.footer-links-list li a:hover {
+    color: var(--color-primary-accent); /* Vàng đồng accent */
+}
+
+.footer-contact-list li {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-footer-light);
+}
+.footer-contact-list li i {
+    color: var(--color-primary-accent); /* Vàng đồng accent */
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+/* Thanh Copyright bên dưới */
+.footer-bottom-bar {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border-footer); /* Đường kẻ mờ */
+    font-size: 0.9rem;
+    color: var(--color-text-footer-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.social-icons-compact a {
+    color: var(--color-text-footer-muted);
+    font-size: 1rem;
+    margin-left: 15px;
+    transition: color 0.3s ease;
+}
+.social-icons-compact a:hover {
+    color: var(--color-primary-accent); /* Vàng đồng accent */
+}
+
+/* Responsive cho Footer mới */
+@media (max-width: 991.98px) {
+    .footer-logo-compact,
+    .footer-heading-compact {
+        justify-content: flex-start; 
+        text-align: left;
+    }
+}
+@media (max-width: 767.98px) {
+    .footer-bottom-bar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .social-icons-compact a:first-child {
+        margin-left: 0;
+    }
 }
