@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Container, Tabs, Tab, Card, Button, Form, Row, Col, Modal, Spinner, Alert, Table, ListGroup } from 'react-bootstrap';
 import axios from 'axios';
 import './ServicePage.css';
-// (Giữ nguyên import PayPal của bạn)
-// import PayPalPayment from '../components/PayPalbutton'; 
 
 const API_BASE_URL = 'http://localhost:5000';
 
@@ -57,7 +55,6 @@ const VehiclePriceTable = () => {
     }
 
     return (
-        // THAY ĐỔI: Sử dụng style 'residem-table'
         <Card className="mb-4 residem-card">
             <Card.Header as="h5" className="residem-card-header">Bảng giá Dịch vụ Gửi xe</Card.Header>
             <Card.Body>
@@ -237,7 +234,7 @@ const ServicePage = () => {
 
      const getVehicleTypeText = (type) => ({ car: 'Car', motorbike: 'Motorbike', bicycle: 'Bicycle' }[type] || type);
 
-     // --- THAY ĐỔI: Form Đăng ký (Đã style lại) ---
+     // --- Form Đăng ký (Đã style lại và thêm dấu *) ---
      const renderRegisterForm = () => {
          if (!regVehicleType) return null;
          const typeName = getVehicleTypeText(regVehicleType);
@@ -266,7 +263,7 @@ const ServicePage = () => {
                      {regSuccess && <Alert variant="success">{regSuccess}</Alert>}
                      <div className="d-flex justify-content-end gap-2 mt-3">
                          <Button variant="residem-secondary" onClick={() => setRegVehicleType(null)}>Back</Button>
-                         <Button variant="residem-primary" type="submit" disabled={regLoading}>
+                         <Button className="btn-residem-primary" type="submit" disabled={regLoading}>
                              {regLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Submit Registration'}
                          </Button>
                      </div>
@@ -307,7 +304,7 @@ const ServicePage = () => {
         }
     };
 
-    // --- THAY ĐỔI: Render Card Item (Đã style lại) ---
+    // --- SỬA LỖI: Render Card Item (Đã thay đổi nút 'pending') ---
     const renderCardItem = (card) => {
         let iconClass = 'bi bi-patch-question';
         const type = card.type || card.vehicle_type;
@@ -323,32 +320,52 @@ const ServicePage = () => {
             case 'active':
                 statusText = 'Active'; statusClass = 'status-badge status-success';
                 actions = (<>
-                    <Button variant="residem-warning" size="sm" onClick={() => openModal('reissue', card)}>Reissue</Button>
-                    <Button variant="residem-danger" size="sm" onClick={() => openModal('cancel', card)}>Cancel</Button>
+                    <Button className="btn-residem-warning" size="sm" onClick={() => openModal('reissue', card)}>Reissue</Button>
+                    <Button className="btn-residem-danger" size="sm" onClick={() => openModal('cancel', card)}>Cancel</Button>
                 </>);
                 break;
             case 'inactive':
                 statusText = 'Locked'; statusClass = 'status-badge status-warning';
                 actions = (<>
-                    <Button variant="residem-warning" size="sm" onClick={() => openModal('reissue', card)}>Reissue</Button>
-                    <Button variant="residem-danger" size="sm" onClick={() => openModal('cancel', card)}>Cancel</Button>
+                    <Button className="btn-residem-warning" size="sm" onClick={() => openModal('reissue', card)}>Reissue</Button>
+                    <Button className="btn-residem-danger" size="sm" onClick={() => openModal('cancel', card)}>Cancel</Button>
                 </>);
                 break;
+            
+            // --- THAY ĐỔI Ở ĐÂY ---
             case 'pending_register':
                 statusText = 'Pending Registration'; statusClass = 'status-badge status-pending';
-                actions = <Button variant="residem-secondary" size="sm" disabled>Processing</Button>;
+                // Thay thế Button disabled bằng indicator "chìm"
+                actions = (
+                    <div className="processing-indicator">
+                        <i className="bi bi-hourglass-split"></i> {/* Icon đồng hồ cát */}
+                        <span>Pending...</span>
+                    </div>
+                );
                 break;
             case 'pending_reissue':
                 statusText = 'Pending Reissue'; statusClass = 'status-badge status-pending';
+                // Thay thế Button disabled bằng indicator "chìm"
                 actions = (<>
-                    <Button variant="residem-secondary" size="sm" disabled>Pending</Button>
-                    <Button variant="residem-danger" size="sm" onClick={() => openModal('cancel', card)}>Cancel</Button>
+                    <div className="processing-indicator">
+                        <i className="bi bi-hourglass-split"></i>
+                        <span>Pending</span>
+                    </div>
+                    <Button className="btn-residem-danger" size="sm" onClick={() => openModal('cancel', card)}>Cancel</Button>
                 </>);
                 break;
              case 'pending_cancel':
                 statusText = 'Pending Cancellation'; statusClass = 'status-badge status-pending';
-                actions = <Button variant="residem-secondary" size="sm" disabled>Pending</Button>;
+                // Thay thế Button disabled bằng indicator "chìm"
+                actions = (
+                    <div className="processing-indicator">
+                        <i className="bi bi-hourglass-split"></i>
+                        <span>Pending</span>
+                    </div>
+                );
                 break;
+            // --- KẾT THÚC THAY ĐỔI ---
+
              case 'lost': statusText = 'Reported Lost'; statusClass = 'status-badge status-danger'; actions = null; break;
              case 'canceled': statusText = 'Canceled'; statusClass = 'status-badge status-danger'; actions = null; break;
             default: statusText = card.status;
@@ -517,22 +534,19 @@ const ServicePage = () => {
             {/* MODAL (GIỮ NGUYÊN) */}
             <Modal show={showModal} onHide={closeModal} centered>
                  <Modal.Header closeButton>
-                    {/* THAY ĐỔI: Style Modal */}
                     <Modal.Title className="residem-modal-title">{modalMode === 'reissue' ? 'Request Card Reissue' : 'Request Card Cancellation'}</Modal.Title>
                  </Modal.Header>
                  <Modal.Body>
                      {selectedCard && <p>Card: <strong>{selectedCard.brand} - {selectedCard.license_plate || 'N/A'}</strong></p>}
                      <Form.Group>
-                         {/* THAY ĐỔI: Thêm dấu * và chú thích */}
                          <Form.Label>Reason<span className="required-star">*</span></Form.Label>
                          <Form.Control as="textarea" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setManageError('');}} isInvalid={!!manageError} />
                          <Form.Control.Feedback type="invalid">{manageError}</Form.Control.Feedback>
                      </Form.Group>
                  </Modal.Body>
                  <Modal.Footer>
-                     {/* THAY ĐỔI: Style nút */}
                      <Button variant="residem-secondary" onClick={closeModal}>Close</Button>
-                     <Button variant="residem-primary" onClick={handleManageSubmit} disabled={manageLoading}>
+                     <Button className="btn-residem-primary" onClick={handleManageSubmit} disabled={manageLoading}>
                          {manageLoading ? <Spinner as="span" animation="border" size="sm" /> : 'Submit Request'}
                      </Button>
                  </Modal.Footer>

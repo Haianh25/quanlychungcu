@@ -1,41 +1,210 @@
-/* frontend/src/pages/admin/BlockManagement.css */
+/* --- BIẾN MÀU (TỪ index.css) --- */
+:root {
+    --color-bg-light: #f8f6f3;
+    --color-primary-accent: #b99a7b;
+    --color-primary-accent-hover: #a98a6b;
+    --color-text-dark: #333333;
+    --color-text-muted-dark: #555555;
+    --color-border-light: #e0e0e0;
+    
+    /* Màu cho ô phòng */
+    --color-room-available: #28a745; /* Xanh lá */
+    --color-room-available-hover: #218838;
+    --color-room-occupied: #dc3545; /* Đỏ */
+    --color-room-occupied-hover: #c82333;
+}
+/* -------------------------------- */
 
-.floor-container {
-  /* Có thể thêm style nếu cần */
-  display: block;
+/* Container chính của trang */
+.management-page-container {
+    /* (File này không cần max-width vì nó nằm trong layout admin) */
+    /* Quan trọng: Phải để nó 100% width của container cha */
+    width: 100%;
 }
 
-.floor-row .card-body {
-  padding: 1rem;
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fadeIn {
+    animation: fadeIn 0.5s ease-out;
 }
 
-.room-grid {
-  display: grid;
-  /* Tạo 6 cột bằng nhau */
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px; /* Khoảng cách giữa các ô phòng */
+/* Tiêu đề trang */
+.page-main-title {
+    color: var(--color-text-dark);
+    font-weight: 700;
+}
+
+/* --- CARD TRẮNG BỌC NGOÀI --- */
+.residem-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 0; /* Xóa padding mặc định */
+}
+.residem-card .card-body {
+    padding: 1.5rem; /* Thêm padding chuẩn */
+}
+.residem-card-header {
+    background-color: #fdfdfd;
+    border-bottom: 1px solid var(--color-border-light);
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    color: var(--color-text-dark);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+/* --- DROPDOWN CHỌN BLOCK --- */
+.residem-form-label {
+    font-weight: 500;
+    color: var(--color-text-muted-dark);
+    font-size: 0.9rem;
+}
+.residem-form-select.form-select {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-dark);
+    border-radius: 5px;
+    padding: 10px 15px;
+    box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.residem-form-select.form-select:focus {
+    background-color: #FFFFFF;
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-dark);
+    box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
+}
+
+/* --- GRID HIỂN THỊ PHÒNG --- */
+.floor-card .card-body.room-grid {
+    padding: 1.5rem;
+    /* === SỬA LỖI TẠI ĐÂY === */
+    display: grid;
+    /* Sử dụng auto-fit: Tự động lấp đầy 
+      minmax(90px, 1fr): Mỗi ô rộng tối thiểu 90px, 
+                       và tự co giãn (1fr) để lấp đầy hàng
+    */
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 15px; /* Khoảng cách giữa các ô phòng */
 }
 
 .room-box {
-  border: 1px solid #ccc;
-  padding: 15px; /* Tăng padding để ô vuông to hơn */
-  text-align: center;
-  font-weight: bold;
-  border-radius: 5px; /* Bo góc nhẹ */
-  cursor: default; /* Đổi con trỏ chuột */
-  color: white; /* Chữ màu trắng cho dễ đọc */
-  aspect-ratio: 1 / 1; /* Giữ tỷ lệ 1:1 để thành ô vuông */
-  display: flex; /* Căn giữa nội dung */
-  justify-content: center;
-  align-items: center;
+    border: 1px solid;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 5px; /* Bo góc 5px */
+    cursor: pointer; /* Luôn là con trỏ */
+    color: white;
+    aspect-ratio: 1 / 1; /* Giữ tỷ lệ 1:1 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1rem;
+    transition: all 0.2s ease-out;
 }
 
+/* Màu VÀNG ĐỒNG cho phòng trống */
 .room-box.available {
-  background-color: #ffc107; /* Màu cam */
-  border-color: #e0a800;
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent-hover);
+}
+.room-box.available:hover {
+    background-color: var(--color-primary-accent-hover);
+    transform: scale(1.05);
 }
 
+/* Màu XÁM CHÌ cho phòng đã có người */
 .room-box.occupied {
-  background-color: #198754; /* Màu xanh lá cây */
-  border-color: #146c43;
+    background-color: #6c757d; /* Màu xám chì (secondary) */
+    border-color: #5a6268;
+}
+.room-box.occupied:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+}
+
+/* Thông báo khi không có tin */
+.no-news-alert.alert-residem-info,
+.alert-residem-info {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-muted-dark);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    font-style: italic;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* --- MODAL (Style lại) --- */
+.modal-content {
+    background-color: var(--color-bg-light);
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+}
+.modal-header {
+    border-bottom: 1px solid var(--color-border-light);
+}
+.modal-title {
+    color: var(--color-text-dark);
+    font-weight: 600;
+}
+.modal-body {
+    color: var(--color-text-muted-dark);
+}
+.modal-body .form-label {
+    font-weight: 500;
+    color: var(--color-text-muted-dark);
+    font-size: 0.9rem;
+}
+.modal-body .form-control,
+.modal-body .form-select {
+    background-color: #FFFFFF;
+    border-color: var(--color-border-light);
+}
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--color-primary-accent);
+    box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
+}
+.modal-footer {
+    border-top: 1px solid var(--color-border-light);
+}
+
+/* Nút bấm (Style chung) */
+.btn-residem-primary {
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-light) !important;
+    padding: 10px 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+.btn-residem-primary:hover {
+    background-color: var(--color-primary-accent-hover);
+    color: var(--color-text-light);
+    transform: translateY(-2px);
+}
+.btn-residem-secondary {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-muted-dark) !important;
+    padding: 10px 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+.btn-residem-secondary:hover {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark) !important;
+    border-color: #ccc;
 }

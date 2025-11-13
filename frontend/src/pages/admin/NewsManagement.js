@@ -1,12 +1,13 @@
-// frontend/src/pages/admin/NewsManagement.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Button, ListGroup, Row, Col, Modal, Badge } from 'react-bootstrap';
+// THÊM: Import Spinner, Alert, Card
+import { Form, Button, ListGroup, Row, Col, Modal, Badge, Spinner, Alert, Card } from 'react-bootstrap';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import './NewsManagement.css';
+import './NewsManagement.css'; // Import CSS MỚI
 
 const NewsManagement = () => {
+    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [newsList, setNewsList] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [editingNews, setEditingNews] = useState(null);
@@ -17,27 +18,33 @@ const NewsManagement = () => {
     });
     const [content, setContent] = useState('');
     const [imageUrlPreview, setImageUrlPreview] = useState('');
-    const [sortBy, setSortBy] = useState('newest'); // <-- THÊM STATE MỚI
+    const [sortBy, setSortBy] = useState('newest');
+    // THÊM: State loading chính
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    // SỬA: Hàm fetchNews giờ sẽ nhận tham số sortBy
     const fetchNews = async () => {
         try {
+            setLoading(true); // Bật loading khi fetch
             const token = localStorage.getItem('adminToken');
             const config = { 
                 headers: { Authorization: `Bearer ${token}` },
-                params: { sortBy: sortBy } // <-- THÊM THAM SỐ
+                params: { sortBy: sortBy } 
             };
             const res = await axios.get('http://localhost:5000/api/admin/news', config);
             setNewsList(res.data);
+            setError('');
         } catch (err) {
             console.error("Error fetching news:", err);
+            setError('Failed to fetch news. Please try again.');
+        } finally {
+            setLoading(false); // Tắt loading khi xong
         }
     };
 
-    // SỬA: useEffect sẽ chạy lại khi sortBy thay đổi
     useEffect(() => {
         fetchNews();
-    }, [sortBy]); // <-- THÊM sortBy VÀO DEPENDENCY
+    }, [sortBy]); 
 
     const quillModules = {
         toolbar: [
@@ -101,7 +108,6 @@ const NewsManagement = () => {
                 'Content-Type': 'application/json'
             }
         };
-
         const payload = {
             title: formData.title,
             content: content,
@@ -138,78 +144,102 @@ const NewsManagement = () => {
         }
     };
 
+    // --- JSX ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     return (
-        <>
-            <div className="admin-page-content">
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h2>News Management</h2>
-                    <Button variant="primary" onClick={handleShowCreate}>Create New Post</Button>
-                </div>
-
-                {/* --- (THÊM BỘ LỌC SẮP XẾP) --- */}
-                <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortNewsBy">
-                    <Form.Label column sm="auto" className="mb-0">
-                        Sắp xếp theo:
-                    </Form.Label>
-                    <Col sm="4" md="3" lg="2">
-                        <Form.Select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                        >
-                            <option value="newest">Bài đăng mới nhất</option>
-                            <option value="oldest">Bài đăng cũ nhất</option>
-                        </Form.Select>
-                    </Col>
-                </Form.Group>
-                {/* --- (KẾT THÚC BỘ LỌC) --- */}
-
-                <ListGroup className="news-list-container">
-                    {newsList.map(item => (
-                        <ListGroup.Item key={item.id} className="news-list-item">
-                            <div className="d-flex align-items-center">
-                                {item.image_url ? (
-                                    <img src={item.image_url} alt={item.title} className="news-thumbnail-list" />
-                                ) : (
-                                    <div className="news-thumbnail-list d-flex align-items-center justify-content-center">No Image</div>
-                                )}
-                                <div className="ms-3 flex-grow-1">
-                                    {/* SỬA LỖI FONT: Thêm class CSS */}
-                                    <h5 className="news-item-title">{item.title}</h5>
-                                    <p className="news-item-meta">
-                                        By: {item.author_name || 'Admin'} | On: {new Date(item.created_at).toLocaleDateString()}
-                                    </p>
-                                    <Badge bg={item.status === 'active' ? 'success' : 'secondary'}>
-                                        {item.status}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <div className="d-flex gap-2">
-                                <Button variant="outline-light" size="sm" onClick={() => handleShowEdit(item)}>Edit</Button>
-                                <Button variant="outline-danger" size="sm" onClick={() => handleDelete(item.id)}>Delete</Button>
-                            </div>
-                        </ListGroup.Item>
-                    ))}
-                </ListGroup>
+        <div className="management-page-container fadeIn">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="page-main-title">News Management</h2>
+                {/* Style lại nút Create */}
+                <Button className="btn-residem-primary" onClick={handleShowCreate}>
+                    <i className="bi bi-plus-lg me-2"></i>Create New Post
+                </Button>
             </div>
+
+            {error && <Alert variant="danger">{error}</Alert>}
+
+            {/* Bọc Card trắng chuyên nghiệp */}
+            <Card className="residem-card">
+                <Card.Body>
+                    {/* Thanh Sắp xếp (Style lại) */}
+                    <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortNewsBy">
+                        <Form.Label column sm="auto" className="residem-form-label mb-0">
+                            Sort by:
+                        </Form.Label>
+                        <Col sm="4" md="3" lg="2">
+                            <Form.Select
+                                className="residem-form-select" // Style lại
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                            >
+                                <option value="newest">Newest</option>
+                                <option value="oldest">Oldest</option>
+                            </Form.Select>
+                        </Col>
+                    </Form.Group>
+
+                    {/* Danh sách tin tức (Style lại) */}
+                    <ListGroup className="news-list-container mt-3">
+                        {loading ? (
+                            <div className="text-center p-5"><Spinner animation="border" /></div>
+                        ) : newsList.length === 0 ? (
+                            <Alert variant="residem-info" className="no-news-alert">No news posts found.</Alert>
+                        ) : (
+                            newsList.map(item => (
+                                <ListGroup.Item key={item.id} className="news-list-item">
+                                    <div className="d-flex align-items-center">
+                                        {item.image_url ? (
+                                            <img src={item.image_url} alt={item.title} className="news-thumbnail-list" />
+                                        ) : (
+                                            <div className="news-thumbnail-list d-flex align-items-center justify-content-center">
+                                                <i className="bi bi-image-alt"></i>
+                                            </div>
+                                        )}
+                                        <div className="ms-3 flex-grow-1">
+                                            <h5 className="news-item-title">{item.title}</h5>
+                                            <p className="news-item-meta">
+                                                By: {item.author_name || 'Admin'} | On: {new Date(item.created_at).toLocaleDateString()}
+                                            </p>
+                                            {/* Style lại Badge */}
+                                            <span className={`status-badge ${item.status === 'active' ? 'status-success' : 'status-secondary'}`}>
+                                                {item.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="d-flex gap-2">
+                                        {/* Style lại nút Edit/Delete */}
+                                        <Button className="btn-residem-warning btn-sm" onClick={() => handleShowEdit(item)}>Edit</Button>
+                                        <Button className="btn-residem-danger btn-sm" onClick={() => handleDelete(item.id)}>Delete</Button>
+                                    </div>
+                                </ListGroup.Item>
+                            ))
+                        )}
+                    </ListGroup>
+                </Card.Body>
+            </Card>
             
-            <div className="pagination-container">
-                {/* Phân trang có thể thêm sau */}
-            </div>
+            {/* Phân trang (Nếu có) */}
+            {/* <div className="pagination-container">
+                 ... (Pagination component của bạn) ...
+            </div> */}
 
+            {/* Modal (Style lại) */}
             <Modal show={showModal} onHide={handleClose} size="lg" centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{editingNews ? 'Edit News Post' : 'Create New News Post'}</Modal.Title>
+                    <Modal.Title className="residem-modal-title">
+                        {editingNews ? 'Edit News Post' : 'Create New News Post'}
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Title</Form.Label>
-                            <Form.Control type="text" name="title" value={formData.title} onChange={handleFormChange} required />
+                            <Form.Label className="residem-form-label">Title<span className="required-star">*</span></Form.Label>
+                            <Form.Control className="residem-form-control" type="text" name="title" value={formData.title} onChange={handleFormChange} required />
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Content</Form.Label>
-                            <div className="quill-editor-container">
+                            <Form.Label className="residem-form-label">Content<span className="required-star">*</span></Form.Label>
+                            {/* Style lại ReactQuill */}
+                            <div className="quill-editor-container residem-quill">
                                 <ReactQuill 
                                     theme="snow" 
                                     value={content} 
@@ -222,8 +252,8 @@ const NewsManagement = () => {
                         <Row>
                             <Col md={6}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Status</Form.Label>
-                                    <Form.Select name="status" value={formData.status} onChange={handleFormChange}>
+                                    <Form.Label className="residem-form-label">Status</Form.Label>
+                                    <Form.Select className="residem-form-select" name="status" value={formData.status} onChange={handleFormChange}>
                                         <option value="active">Active (Published)</option>
                                         <option value="inactive">Inactive (Draft)</option>
                                     </Form.Select>
@@ -231,8 +261,9 @@ const NewsManagement = () => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Cover Image URL</Form.Label>
+                                    <Form.Label className="residem-form-label">Cover Image URL</Form.Label>
                                     <Form.Control 
+                                        className="residem-form-control"
                                         type="text" 
                                         name="imageUrl" 
                                         value={formData.imageUrl} 
@@ -244,20 +275,20 @@ const NewsManagement = () => {
                         </Row>
 
                         {imageUrlPreview && (
-                            <div className="text-center mb-3">
+                            <div className="text-center mb-3 image-preview-box">
                                 <p>Image Preview:</p>
-                                <img src={imageUrlPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
+                                <img src={imageUrlPreview} alt="Preview" />
                             </div>
                         )}
                         
-                        <div className="text-end">
-                            <Button variant="secondary" onClick={handleClose} className="me-2">Cancel</Button>
-                            <Button variant="primary" type="submit">Save Post</Button>
+                        <div className="text-end mt-4">
+                            <Button variant="residem-secondary" onClick={handleClose} className="me-2">Cancel</Button>
+                            <Button className="btn-residem-primary" type="submit">Save Post</Button>
                         </div>
                     </Form>
                 </Modal.Body>
             </Modal>
-        </>
+        </div>
     );
 };
 

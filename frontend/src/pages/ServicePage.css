@@ -149,6 +149,23 @@
     color: #dc3545;
     margin-left: 3px;
 }
+/* Style lại form control */
+.registration-form-container .form-control {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-dark);
+    border-radius: 5px;
+    padding: 10px 15px;
+    box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.registration-form-container .form-control:focus {
+    background-color: #FFFFFF;
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-dark);
+    box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
+}
+
 
 /* --- Card Quản lý Thẻ --- */
 .existing-card-item {
@@ -229,7 +246,9 @@
     opacity: 0.65;
 }
 
-.btn-residem-secondary {
+/* Nút phụ */
+.btn-residem-secondary,
+[variant="residem-secondary"] {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
     color: var(--color-text-muted-dark) !important;
@@ -239,7 +258,8 @@
     border-radius: 5px;
     transition: all 0.3s ease;
 }
-.btn-residem-secondary:hover {
+.btn-residem-secondary:hover,
+[variant="residem-secondary"]:hover {
     background-color: var(--color-bg-light);
     color: var(--color-text-dark) !important;
     border-color: #ccc;
@@ -253,15 +273,38 @@
     font-size: 0.9rem;
 }
 /* Nút màu khác */
-.btn-residem-warning {
+.btn-residem-warning,
+[variant="residem-warning"] {
     background-color: #ffc107;
     border-color: #ffc107;
     color: #000 !important;
 }
-.btn-residem-danger {
+.btn-residem-danger,
+[variant="residem-danger"] {
     background-color: #dc3545;
     border-color: #dc3545;
     color: #fff !important;
+}
+
+/* --- (MỚI) CHỈ BÁO ĐANG XỬ LÝ (Không phải nút) --- */
+.processing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Khoảng cách giữa spinner và chữ */
+    padding: 0.4rem 0.8rem; /* Giống btn-sm */
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-muted-dark);
+    background-color: var(--color-bg-light); /* Nền kem */
+    border: 1px solid var(--color-border-light); /* Viền mờ */
+    border-radius: 5px; /* Bo góc */
+    cursor: not-allowed; /* Con trỏ "cấm" */
+}
+.processing-indicator .spinner-border {
+    width: 1em; /* Làm spinner nhỏ hơn */
+    height: 1em;
+    border-width: 0.2em;
+    color: var(--color-primary-accent); /* Spinner màu vàng đồng */
 }
 
 /* --- MODAL (Style lại) --- */
@@ -280,6 +323,21 @@
 .modal-body {
     color: var(--color-text-muted-dark);
 }
+/* Style lại form trong modal */
+.modal-body .form-label {
+    font-weight: 500;
+    color: var(--color-text-muted-dark);
+    font-size: 0.9rem;
+}
+.modal-body .form-control {
+    background-color: #FFFFFF;
+    border-color: var(--color-border-light);
+}
+.modal-body .form-control:focus {
+    border-color: var(--color-primary-accent);
+    box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
+}
+
 .modal-footer {
     border-top: 1px solid var(--color-border-light);
 }
@@ -306,7 +364,8 @@
     margin-bottom: 1.25rem;
     border-bottom: 1px solid var(--color-border-light);
 }
-/* Widget Hướng dẫn */
+
+/* Widget Hướng dẫn (Steps) */
 .steps-list .list-group-item {
     border: none;
     padding: 0.75rem 0.25rem;
@@ -315,9 +374,11 @@
     display: flex;
     align-items: center;
     border-bottom: 1px dashed var(--color-border-light);
+    background: none;
 }
 .steps-list .list-group-item:last-child {
     border-bottom: none;
+    padding-bottom: 0;
 }
 .step-number {
     display: inline-flex;
@@ -333,7 +394,7 @@
     flex-shrink: 0; /* Không bị co lại */
 }
 
-/* Widget Hỗ trợ */
+/* Widget Hỗ trợ (FAQ) */
 .faq-list .list-group-item {
     border: none;
     padding: 0.5rem 0;

@@ -1,10 +1,12 @@
-// frontend/src/pages/admin/BlockManagement.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import RoomDetailsModal from '../../components/admin/RoomDetailsModal';
-import './BlockManagement.css';
+import './BlockManagement.css'; // Import CSS mới
+// THÊM: Import các component Bootstrap
+import { Card, Form, Spinner, Alert } from 'react-bootstrap';
 
 const BlockManagement = () => {
+    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [blocks, setBlocks] = useState([]);
     const [selectedBlockId, setSelectedBlockId] = useState('');
     const [selectedBlockName, setSelectedBlockName] = useState('');
@@ -14,10 +16,9 @@ const BlockManagement = () => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState(null);
 
-    // Fetch blocks
     useEffect(() => {
         const fetchBlocks = async () => {
-                try {
+            try {
                 const token = localStorage.getItem('adminToken');
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const res = await axios.get('http://localhost:5000/api/admin/blocks', config);
@@ -29,7 +30,6 @@ const BlockManagement = () => {
         fetchBlocks();
     }, []);
 
-    // Fetch rooms when block selected
     const handleBlockSelect = async (blockId, blockName) => {
         if (!blockId) {
             setSelectedBlockId('');
@@ -41,7 +41,7 @@ const BlockManagement = () => {
         setSelectedBlockName(blockName);
         setLoadingRooms(true);
         setError('');
-            try {
+        try {
             const token = localStorage.getItem('adminToken');
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const res = await axios.get(`http://localhost:5000/api/admin/blocks/${blockId}/rooms`, config);
@@ -54,7 +54,6 @@ const BlockManagement = () => {
         }
     };
 
-    // --- Logic modal chi tiết phòng ---
     const handleShowDetailsModal = (room) => {
         setSelectedRoom(room);
         setShowDetailsModal(true);
@@ -64,9 +63,7 @@ const BlockManagement = () => {
         setShowDetailsModal(false);
         setSelectedRoom(null);
     };
-    // --- Kết thúc logic ---
 
-    // Nhóm phòng theo tầng
     const roomsByFloor = Array.isArray(rooms) ? rooms.reduce((acc, room) => {
         const floor = room.floor;
         if (!acc[floor]) acc[floor] = [];
@@ -74,64 +71,79 @@ const BlockManagement = () => {
         return acc;
     }, {}) : {};
 
-    // Sắp xếp tầng
     const sortedFloors = roomsByFloor && typeof roomsByFloor === 'object'
         ? Object.keys(roomsByFloor).sort((a, b) => parseInt(b) - parseInt(a))
         : [];
 
+    // --- JSX ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     return (
-        <>
-            <div className="admin-page-content">
-                <h2>Block Management</h2>
-                {error && <p className="alert alert-danger">{error}</p>}
+        // THAY ĐỔI: Sử dụng class mới và animation
+        <div className="management-page-container fadeIn">
+            <h2 className="page-main-title mb-4">Block Management</h2>
+            {error && <Alert variant="danger">{error}</Alert>}
 
-                <div className="mb-3">
-                    <label htmlFor="blockSelect" className="form-label">Select Block:</label>
-                    <select
-                        id="blockSelect"
-                        className="form-select"
-                        value={selectedBlockId}
-                        onChange={(e) => {
-                            const selectedId = e.target.value;
-                            const selectedBlock = blocks.find(b => b.id === selectedId);
-                            handleBlockSelect(selectedId, selectedBlock ? selectedBlock.name : '');
-                        }}
-                    >
-                        <option value="">-- Select Block --</option>
-                        {blocks.map(block => (
-                            <option key={block.id} value={block.id}>{block.name}</option>
-                        ))}
-                    </select>
+            {/* Bọc Card trắng chuyên nghiệp */}
+            <Card className="residem-card">
+                <Card.Body>
+                    <Form.Group className="mb-3">
+                        <Form.Label htmlFor="blockSelect" className="residem-form-label">Select Block:</Form.Label>
+                        {/* Style lại Dropdown */}
+                        <Form.Select
+                            id="blockSelect"
+                            className="residem-form-select" // Class mới
+                            value={selectedBlockId}
+                            onChange={(e) => {
+                                const selectedId = e.target.value;
+                                const selectedBlock = blocks.find(b => b.id.toString() === selectedId); // So sánh chuỗi an toàn
+                                handleBlockSelect(selectedId, selectedBlock ? selectedBlock.name : '');
+                            }}
+                        >
+                            <option value="">-- Select Block --</option>
+                            {blocks.map(block => (
+                                <option key={block.id} value={block.id}>{block.name}</option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+                </Card.Body>
+            </Card>
+
+            {loadingRooms && (
+                <div className="text-center p-5">
+                    <Spinner animation="border" />
+                    <p className="mt-2">Loading room list...</p>
                 </div>
+            )}
 
-                {loadingRooms && <p>Loading room list...</p>}
-
-                {!loadingRooms && selectedBlockId && (
-                    <div className="floor-container">
-                        {sortedFloors.length > 0 ? sortedFloors.map(floor => (
-                            <div key={floor} className="floor-row card mb-3">
-                                <div className="card-header">
-                                    <strong>Floor {floor}</strong>
-                                </div>
-                                <div className="card-body room-grid">
-                                    {roomsByFloor[floor].map(room => (
-                                        <div
-                                            key={room.id}
-                                            className={`room-box ${room.resident_name ? 'occupied' : 'available'}`}
-                                            title={room.resident_name ? `Đang ở: ${room.resident_name}` : 'Còn trống'}
-                                            // Đảm bảo dòng onClick này tồn tại và đúng
-                                            onClick={() => handleShowDetailsModal(room)}
-                                            style={{ cursor: 'pointer' }}
-                                        >
-                                            {room.room_number}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )) : <p>No rooms found for this block.</p>}
-                    </div>
-                )}
-            </div>
+            {!loadingRooms && selectedBlockId && (
+                <div className="floor-container mt-4">
+                    {sortedFloors.length > 0 ? sortedFloors.map(floor => (
+                        // Style lại Card tầng
+                        <Card key={floor} className="mb-3 residem-card floor-card">
+                            <Card.Header className="residem-card-header floor-header">
+                                <strong>Floor {floor}</strong>
+                            </Card.Header>
+                            {/* THAY ĐỔI: Thêm className 'room-grid' vào Card.Body */}
+                            <Card.Body className="room-grid">
+                                {roomsByFloor[floor].map(room => (
+                                    // Style lại ô phòng
+                                    <div
+                                        key={room.id}
+                                        className={`room-box ${room.resident_name ? 'occupied' : 'available'}`}
+                                        title={room.resident_name ? `Occupied by: ${room.resident_name}` : 'Available'}
+                                        onClick={() => handleShowDetailsModal(room)}
+                                    >
+                                        {room.room_number}
+                                    </div>
+                                ))}
+                            </Card.Body>
+                        </Card>
+                    )) : (
+                        <Alert variant="residem-info" className="no-news-alert">
+                            No rooms found for this block.
+                        </Alert>
+                    )}
+                </div>
+            )}
 
             {selectedRoom && (
                 <RoomDetailsModal
@@ -141,7 +153,7 @@ const BlockManagement = () => {
                     blockName={selectedBlockName}
                 />
             )}
-        </>
+        </div>
     );
 };
 

@@ -11,8 +11,7 @@
 
 /* Container chính của trang */
 .management-page-container {
-    max-width: 1200px; /* Căn giữa nội dung */
-    margin: 3rem auto;
+    width: 100%;
 }
 
 /* Animation */
@@ -36,11 +35,48 @@
     border: 1px solid var(--color-border-light);
     border-radius: 0.5rem;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    padding: 1.5rem; /* Thêm padding cho card */
+    padding: 1.5rem;
+}
+/* Style Card khi dùng với Tab */
+.tab-content .residem-card {
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
 
-/* --- THANH TÌM KIẾM --- */
-.residem-search-bar.form-control {
+/* --- TABS STYLE (THEME RESIDEM) --- */
+.residem-tabs .nav-tabs {
+    border-bottom: 1px solid var(--color-border-light);
+}
+.residem-tabs .nav-tabs .nav-link {
+    color: var(--color-text-muted-dark);
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+.residem-tabs .nav-tabs .nav-link:hover {
+    color: var(--color-text-dark);
+    border-bottom-color: var(--color-border-light);
+}
+.residem-tabs .nav-tabs .nav-link.active {
+    color: var(--color-primary-accent);
+    background-color: transparent;
+    border-bottom: 2px solid var(--color-primary-accent);
+    font-weight: 600;
+}
+
+/* --- FORM CONTROLS (InputGroup, Select, Input) --- */
+.residem-form-label {
+    font-weight: 500;
+    color: var(--color-text-muted-dark);
+    font-size: 0.9rem;
+}
+.residem-form-select,
+.residem-form-control,
+.input-group-text {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
     color: var(--color-text-dark);
@@ -49,16 +85,22 @@
     box-shadow: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.residem-search-bar.form-control:focus {
+.residem-form-select:focus,
+.residem-form-control:focus {
     background-color: #FFFFFF;
     border-color: var(--color-primary-accent);
     color: var(--color-text-dark);
     box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
+    z-index: 3;
+}
+.required-star {
+    color: #dc3545;
+    margin-left: 3px;
 }
 
 /* --- BẢNG (THEME SÁNG) --- */
 .table-wrapper {
-    overflow-x: auto; /* Thêm cuộn ngang nếu quá hẹp */
+    overflow-x: auto;
 }
 .residem-table.table {
     --bs-table-bg: #FFFFFF;
@@ -69,26 +111,34 @@
     --bs-table-hover-bg: #e9e5e0;
     --bs-table-hover-color: var(--color-text-dark);
     margin-bottom: 0; 
-    table-layout: fixed; /* Giữ layout cố định */
+    /* table-layout: fixed; */ /* Bỏ fixed để cột Actions co giãn */
+    min-width: 1000px; /* Đảm bảo bảng đủ rộng */
 }
 .residem-table thead th {
     font-weight: 600;
     color: var(--color-text-muted-dark);
     border-bottom-width: 2px;
-    white-space: nowrap; /* Không xuống dòng */
+    white-space: nowrap;
 }
 .residem-table td {
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Hiển thị ... nếu quá dài */
+    text-overflow: ellipsis;
     vertical-align: middle;
 }
-/* Hàng giữ chỗ */
-.placeholder-row td {
-    height: 53.5px; /* Giữ chiều cao hàng ổn định */
+.residem-table td.actions-cell {
+    white-space: nowrap;
+    width: 1%;
+}
+.residem-link {
+    font-weight: 500;
+    text-decoration: none;
+}
+.residem-link:hover {
+    text-decoration: underline;
 }
 
-/* --- BADGES & STATUS --- */
+/* --- BADGES (Style lại) --- */
 .status-badge {
     padding: 0.3em 0.6em;
     font-size: 0.8rem;
@@ -98,41 +148,58 @@
     text-transform: capitalize;
 }
 .status-badge.status-success { background-color: #198754; }
+.status-badge.status-warning { background-color: #ffc107; color: #000; }
+.status-badge.status-danger { background-color: #dc3545; }
 .status-badge.status-secondary { background-color: #6c757d; }
 
-.status-text-success {
-    color: #198754;
-    font-weight: 500;
-}
-.status-text-danger {
-    color: #dc3545;
-    font-weight: 500;
+/* Thông báo "No news" */
+.no-news-alert.alert-residem-info,
+.alert-residem-info {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text-muted-dark);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    font-style: italic;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
+
 /* --- NÚT BẤM (Style chung) --- */
-.btn-residem-primary, .btn-residem-warning, .btn-residem-danger, .btn-residem-secondary {
-    border: none;
+.btn-residem-primary {
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-light) !important;
     padding: 10px 25px;
     font-weight: 600;
     font-size: 1rem;
     border-radius: 5px;
     transition: all 0.3s ease;
 }
-.btn-residem-primary {
-    background-color: var(--color-primary-accent);
-    color: var(--color-text-light) !important;
-}
 .btn-residem-primary:hover {
     background-color: var(--color-primary-accent-hover);
     color: var(--color-text-light);
     transform: translateY(-2px);
 }
-.btn-residem-secondary {
+.btn-residem-primary:disabled {
+    background-color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+    opacity: 0.65;
+}
+.btn-residem-secondary,
+[variant="secondary"] { 
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
     color: var(--color-text-muted-dark) !important;
+    padding: 10px 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
 }
-.btn-residem-secondary:hover {
+.btn-residem-secondary:hover,
+[variant="secondary"]:hover {
     background-color: var(--color-bg-light);
     color: var(--color-text-dark) !important;
     border-color: #ccc;
@@ -142,45 +209,46 @@
     border-color: #ffc107;
     color: #000 !important;
 }
-.btn-residem-danger {
+.btn-residem-danger,
+[variant="danger"] {
     background-color: #dc3545;
     border-color: #dc3545;
     color: #fff !important;
 }
-/* Nút size nhỏ (cho Edit/Delete) */
+.btn-residem-success {
+    background-color: #198754;
+    border-color: #198754;
+    color: #fff !important;
+}
+.btn-residem-play {
+    background-color: transparent;
+    border: 1px solid #198754;
+    color: #198754 !important;
+}
+.btn-residem-play:hover {
+    background-color: #198754;
+    color: #fff !important;
+}
+.btn-residem-pause {
+    background-color: transparent;
+    border: 1px solid #ffc107;
+    color: #ffc107 !important;
+}
+.btn-residem-pause:hover {
+    background-color: #ffc107;
+    color: #000 !important;
+}
+
+/* Nút size nhỏ (cho Actions) */
 .btn-residem-primary.btn-sm,
 .btn-residem-secondary.btn-sm,
 .btn-residem-warning.btn-sm,
-.btn-residem-danger.btn-sm {
+.btn-residem-danger.btn-sm,
+.btn-residem-success.btn-sm,
+.btn-residem-play.btn-sm,
+.btn-residem-pause.btn-sm {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
-}
-
-/* --- PAGINATION (Style lại) --- */
-.residem-pagination .pagination { margin: 0; }
-.residem-pagination .page-item .page-link {
-    color: var(--color-text-muted-dark);
-    background-color: #FFFFFF;
-    border: 1px solid var(--color-border-light);
-    border-radius: 5px;
-    margin: 0 3px;
-    transition: all 0.2s ease;
-}
-.residem-pagination .page-item .page-link:hover {
-    background-color: #e9ecef;
-    color: var(--color-text-dark);
-    border-color: var(--color-border-light);
-}
-.residem-pagination .page-item.active .page-link {
-    background-color: var(--color-primary-accent);
-    border-color: var(--color-primary-accent);
-    color: #FFFFFF;
-    box-shadow: 0 2px 5px rgba(185, 154, 123, 0.3);
-}
-.residem-pagination .page-item.disabled .page-link {
-    color: #ccc;
-    background-color: #f8f9fa;
-    border-color: var(--color-border-light);
 }
 
 /* --- MODAL (Style lại) --- */
@@ -192,27 +260,12 @@
 .modal-header {
     border-bottom: 1px solid var(--color-border-light);
 }
-.modal-title {
+.residem-modal-title {
     color: var(--color-text-dark);
     font-weight: 600;
 }
 .modal-body {
     color: var(--color-text-muted-dark);
-}
-.modal-body .form-label {
-    font-weight: 500;
-    color: var(--color-text-muted-dark);
-    font-size: 0.9rem;
-}
-.modal-body .form-control,
-.modal-body .form-select {
-    background-color: #FFFFFF;
-    border-color: var(--color-border-light);
-}
-.modal-body .form-control:focus,
-.modal-body .form-select:focus {
-    border-color: var(--color-primary-accent);
-    box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
 }
 .modal-footer {
     border-top: 1px solid var(--color-border-light);
