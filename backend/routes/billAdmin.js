@@ -17,7 +17,7 @@ router.post('/generate-bills', protect, isAdmin, async (req, res) => {
     console.log(`[Bills] Admin triggered generation for ${month}/${year}`);
     const result = await generateBillsForMonth(month, year);
     if (result.success) {
-        res.json({ message: `Tạo thành công ${result.count} hóa đơn mới cho tháng ${month}/${year}.` });
+        res.json({ message: `Create Success ${result.count} new bills for ${month}/${year}.` });
     } else {
         res.status(500).json({ message: result.error });
     }
@@ -47,7 +47,7 @@ router.get('/', protect, isAdmin, async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error('[Bills GET] Error fetching bills:', err);
-        res.status(500).json({ message: 'Lỗi server khi tải hóa đơn' });
+        res.status(500).json({ message: 'Server error while loading bills' });
     }
 });
 
@@ -64,7 +64,7 @@ router.get('/:id', protect, isAdmin, async (req, res) => {
         res.json(lineItemsRes.rows);
     } catch (err) {
         console.error(`Error fetching bill details for ID ${billId}:`, err);
-        res.status(500).json({ message: 'Lỗi server khi tải chi tiết hóa đơn' });
+        res.status(500).json({ message: 'Server error while loading bill details' });
     }
 });
 
@@ -79,12 +79,12 @@ router.post('/:id/mark-paid', protect, isAdmin, async (req, res) => {
             [billId]
         );
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy hóa đơn hoặc hóa đơn đã được thanh toán.' });
+            return res.status(404).json({ message: 'Bill not found or already paid.' });
         }
-        res.json({ message: `Hóa đơn #${billId} đã được đánh dấu thanh toán.` });
+        res.json({ message: `Bill #${billId} has been marked as paid.` });
     } catch (err) {
         console.error(`Error marking bill ${billId} as paid:`, err);
-        res.status(500).json({ message: 'Lỗi server' });
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

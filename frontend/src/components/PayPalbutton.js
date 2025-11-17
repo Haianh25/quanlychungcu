@@ -24,7 +24,7 @@ const ButtonWrapper = ({ bill, onPaymentSuccess, onPaymentError, setProcessing }
             return res.data.orderID; 
         } catch (error) {
             console.error('Error creating PayPal order', error);
-            onPaymentError('Không thể tạo đơn hàng PayPal. Vui lòng thử lại.'); 
+            onPaymentError('Could not create PayPal order. Please try again.'); 
             setProcessing(false);
             throw error;
         }
@@ -38,10 +38,10 @@ const ButtonWrapper = ({ bill, onPaymentSuccess, onPaymentError, setProcessing }
                 _body: data, 
             });
             console.log('Payment successful', res.data);
-            onPaymentSuccess('Thanh toán thành công!');
+            onPaymentSuccess('Payment successful!');
         } catch (error) {
             console.error('Error capturing PayPal order', error);
-            onPaymentError(error.response?.data?.message || 'Thanh toán thất bại. Vui lòng liên hệ ban quản lý.');
+            onPaymentError(error.response?.data?.message || 'Payment failed. Please contact management.');
         } finally {
             setProcessing(false); // Dừng hiển thị loading
         }
@@ -56,7 +56,7 @@ const ButtonWrapper = ({ bill, onPaymentSuccess, onPaymentError, setProcessing }
     // 4. Xử lý lỗi từ PayPal SDK
     const onError = (err) => {
         console.error('PayPal SDK Error', err);
-        onPaymentError('Đã xảy ra lỗi với PayPal. Vui lòng thử lại sau.');
+        onPaymentError('An error occurred with PayPal. Please try again later.');
         setProcessing(false);
     };
 
@@ -78,7 +78,7 @@ const ButtonWrapper = ({ bill, onPaymentSuccess, onPaymentError, setProcessing }
 // Component chính bao bọc Provider
 const PayPalPayment = ({ bill, onPaymentSuccess, onPaymentError, setProcessing, isProcessing }) => {
     if (!PAYPAL_CLIENT_ID || PAYPAL_CLIENT_ID === "YOUR_SANDBOX_CLIENT_ID") {
-        return <Alert variant="danger">PayPal Client ID chưa được cấu hình.</Alert>;
+        return <Alert variant="danger">PayPal Client ID is not configured.</Alert>;
     }
 
     return (
@@ -86,7 +86,7 @@ const PayPalPayment = ({ bill, onPaymentSuccess, onPaymentError, setProcessing, 
             {isProcessing && (
                 <div className="payment-loading-overlay">
                     <Spinner animation="border" />
-                    <span>Đang xử lý...</span>
+                    <span>Processing...</span>
                 </div>
             )}
             <PayPalScriptProvider options={{ "client-id": PAYPAL_CLIENT_ID, currency: "USD" }}>

@@ -19,7 +19,7 @@ const BillPage = () => {
 
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('token'); 
-        if (!token) { setError("Vui lòng đăng nhập."); return null; }
+        if (!token) { setError("Please Login."); return null; }
         return { headers: { 'Authorization': `Bearer ${token}` } };
     }, []);
 
@@ -38,7 +38,7 @@ const BillPage = () => {
             setTransactions(transRes.data || []);
         } catch (err) {
             console.error('Error loading bill data:', err);
-            setError(err.response?.data?.message || 'Không thể tải dữ liệu hóa đơn.');
+            setError(err.response?.data?.message || 'Could not load bill data.');
         } finally {
             setLoading(false);
         }

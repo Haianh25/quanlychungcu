@@ -70,7 +70,12 @@ const AdminSidebar = () => {
                 Fee Management
             </NavLink>
             {/* --- (KẾT THÚC BỔ SUNG) --- */}
-
+                <NavLink 
+    to="/admin/amenity-management"
+    className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
+>
+    Amenity Management
+</NavLink>
         </div>
     );
 };
