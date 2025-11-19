@@ -8,8 +8,8 @@ router.get('/', protect, isAdmin, async (req, res) => {
         const { rows } = await db.query('SELECT * FROM fees ORDER BY fee_id ASC');
         res.json(rows);
     } catch (err) {
-        console.error('Lỗi khi lấy danh sách phí:', err.message);
-        res.status(500).json({ message: 'Lỗi server' });
+        console.error('Error while fetching the fee list.:', err.message);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
@@ -17,12 +17,12 @@ router.post('/', protect, isAdmin, async (req, res) => {
     const { fee_name, fee_code, price, description } = req.body;
 
     if (!fee_name || !fee_code || !price) {
-        return res.status(400).json({ message: 'Vui lòng điền đầy đủ Tên, Mã, và Giá Phí.' });
+        return res.status(400).json({ message: 'Please fill in all required fields: Name, Code, and Price.' });
     }
     try {
         const check = await db.query('SELECT 1 FROM fees WHERE fee_code = $1', [fee_code.toUpperCase()]);
         if (check.rows.length > 0) {
-            return res.status(409).json({ message: 'Mã Phí (Key) này đã tồn tại. Vui lòng chọn mã khác.' });
+            return res.status(409).json({ message: 'This fee code already exists. Please choose a different code.' });
         }
 
         const { rows } = await db.query(
@@ -31,8 +31,8 @@ router.post('/', protect, isAdmin, async (req, res) => {
         );
         res.status(201).json(rows[0]);
     } catch (err) {
-        console.error('Lỗi khi thêm phí mới:', err.message);
-        res.status(500).json({ message: 'Lỗi server' });
+        console.error('Error while adding new fee:', err.message);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
@@ -41,7 +41,7 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
     const { fee_name, price, description } = req.body;
 
     if (!fee_name || !price) {
-        return res.status(400).json({ message: 'Vui lòng điền đầy đủ Tên và Giá Phí.' });
+        return res.status(400).json({ message: 'Please fill in all required fields: Name and Price.' });
     }
 
     try {
@@ -51,12 +51,12 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy phí này.' });
+            return res.status(404).json({ message: 'Fee not found.' });
         }
         res.json(rows[0]);
     } catch (err) {
-        console.error('Lỗi khi cập nhật phí:', err.message);
-        res.status(500).json({ message: 'Lỗi server' });
+        console.error('Error while updating fee:', err.message);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 router.delete('/:id', protect, isAdmin, async (req, res) => {
@@ -67,23 +67,23 @@ router.delete('/:id', protect, isAdmin, async (req, res) => {
         const feeCheck = await db.query('SELECT fee_code FROM fees WHERE fee_id = $1', [id]);
         if (feeCheck.rows.length > 0 && 
             (feeCheck.rows[0].fee_code === 'MANAGEMENT_FEE' || feeCheck.rows[0].fee_code === 'ADMIN_FEE')) {
-            return res.status(400).json({ message: 'Không thể xóa các loại phí hệ thống cốt lõi.' });
+            return res.status(400).json({ message: 'Cannot delete core system fees.' });
         }
 
-        // Tiến hành xóa
+        // Proceed to delete
         const { rowCount } = await db.query('DELETE FROM fees WHERE fee_id = $1', [id]);
 
         if (rowCount === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy phí này để xóa.' });
+            return res.status(404).json({ message: 'Fee not found.' });
         }
-        res.json({ message: 'Đã xóa phí thành công.' });
+        res.json({ message: 'Fee deleted successfully.' });
     } catch (err) {
-        console.error('Lỗi khi xóa phí:', err.message);
-        // Kiểm tra lỗi khóa ngoại (nếu phí đã được dùng trong hóa đơn cũ)
+        console.error('Error while deleting fee:', err.message);
+        // Check for foreign key constraint error (if the fee has been used in old invoices)
         if (err.code === '23503') { 
-            return res.status(400).json({ message: 'Xóa thất bại. Phí này đã được sử dụng trong các hóa đơn cũ và không thể xóa.' });
+            return res.status(400).json({ message: 'Deletion failed. This fee has been used in old invoices and cannot be deleted.' });
         }
-        res.status(500).json({ message: 'Lỗi server' });
+        res.status(500).json({ message: 'Server error' });
     }
 });
 module.exports = router;

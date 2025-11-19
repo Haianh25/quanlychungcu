@@ -19,7 +19,7 @@ router.get('/rooms', protect, async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi tải danh sách phòng.' });
+        res.status(500).json({ message: 'Failed to load room list.' });
     }
 });
 
@@ -38,11 +38,11 @@ router.get('/my-bookings', protect, async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi tải lịch sử.' });
+        res.status(500).json({ message: 'Failed to load booking history.' });
     }
 });
 
-// 3. ĐẶT PHÒNG
+// 3. BOOK ROOM
 router.post('/book', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const { roomId, date, startTime, endTime } = req.body;
@@ -53,7 +53,7 @@ router.post('/book', protect, async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (bookingDate <= today) {
-            return res.status(400).json({ message: 'Bạn phải đặt phòng trước ít nhất 1 ngày.' });
+            return res.status(400).json({ message: 'You have to book at least 1 day in advance.' });
         }
 
         // B. Validate giới hạn: Mỗi resident chỉ được giữ 1 lịch active (status = confirmed và ngày chưa qua)
@@ -64,10 +64,10 @@ router.post('/book', protect, async (req, res) => {
             [residentId]
         );
         if (activeBooking.rows.length > 0) {
-            return res.status(400).json({ message: 'Bạn đang có lịch đặt chưa hoàn thành. Mỗi cư dân chỉ được giữ 1 lịch đặt.' });
+            return res.status(400).json({ message: 'You already have an active booking. Each resident can only hold one booking.' });
         }
 
-        // C. Kiểm tra trùng lịch (Overlap) với người khác
+        // C. Check for overlapping bookings with others
         // Logic: (StartA < EndB) and (EndA > StartB)
         const overlap = await db.query(
             `SELECT id FROM room_bookings 
@@ -77,10 +77,10 @@ router.post('/book', protect, async (req, res) => {
         );
 
         if (overlap.rows.length > 0) {
-            return res.status(400).json({ message: 'Khung giờ này đã có người đặt. Vui lòng chọn giờ khác.' });
+            return res.status(400).json({ message: 'This time slot is already booked. Please choose a different time.' });
         }
 
-        // D. Lấy giá tiền từ bảng Fees thông qua bảng Rooms
+        // D. Get price from Fees table through Rooms table
         const priceQuery = `
             SELECT f.price 
             FROM community_rooms r 
@@ -94,26 +94,26 @@ router.post('/book', protect, async (req, res) => {
         const start = parseInt(startTime.split(':')[0]);
         const end = parseInt(endTime.split(':')[0]);
         const duration = end - start;
-        if (duration <= 0) return res.status(400).json({ message: 'Thời gian không hợp lệ.' });
+        if (duration <= 0) return res.status(400).json({ message: 'Invalid time range.' });
         
         const totalPrice = duration * pricePerHour;
 
-        // F. Lưu vào DB
+        // F. Save to DB
         await db.query(
             `INSERT INTO room_bookings (resident_id, room_id, booking_date, start_time, end_time, total_price)
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [residentId, roomId, date, startTime, endTime, totalPrice]
         );
 
-        res.json({ message: 'Đặt phòng thành công! Phí đã được ghi nhận.' });
+        res.json({ message: 'Booking successful! The fee has been recorded.' });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi server khi đặt phòng.' });
+        res.status(500).json({ message: 'Server error when booking room.' });
     }
 });
 
-// 4. Hủy lịch (User tự hủy)
+// 4. Cancel booking (User cancels)
 router.post('/cancel/:id', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     try {
@@ -124,12 +124,12 @@ router.post('/cancel/:id', protect, async (req, res) => {
         );
         
         if (result.rows.length === 0) {
-            return res.status(400).json({ message: 'Không tìm thấy lịch hoặc bạn không có quyền hủy.' });
+            return res.status(400).json({ message: 'Booking not found or you do not have permission to cancel.' });
         }
 
-        res.json({ message: 'Đã hủy lịch đặt phòng.' });
+        res.json({ message: 'Booking has been cancelled.' });
     } catch (err) {
-        res.status(500).json({ message: 'Lỗi server.' });
+        res.status(500).json({ message: 'Server error.' });
     }
 });
 

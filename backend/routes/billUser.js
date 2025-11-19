@@ -42,7 +42,7 @@ router.get('/my-bills-detailed', protect, async (req, res) => {
         res.json({ bills: billsWithDetails });
     } catch (err) {
         console.error('Error fetching user bills with details:', err);
-        res.status(500).json({ message: 'Lỗi server khi tải hóa đơn.' });
+        res.status(500).json({ message: 'Server error when loading bills.' });
     }
 });
 
@@ -59,7 +59,7 @@ router.get('/my-transactions', protect, async (req, res) => {
         res.json(transRes.rows);
     } catch (err) {
         console.error('Error fetching user transactions:', err);
-        res.status(500).json({ message: 'Lỗi server khi tải lịch sử giao dịch.' });
+        res.status(500).json({ message: 'Server error when loading transaction history.' });
     }
 });
 
@@ -82,7 +82,7 @@ router.post('/create-payment', protect, async (req, res) => {
             [bill_id, residentId]
         );
         if (billRes.rows.length === 0) {
-            throw new Error('Hóa đơn không hợp lệ hoặc đã được thanh toán.');
+            throw new Error('Invalid bill or already paid.');
         }
         const bill = billRes.rows[0];
         const amountToPay = bill.total_amount; 
@@ -105,7 +105,7 @@ router.post('/create-payment', protect, async (req, res) => {
         if (isSuccess) {
             // 5a. Thanh toán thành công (SỬA: dùng transaction_id)
             await client.query(
-                "UPDATE transactions SET status = 'success', message = 'Thanh toán giả lập thành công' WHERE transaction_id = $1",
+                "UPDATE transactions SET status = 'success', message = 'Simulated payment successful' WHERE transaction_id = $1",
                 [newTransactionId]
             );
             // 5b. Cập nhật hóa đơn (SỬA: dùng bill_id)
@@ -114,20 +114,20 @@ router.post('/create-payment', protect, async (req, res) => {
                 [bill_id]
             );
             await client.query('COMMIT');
-            res.json({ success: true, message: 'Thanh toán thành công!', transaction_code: transCode });
+            res.json({ success: true, message: 'Payment successful!', transaction_code: transCode });
         } else {
             // 5a. Thanh toán thất bại (SỬA: dùng transaction_id)
             await client.query(
-                "UPDATE transactions SET status = 'failed', message = 'Thanh toán giả lập thất bại' WHERE transaction_id = $1",
+                "UPDATE transactions SET status = 'failed', message = 'Simulated payment failed' WHERE transaction_id = $1",
                 [newTransactionId]
             );
             await client.query('COMMIT'); 
-            res.status(400).json({ success: false, message: 'Thanh toán thất bại. Ngân hàng từ chối.', transaction_code: transCode });
+            res.status(400).json({ success: false, message: 'Payment failed. Bank declined.', transaction_code: transCode });
         }
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error creating payment:', err);
-        res.status(500).json({ message: err.message || 'Lỗi server khi tạo thanh toán.' });
+        res.status(500).json({ message: err.message || 'Server error when creating payment.' });
     } finally {
         client.release();
     }

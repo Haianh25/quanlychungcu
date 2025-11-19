@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Tabs, Tab, Card, Form, Button, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
-import './ProfilePage.css'; // Import CSS
+import './ProfilePage.css'; 
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const ProfilePage = () => {
-    // --- TOÀN BỘ LOGIC STATE VÀ HÀM CỦA BẠN (GIỮ NGUYÊN) ---
-    const [key, setKey] = useState('details'); // Tab mặc định
+    const [key, setKey] = useState('details');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(''); // Lỗi chung
+    const [error, setError] = useState('');
 
     const [detailsFormData, setDetailsFormData] = useState({ fullName: '', email: '', phone: '' });
     const [detailsLoading, setDetailsLoading] = useState(false);
     const [detailsError, setDetailsError] = useState('');
     const [detailsSuccess, setDetailsSuccess] = useState('');
-
+    
     const [passFormData, setPassFormData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [passLoading, setPassLoading] = useState(false);
     const [passError, setPassError] = useState('');
@@ -24,7 +23,7 @@ const ProfilePage = () => {
     const getUserAuthConfig = useCallback(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            setError("Vui lòng đăng nhập để xem hồ sơ.");
+            setError("Please log in to view profile.");
             return null;
         }
         return { headers: { 'Authorization': `Bearer ${token}` } };
@@ -43,8 +42,8 @@ const ProfilePage = () => {
                     phone: res.data.phone || ''
                 });
             } catch (err) {
-                console.error("Lỗi tải hồ sơ:", err);
-                setError(err.response?.data?.message || "Không thể tải thông tin hồ sơ.");
+                console.error("Error loading profile:", err);
+                setError(err.response?.data?.message || "Failed to load profile.");
             } finally {
                 setLoading(false);
             }
@@ -55,6 +54,7 @@ const ProfilePage = () => {
     const handleDetailsChange = (e) => {
         setDetailsFormData({ ...detailsFormData, [e.target.name]: e.target.value });
     };
+
     const handlePassChange = (e) => {
         setPassFormData({ ...passFormData, [e.target.name]: e.target.value });
     };
@@ -64,21 +64,22 @@ const ProfilePage = () => {
         const config = getUserAuthConfig();
         if (!config) return;
         setDetailsLoading(true); setDetailsError(''); setDetailsSuccess('');
+        
         try {
+            // Chỉ gửi Phone lên server
             const res = await axios.put(`${API_BASE_URL}/api/profile/update-details`, {
-                fullName: detailsFormData.fullName,
-                email: detailsFormData.email,
                 phone: detailsFormData.phone
             }, config);
-            setDetailsSuccess(res.data.message || 'Cập nhật thành công!');
-            setDetailsFormData({
-                fullName: res.data.user.full_name,
-                email: res.data.user.email,
+
+            setDetailsSuccess(res.data.message || 'Update successful!');
+            // Update state với dữ liệu mới từ server trả về
+            setDetailsFormData(prev => ({
+                ...prev,
                 phone: res.data.user.phone
-            });
+            }));
         } catch (err) {
-            console.error("Lỗi cập nhật chi tiết:", err);
-            setDetailsError(err.response?.data?.message || "Cập nhật thất bại.");
+            console.error("Update error:", err);
+            setDetailsError(err.response?.data?.message || "Update failed.");
         } finally {
             setDetailsLoading(false);
         }
@@ -95,34 +96,30 @@ const ProfilePage = () => {
                 newPassword: passFormData.newPassword,
                 confirmPassword: passFormData.confirmPassword
             }, config);
-            setPassSuccess(res.data.message || 'Đổi mật khẩu thành công!');
+            setPassSuccess(res.data.message || 'Password changed successfully!');
             setPassFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         } catch (err)
         {
-            console.error("Lỗi đổi mật khẩu:", err);
-            setPassError(err.response?.data?.message || "Đổi mật khẩu thất bại.");
+            console.error("Password change error:", err);
+            setPassError(err.response?.data?.message || "Failed to change password.");
         } finally {
             setPassLoading(false);
         }
     };
 
-    // --- PHẦN JSX ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     if (loading) {
         return <Container className="profile-page-container text-center p-5"><Spinner animation="border" /></Container>;
     }
 
     return (
-        // Container bọc toàn bộ nội dung và căn giữa
-        <Container className="profile-page-container my-5">
+        <Container className="profile-page-container my-5 fadeIn">
             <h2 className="mb-4 profile-page-title">Your Profile</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             
-            {/* THAY ĐỔI: Thêm className 'residem-tabs' để style tab chuyên nghiệp */}
             <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
                 
                 {/* === TAB 1: THÔNG TIN CHI TIẾT === */}
                 <Tab eventKey="details" title="Profile Details">
-                    {/* Thẻ Card trắng chứa form */}
                     <Card className="profile-form-card">
                         <Card.Body>
                             <Form onSubmit={handleDetailsSubmit}>
@@ -130,28 +127,54 @@ const ProfilePage = () => {
                                     <Col md={6}>
                                         <Form.Group className="mb-3">
                                             <Form.Label>Full Name</Form.Label>
-                                            <Form.Control type="text" name="fullName" value={detailsFormData.fullName} onChange={handleDetailsChange} required />
+                                            {/* KHÓA: Disabled & ReadOnly */}
+                                            <Form.Control 
+                                                type="text" 
+                                                value={detailsFormData.fullName} 
+                                                disabled 
+                                                className="bg-light"
+                                                title="Contact Admin to change name"
+                                            />
+                                            <Form.Text className="text-muted small">
+                                                * Name cannot be changed. Contact Admin for corrections.
+                                            </Form.Text>
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group className="mb-3">
                                             <Form.Label>Phone Number</Form.Label>
-                                            <Form.Control type="tel" name="phone" value={detailsFormData.phone} onChange={handleDetailsChange} required />
+                                            <Form.Control 
+                                                type="tel" 
+                                                name="phone" 
+                                                value={detailsFormData.phone} 
+                                                onChange={handleDetailsChange} 
+                                                required 
+                                            />
                                         </Form.Group>
                                     </Col>
                                 </Row>
+
                                 <Form.Group className="mb-3">
                                     <Form.Label>Email</Form.Label>
-                                    <Form.Control type="email" name="email" value={detailsFormData.email} onChange={handleDetailsChange} required />
+                                    {/* KHÓA: Disabled & ReadOnly */}
+                                    <Form.Control 
+                                        type="email" 
+                                        value={detailsFormData.email} 
+                                        disabled 
+                                        className="bg-light"
+                                        title="Email cannot be changed"
+                                    />
+                                    <Form.Text className="text-muted small">
+                                        * Email is your login identifier and cannot be changed directly.
+                                    </Form.Text>
                                 </Form.Group>
-                                
+                            
                                 {detailsError && <Alert variant="danger" className="mt-3">{detailsError}</Alert>}
                                 {detailsSuccess && <Alert variant="success" className="mt-3">{detailsSuccess}</Alert>}
 
                                 <div className="text-end mt-4">
-                                    {/* THAY ĐỔI: Dùng className 'btn-residem-primary' cho nút */}
                                     <Button className="btn-residem-primary" type="submit" disabled={detailsLoading}>
-                                        {detailsLoading ? <Spinner as="span" size="sm" /> : 'Save Changes'}
+                                        {detailsLoading ? <Spinner as="span" size="sm" /> : 'Save Phone Number'}
                                     </Button>
                                 </div>
                             </Form>
@@ -181,7 +204,6 @@ const ProfilePage = () => {
                                 {passSuccess && <Alert variant="success" className="mt-3">{passSuccess}</Alert>}
 
                                 <div className="text-end mt-4">
-                                    {/* THAY ĐỔI: Dùng className 'btn-residem-primary' cho nút */}
                                     <Button className="btn-residem-primary" type="submit" disabled={passLoading}>
                                         {passLoading ? <Spinner as="span" size="sm" /> : 'Change Password'}
                                     </Button>
