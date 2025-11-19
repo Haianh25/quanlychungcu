@@ -42,7 +42,7 @@ router.post('/mark-read', protect, async (req, res) => {
                 "UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false",
                 [req.user.id]
             );
-            return res.status(200).json({ message: "Tất cả thông báo đã được đánh dấu là đã đọc." });
+            return res.status(200).json({ message: "All notifications have been marked as read." });
         } catch (err) {
             console.error('Error marking all notifications as read:', err);
             return res.status(500).json({ message: 'Server error' });
@@ -55,7 +55,7 @@ router.post('/mark-read', protect, async (req, res) => {
             "UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2",
             [notificationId, req.user.id]
         );
-        res.status(200).json({ message: "Thông báo đã được đánh dấu là đã đọc." });
+        res.status(200).json({ message: "The notification has been marked as read." });
     } catch (err) {
         console.error('Error marking notification as read:', err);
         res.status(500).json({ message: 'Server error' });

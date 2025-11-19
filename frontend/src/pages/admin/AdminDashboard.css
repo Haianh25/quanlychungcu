@@ -1,0 +1,55 @@
+/* --- AdminDashboard.css --- */
+
+/* Kế thừa biến màu từ index.css */
+:root {
+    --color-primary-accent: #b99a7b;
+}
+
+.dashboard-container {
+    width: 100%;
+}
+
+.dashboard-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 12px;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+
+/* Icon Box */
+.dashboard-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Soft Background Colors */
+.bg-primary-soft { background-color: rgba(185, 154, 123, 0.15); }
+.bg-success-soft { background-color: rgba(25, 135, 84, 0.15); }
+.bg-warning-soft { background-color: rgba(255, 193, 7, 0.15); }
+.bg-info-soft { background-color: rgba(13, 202, 240, 0.15); }
+
+.text-primary-accent { color: var(--color-primary-accent); }
+
+/* Welcome Card */
+.welcome-card {
+    background: linear-gradient(135deg, #b99a7b 0%, #a08365 100%);
+    border-radius: 12px;
+}
+.welcome-card .btn-light {
+    color: #a08365 !important;
+}
+
+/* Animation */
+.fadeIn {
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

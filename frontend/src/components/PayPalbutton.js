@@ -49,7 +49,7 @@ const ButtonWrapper = ({ bill, onPaymentSuccess, onPaymentError, setProcessing }
 
     // 3. Xử lý khi user hủy
     const onCancel = () => {
-        onPaymentError('Bạn đã hủy giao dịch.');
+        onPaymentError('You canceled the transaction.');
         setProcessing(false);
     };
 

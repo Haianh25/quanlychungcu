@@ -17,6 +17,7 @@ const paymentRoutes = require('./routes/payment');
 const serviceRoutes = require('./routes/services'); // Route cho Bảng giá Dịch vụ
 const amenityAdminRoutes = require('./routes/amenityAdmin');
 const amenityUserRoutes = require('./routes/amenityUser');
+const dashboardRoutes = require('./routes/dashboard');
 // Import file cron.js để khởi chạy
 require('./cron'); 
 
@@ -46,6 +47,7 @@ adminMasterRouter.use(vehicleAdminRoutes);
 adminMasterRouter.use('/bills', billAdminRoutes); 
 adminMasterRouter.use('/fees', feeAdminRoutes); // Gắn route fee
 adminMasterRouter.use('/amenities', amenityAdminRoutes);
+adminMasterRouter.use('/dashboard', dashboardRoutes);
 // 3. Đăng ký các route KHÔNG phải admin
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
