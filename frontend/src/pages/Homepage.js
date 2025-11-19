@@ -13,16 +13,15 @@ const Homepage = () => {
         { src: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDR8fGFwYXJ0bWVudCUyMGV4dGVyaW9yfGVufDB8fHx8MTcwMTU4NTc0N3ww&ixlib=rb-4.0.3&q=80&w=800", alt: "Apartment exterior" },
         { src: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEwfHxhcGFydG1lbnQlMjBleHRlcmlvcnxlbnwwfHx8fDE3MDE1ODU3NDd8MA&ixlib=rb-4.0.3&q=80&w=800", alt: "Modern home exterior" },
         { src: "https://images.unsplash.com/photo-1448630360428-65456885c650?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDE2fHxhcGFydG1lbnQlMjBleHRlcmlvcnxlbnwwfHx8fDE3MDE1ODU3NDd8MA&ixlib=rb-4.0.3&q=80&w=800", alt: "Balcony exterior" },
-         { src: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEwfHxhcGFydG1lbnQlMjBleHRlcmlvcnxlbnwwfHx8fDE3MDE1ODU3NDd8MA&ixlib=rb-4.0.3&q=80&w=800", alt: "Modern home exterior" },
+        { src: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEwfHxhcGFydG1lbnQlMjBleHRlcmlvcnxlbnwwfHx8fDE3MDE1ODU3NDd8MA&ixlib=rb-4.0.3&q=80&w=800", alt: "Modern home exterior" },
         { src: "https://images.unsplash.com/photo-1448630360428-65456885c650?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDE2fHxhcGFydG1lbnQlMjBleHRlcmlvcnxlbnwwfHx8fDE3MDE1ODU3NDd8MA&ixlib=rb-4.0.3&q=80&w=800", alt: "Balcony exterior" },
         { src: "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDR8fHN3aW1taW5nJTIwcG9vbCUyMGhvZGlkYXl8ZW58MHx8fHwxNzAxNTg1ODE1fDA&ixlib=rb-4.0.3&q=80&w=800", alt: "Swimming pool" },
         { src: "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDR8fHN3aW1taW5nJTIwcG9vbCUyMGhvZGlkYXl8ZW58MHx8fHwxNzAxNTg1ODE1fDA&ixlib=rb-4.0.3&q=80&w=800", alt: "Swimming pool" },
-        // ... (Giữ nguyên các ảnh khác)
     ];
 
     return (
         <>
-            {/* --- HERO SECTION MỚI (THEO MẪU f1d383 & f1d402) --- */}
+            {/* --- HERO SECTION MỚI --- */}
             <section 
                 className="hero-section residem-hero" 
                 style={{ backgroundImage: `url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDR8fGFwYXJ0bWVudCUyMGV4dGVyaW9yfGVufDB8fHx8MTcwMTU4NTc0N3ww&ixlib=rb-4.0.3&q=80&w=1800')` }}
@@ -32,23 +31,25 @@ const Homepage = () => {
                 {/* Wrapper để căn lề nội dung */}
                 <div className="hero-content-wrapper">
                     <div className="hero-content">
-                        {/* Text mới từ mẫu */}
-                        <h1>Elegant and Comfort in a Modern Space</h1>
-                        <p>320 40th Street B4, New York, NY 10019</p>
+                        {/* SỬA: Text mô tả về PTIT Apartment */}
+                        <h1>Modern Living, Thoughtfully Designed</h1>
+                        
+                        
+                        {/* SỬA: Địa chỉ */}
+                        <p className="hero-address">Km10, Nguyen Trai Street, Ha Dong District, Hanoi</p>
                         
                         <div className="hero-buttons">
-                            {/* Nút được style lại */}
-                            <Link to="/contact" className="btn btn-residem-primary">SCHEDULE A VISIT</Link>
-                            <Link to="/gallery" className="btn btn-residem-secondary">EXPLORE PROPERTY</Link>
+                            {/* SỬA: Nút điều hướng */}
+                            <Link to="/about" className="btn btn-residem-primary">ABOUT US</Link>
+                            <Link to="/news" className="btn btn-residem-secondary">LATEST NEWS</Link>
                         </div>
                     </div>
                 </div>
                 
-                {/* Thanh bottom bar mới từ mẫu f1d402 */}
+                {/* Thanh bottom bar */}
                 <div className="hero-bottom-bar">
                     <div className="container">
                         <div className="row">
-                            {/* 4 cột, bỏ icon */}
                             <div className="col-md-3">Spacious Rooms</div>
                             <div className="col-md-3">Private Garden</div>
                             <div className="col-md-3">Walk-in Closets</div>
@@ -65,7 +66,6 @@ const Homepage = () => {
                     <h2>Exterior & Interior</h2>
                 </div>
                 <div className="filter-buttons text-center mb-4">
-                    {/* Nút được style lại */}
                     <button className="btn btn-residem-filter active">View All</button>
                     <button className="btn btn-residem-filter">Exterior</button>
                     <button className="btn btn-residem-filter">Interior</button>
@@ -81,8 +81,6 @@ const Homepage = () => {
                     ))}
                 </div>
             </section>
-
-            
         </>
     );
 };

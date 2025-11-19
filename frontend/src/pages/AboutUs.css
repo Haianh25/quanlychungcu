@@ -1,0 +1,245 @@
+/* --- SỬ DỤNG BIẾN MÀU TỪ INDEX.CSS --- */
+
+/* 1. HERO SECTION (BANNER) */
+.page-hero-section {
+    position: relative;
+    height: 50vh; /* Chiều cao khoảng 50% màn hình, giống Homepage */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #FFFFFF; /* Chữ bắt buộc màu trắng */
+    margin-bottom: 3rem;
+}
+
+/* Lớp phủ màu đen mờ để làm nổi chữ */
+.page-hero-overlay {
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.65); /* Tăng độ tối lên 0.65 */
+    z-index: 1;
+}
+
+.page-hero-title {
+    position: relative;
+    z-index: 2; /* Đè lên lớp phủ */
+    padding: 0 15px;
+}
+
+.page-hero-title h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5); /* Đổ bóng chữ */
+    letter-spacing: 1px;
+}
+
+.page-hero-title .lead {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #e0e0e0;
+    max-width: 700px;
+    margin: 0 auto;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+}
+
+
+/* 2. SECTION TITLES (TIÊU ĐỀ CÁC PHẦN) */
+.section-title {
+    color: var(--color-text-dark);
+    font-weight: 700;
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+/* Gạch chân vàng đồng dưới tiêu đề */
+.section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background-color: var(--color-primary-accent);
+    margin-top: 0.5rem;
+    border-radius: 2px;
+}
+/* Nếu tiêu đề căn giữa */
+.text-center .section-title::after {
+    margin: 0.5rem auto 0 auto;
+}
+
+.sub-heading {
+    color: var(--color-primary-accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+
+/* 3. OUR STORY SECTION */
+.about-story-section {
+    padding: 3rem 0;
+}
+
+.about-story-img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+.about-story-img:hover {
+    transform: translateY(-5px);
+}
+
+/* Căn chỉnh text bên phải ảnh */
+.about-story-content p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--color-text-muted-dark);
+    margin-bottom: 1.5rem;
+    text-align: justify; /* Căn đều 2 bên cho đẹp */
+}
+
+
+/* 4. STATS COUNTER (SỐ LIỆU) */
+.about-stats-section {
+    background-color: #FFFFFF;
+    padding: 4rem 0;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+    margin-top: 2rem;
+}
+
+.stat-item {
+    padding: 1rem;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--color-primary-accent); /* Màu vàng đồng */
+    margin-bottom: 0.25rem;
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--color-text-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+}
+
+
+/* 5. CORE VALUES (GIÁ TRỊ CỐT LÕI) */
+.about-values-section {
+    padding: 5rem 0;
+    background-color: var(--color-bg-light); /* Nền kem nhẹ */
+}
+
+.value-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+.value-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+    border-color: var(--color-primary-accent);
+}
+
+.value-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    background-color: var(--color-bg-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+    transition: background-color 0.3s ease;
+}
+.value-card:hover .value-icon-wrapper {
+    background-color: var(--color-primary-accent);
+}
+
+.value-icon {
+    font-size: 2rem;
+    color: var(--color-primary-accent);
+    transition: color 0.3s ease;
+}
+.value-card:hover .value-icon {
+    color: #FFFFFF;
+}
+
+.value-card .card-title {
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--color-text-dark);
+}
+
+.value-card .card-text {
+    color: var(--color-text-muted-dark);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+
+/* 6. CTA SECTION (KÊU GỌI HÀNH ĐỘNG) */
+.about-cta-section {
+    background-color: var(--color-bg-dark-teal); /* Màu xanh rêu đậm */
+    padding: 5rem 0;
+    color: #fff;
+    position: relative;
+}
+
+.about-cta-section h2 {
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.about-cta-section p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    color: #e0e0e0;
+}
+
+/* Animation */
+.fadeIn {
+    animation: fadeIn 0.8s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .about-story-content {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .about-story-content p {
+        text-align: center;
+    }
+    .section-title::after {
+        margin: 0.5rem auto 0 auto;
+    }
+}

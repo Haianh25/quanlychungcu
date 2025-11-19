@@ -18,6 +18,7 @@ import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import ProfilePage from './pages/ProfilePage';
 import BillPage from './pages/BillPage';
+import AboutUs from './pages/AboutUs';
 
 // IMPORT CÁC TRANG DỊCH VỤ
 import ServicePage from './pages/ServicePage';      // Trang chọn dịch vụ (Dashboard)
@@ -53,6 +54,7 @@ function App() {
             
             <Route path="profile" element={<ProfilePage />} />
             <Route path="/bill" element={<BillPage />} />
+            <Route path="/about" element={<AboutUs />} />
           </Route>
 
           {/* === Authentication Routes === */}

@@ -8,42 +8,39 @@ const ResidentFooter = () => {
             <div className="container">
                 <div className="row">
                     
-                    {/* CỘT 1: LOGO VÀ ĐỊA CHỈ */}
+                    {/* COLUMN 1: LOGO AND ADDRESS */}
                     <div className="col-lg-5 col-md-12 mb-4 mb-lg-0">
                         <div className="footer-logo-compact">
                             <img src="/images/logoo.png" alt="PTIT Apartment Logo" className="new-logo" />
                             <span>PTIT Apartment</span>
                         </div>
                         <p className="footer-address-compact">
-                            Học viện Công nghệ Bưu chính Viễn thông (PTIT)
+                            Posts and Telecommunications Institute of Technology (PTIT)
                             <br />
-                            Km10, Đường Nguyễn Trãi, Q. Hà Đông, Hà Nội
+                            Km10, Nguyen Trai Street, Ha Dong District, Hanoi
                         </p>
                     </div>
 
-                    {/* CỘT 2: LINK NHANH */}
+                    {/* COLUMN 2: QUICK LINKS */}
                     <div className="col-lg-3 col-md-6 mb-4 mb-lg-0">
                         <h5 className="footer-heading-compact">Quick Links</h5>
                         <ul className="footer-links-list">
                             <li><Link to="/">Home</Link></li>
                             <li><Link to="/services">Services</Link></li>
-                            {/* Đã giữ lại các link bạn có */}
                             <li><Link to="/bill">Bill</Link></li> 
                             <li><Link to="/news">News</Link></li>
                             <li><Link to="/about">About Us</Link></li>
                         </ul>
                     </div>
 
-                    {/* CỘT 3: LIÊN HỆ (Đã bỏ "Call Us" và "Opening Hours" để gọn hơn, giữ Email) */}
+                    {/* COLUMN 3: CONTACT US */}
                     <div className="col-lg-4 col-md-6 mb-4 mb-lg-0">
                         <h5 className="footer-heading-compact">Contact Us</h5>
                         <ul className="footer-contact-list">
-                            {/* Đã bỏ "Call Us" để gọn hơn */}
                             <li>
                                 <i className="bi bi-envelope-fill"></i>
                                 <span>contact.ptit@apartment.com</span>
                             </li>
-                             {/* Chỉ giữ số điện thoại và email, bỏ giờ mở cửa để gọn hơn */}
                             <li>
                                 <i className="bi bi-telephone-fill"></i>
                                 <span>(024) 3352 8122</span>
@@ -52,10 +49,10 @@ const ResidentFooter = () => {
                     </div>
                 </div>
 
-                {/* THANH COPYRIGHT */}
+                {/* COPYRIGHT BAR */}
                 <div className="footer-bottom-bar">
                     <span className="copyright-text">
-                        Copyright © {new Date().getFullYear()} PTIT Apartment. Đã đăng ký bản quyền.
+                        Copyright © {new Date().getFullYear()} PTIT Apartment. All rights reserved.
                     </span>
                     <div className="social-icons-compact">
                         <a href="#!" aria-label="Facebook"><i className="bi bi-facebook"></i></a>

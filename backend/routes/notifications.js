@@ -1,16 +1,29 @@
-// backend/routes/notifications.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { protect } = require('../middleware/authMiddleware');
 
-// Lấy tất cả thông báo (chưa đọc) của user (admin hoặc resident)
+// Lấy tất cả thông báo (cả đã đọc và chưa đọc) trong 7 ngày gần nhất
 router.get('/', protect, async (req, res) => {
     try {
-        const result = await db.query(
-            "SELECT * FROM notifications WHERE user_id = $1 AND is_read = false ORDER BY created_at DESC",
+        // 1. (Tùy chọn) Dọn dẹp thông báo cũ hơn 7 ngày của user này để database nhẹ bớt
+        // (Bạn có thể bỏ qua bước này nếu muốn giữ lịch sử lâu hơn trong DB nhưng chỉ hiển thị 7 ngày)
+        await db.query(
+            "DELETE FROM notifications WHERE user_id = $1 AND created_at < NOW() - INTERVAL '7 days'",
             [req.user.id]
         );
+
+        // 2. Lấy danh sách thông báo
+        // Logic mới: Lấy tất cả thông báo (bất kể is_read là true hay false)
+        // NHƯNG chỉ lấy trong vòng 7 ngày trở lại đây.
+        const result = await db.query(
+            `SELECT * FROM notifications 
+             WHERE user_id = $1 
+             AND created_at >= NOW() - INTERVAL '7 days' 
+             ORDER BY created_at DESC`,
+            [req.user.id]
+        );
+        
         res.status(200).json(result.rows);
     } catch (err) {
         console.error('Error fetching notifications:', err);
