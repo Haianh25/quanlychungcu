@@ -409,3 +409,242 @@
     margin-bottom: 0;
     margin-top: 0.25rem;
 }
+/* --- MÀU SẮC & BIẾN --- */
+.text-brown { color: #b99a7b !important; }
+
+/* --- SỬA LẠI CARD ĐỂ KHÔNG BỊ TRÀN --- */
+.residem-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    /* THÊM DÒNG NÀY: Cắt bỏ mọi nội dung thừa tràn ra ngoài */
+    overflow: hidden; 
+    position: relative; /* Đảm bảo z-index hoạt động đúng */
+}
+
+/* --- TINH CHỈNH BẢNG GIÁ ĐỂ VỪA VẶN HƠN --- */
+.residem-table {
+    width: 100%;
+    table-layout: fixed; /* Ép cột chia đều theo % */
+    margin-bottom: 0;
+}
+
+.residem-table thead th {
+    background-color: #f8f6f3;
+    color: #666;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem; /* Giảm size chữ tiêu đề một chút */
+    padding: 12px 8px; /* Giảm padding để tiết kiệm diện tích ngang */
+    border-bottom: 2px solid #e0e0e0;
+    border-top: none;
+    white-space: normal; 
+    vertical-align: middle; 
+}
+
+.residem-table tbody td {
+    padding: 12px 8px; /* Giảm padding */
+    font-size: 0.95rem; /* Size chữ nội dung vừa phải */
+    vertical-align: middle;
+    color: #444;
+    border-bottom: 1px solid #f0f0f0;
+    word-wrap: break-word; /* Tự xuống dòng nếu chữ quá dài */
+}
+
+.residem-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- SIDEBAR POLICY --- */
+.policy-card {
+    border-left: 4px solid #b99a7b !important; 
+    border-radius: 8px;
+}
+.policy-list .list-group-item {
+    border: none;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed #eee;
+}
+.policy-list .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* --- NÚT CHỌN XE --- */
+.vehicle-selection-card {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.vehicle-selection-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(185, 154, 123, 0.15);
+    border-color: #b99a7b;
+}
+.vehicle-selection-card i {
+    font-size: 2.5rem;
+    color: #b99a7b;
+    transition: transform 0.3s;
+}
+.vehicle-selection-card:hover i { transform: scale(1.1); }
+.vehicle-selection-card-disabled {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.vehicle-selection-card-disabled i { color: #ccc; }
+
+/* --- NÚT BẤM --- */
+.btn-residem-primary {
+    background-color: #b99a7b;
+    border-color: #b99a7b;
+    color: #fff;
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-residem-primary:hover {
+    background-color: #a38568;
+    border-color: #a38568;
+    transform: translateY(-1px);
+}
+
+/* --- TABS --- */
+.residem-tabs .nav-link {
+    color: #666;
+    font-weight: 500;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding-bottom: 10px;
+}
+.residem-tabs .nav-link:hover { color: #b99a7b; }
+.residem-tabs .nav-link.active {
+    color: #b99a7b;
+    border-bottom-color: #b99a7b;
+    background: transparent;
+    font-weight: 700;
+}
+
+/* --- FORM ĐĂNG KÝ (NÂNG CẤP GIAO DIỆN) --- */
+
+.registration-form-container {
+    background-color: #fff;
+    padding: 2rem 2.5rem; /* Tăng padding để form thoáng hơn */
+    border-radius: 8px;
+    /* Tạo điểm nhấn màu nâu ở viền trên */
+    border-top: 4px solid var(--color-primary-accent); 
+}
+
+.registration-form-container .form-title {
+    font-weight: 700;
+    color: var(--color-text-dark);
+}
+
+/* Style cho nhãn (Label) */
+.registration-form-container .form-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+}
+
+/* Dấu sao đỏ bắt buộc */
+.required-star {
+    color: #dc3545;
+    margin-left: 3px;
+    font-weight: 700;
+}
+
+/* Style cho ô input */
+.registration-form-container .form-control,
+.registration-form-container .form-select {
+    padding: 0.7rem 1rem; /* Ô nhập cao hơn, dễ bấm */
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    font-size: 0.95rem;
+    background-color: #fcfcfc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.registration-form-container .form-control:focus,
+.registration-form-container .form-select:focus {
+    background-color: #fff;
+    border-color: var(--color-primary-accent);
+    box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15); /* Hiệu ứng focus màu nâu nhạt */
+}
+
+/* Phần Upload File */
+.file-upload-wrapper {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border: 1px dashed #dee2e6;
+    border-radius: 6px;
+}
+
+.upload-note {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-top: 8px;
+    color: #666;
+}
+
+.upload-note strong {
+    color: #333;
+}
+/* --- FORM ĐĂNG KÝ MỚI (STYLE ĐẸP) --- */
+.registration-form-container {
+    padding: 2rem 2.5rem;
+    background-color: #fff;
+    border-top: 4px solid var(--color-primary-accent);
+    border-radius: 8px;
+}
+.form-header {
+    border-bottom: 1px dashed #e0e0e0;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+.form-title {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+.form-subtitle {
+    color: #666;
+    font-size: 0.95rem;
+}
+.form-section-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-primary-accent);
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+}
+.file-upload-box {
+    background-color: #f9f9f9;
+    border: 1px dashed #ccc;
+}
+.registration-form-container .form-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+.registration-form-container .form-control, 
+.registration-form-container .form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    background-color: #fff;
+}
+.registration-form-container .form-control:focus,
+.registration-form-container .form-select:focus {
+    border-color: var(--color-primary-accent);
+    box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15);
+}
