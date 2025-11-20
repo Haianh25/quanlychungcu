@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AssignRoomModal from '../../components/admin/AssignRoomModal';
 import Pagination from '../../components/admin/Pagination';
-import './ResidentManagement.css'; // Import CSS mới
-// THÊM: Import các component Bootstrap
+import './ResidentManagement.css';
 import { Card, Form, Table, Alert } from 'react-bootstrap';
 
 const ResidentManagement = () => {
-    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [residents, setResidents] = useState([]);
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -24,7 +22,7 @@ const ResidentManagement = () => {
             const res = await axios.get('http://localhost:5000/api/admin/residents', config);
             setResidents(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Không thể tải danh sách cư dân.');
+            setError(err.response?.data?.message || 'Failed to load resident list.');
         }
     };
 
@@ -55,22 +53,18 @@ const ResidentManagement = () => {
     const currentResidents = filteredResidents.slice(indexOfFirstResident, indexOfLastResident);
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // --- JSX ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     return (
-        // Sử dụng class mới và animation
         <div className="management-page-container fadeIn">
             <h2 className="page-main-title mb-4">Resident Management</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             
-            {/* Bọc Card trắng chuyên nghiệp */}
             <Card className="residem-card">
                 <Card.Body>
-                    {/* Thanh tìm kiếm */}
                     <div className="mb-3">
                         <Form.Control
                             type="text"
-                            className="residem-search-bar" // Style lại search bar
-                            placeholder="Tìm kiếm theo họ tên cư dân..."
+                            className="residem-search-bar"
+                            placeholder="Search by resident name..."
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
@@ -79,11 +73,8 @@ const ResidentManagement = () => {
                         />
                     </div>
                     
-                    {/* Bọc bảng */}
                     <div className="table-wrapper">
-                        {/* Dùng Table của React-Bootstrap */}
                         <Table hover striped className="residem-table">
-                            {/* Cố định độ rộng cột */}
                             <colgroup>
                                 <col style={{ width: '33%' }} />
                                 <col style={{ width: '33%' }} />
@@ -104,7 +95,6 @@ const ResidentManagement = () => {
                                         <td title={resident.full_name}>{resident.full_name}</td>
                                         <td title={resident.email}>{resident.email}</td>
                                         <td>
-                                            {/* Style lại trạng thái "Chưa gán" */}
                                             {resident.apartment_number ? (
                                                 resident.apartment_number
                                             ) : (
@@ -112,7 +102,6 @@ const ResidentManagement = () => {
                                             )}
                                         </td>
                                         <td className="col-actions">
-                                            {/* Style lại nút */}
                                             <button 
                                                 className="btn btn-residem-primary btn-sm" 
                                                 onClick={() => handleShowModal(resident)}
@@ -123,7 +112,6 @@ const ResidentManagement = () => {
                                     </tr>
                                 ))}
 
-                                {/* Hàng giữ chỗ (Giữ nguyên logic) */}
                                 {currentResidents.length < residentsPerPage && Array.from({ length: residentsPerPage - currentResidents.length }).map((_, idx) => (
                                     <tr key={`placeholder-${idx}`} className="placeholder-row">
                                         <td>&nbsp;</td>
@@ -138,7 +126,6 @@ const ResidentManagement = () => {
                 </Card.Body>
             </Card>
 
-            {/* Phân trang (Style lại) */}
             {filteredResidents.length > residentsPerPage && (
                 <div className="residem-pagination mt-4 d-flex justify-content-center">
                     <Pagination

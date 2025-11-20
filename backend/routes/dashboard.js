@@ -8,17 +8,17 @@ const { protect, isAdmin } = require('../middleware/authMiddleware');
 router.get('/stats', protect, isAdmin, async (req, res) => {
     try {
         const now = new Date();
-        // Lấy ngày đầu tháng hiện tại (theo giờ UTC để đơn giản, hoặc chỉnh theo múi giờ nếu cần chính xác tuyệt đối)
+        // Get the start date of the current month (in UTC for simplicity, adjust timezone if needed)
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-        // Sử dụng Promise.all để chạy song song các truy vấn cho nhanh
+        // Use Promise.all to execute queries in parallel for better performance
         const [
             residentRes,
             vehicleRes,
             newsRes,
             billRes
         ] = await Promise.all([
-            // 1. Thống kê Cư dân: Tổng số & Mới trong tháng
+            // 1. Resident Statistics: Total & New this month
             db.query(`
                 SELECT 
                     COUNT(*) AS total,
@@ -27,21 +27,21 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 WHERE role = 'resident'
             `, [startOfMonth]),
 
-            // 2. Thống kê Xe: Tổng số xe đang active
+            // 2. Vehicle Statistics: Total active vehicles
             db.query(`
                 SELECT COUNT(*) AS total 
                 FROM vehicle_cards 
                 WHERE status = 'active'
             `),
 
-            // 3. Thống kê Tin tức: Số bài đăng trong tháng
+            // 3. News Statistics: Number of posts this month
             db.query(`
                 SELECT COUNT(*) AS total 
                 FROM news 
                 WHERE created_at >= $1
             `, [startOfMonth]),
 
-            // 4. Thống kê Hóa đơn tháng này: Đã thanh toán / Tổng phải thu
+            // 4. Bill Statistics for this month: Paid count / Total expected revenue / Total collected revenue
             db.query(`
                 SELECT 
                     COUNT(*) AS total_bills,
@@ -72,7 +72,7 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
 
     } catch (err) {
         console.error('Dashboard Stats Error:', err);
-        res.status(500).json({ message: 'Lỗi server khi lấy thống kê.' });
+        res.status(500).json({ message: 'Server error while fetching statistics.' });
     }
 });
 

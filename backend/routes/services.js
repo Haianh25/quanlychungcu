@@ -1,5 +1,3 @@
-// G:\quanlychungcu\backend\routes\services.js
-
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -7,7 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 const upload = require('../utils/upload'); 
 const fs = require('fs'); 
 
-// (Code GET /api/services/fees-table không đổi)
+// GET /api/services/fees-table
 router.get('/fees-table', async (req, res) => {
     try {
         const feeCodes = [
@@ -32,17 +30,13 @@ router.get('/fees-table', async (req, res) => {
     }
 });
 
-
-// (Code GET /api/services/my-cards không đổi)
+// GET /api/services/my-cards
 router.get('/my-cards', protect, async (req, res) => {
-    // === SỬA LỖI AN TOÀN (DÒNG 60) ===
-    // Tự động kiểm tra xem req.user.user có tồn tại không
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     
     if (!residentId) {
-        return res.status(401).json({ message: 'Không thể xác định ID người dùng từ token.' });
+        return res.status(401).json({ message: 'Cannot determine user ID.' });
     }
-    // ===================================
     
     try {
         const managedCardsRes = await db.query(
@@ -96,22 +90,18 @@ router.get('/my-cards', protect, async (req, res) => {
         });
     } catch (err) {
         console.error('Error fetching user vehicle cards:', err);
-        res.status(500).json({ message: 'Lỗi server khi tải danh sách thẻ.' });
+        res.status(500).json({ message: 'Server error loading cards.' });
     }
 });
 
-
-// === POST /api/services/register-card ===
+// POST /api/services/register-card
 router.post('/register-card', protect, upload.single('proofImage'), async (req, res) => {
-    
-    // === SỬA LỖI AN TOÀN (DÒNG 112 & 113) ===
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
     if (!residentId || !residentFullName) {
-        return res.status(401).json({ message: 'Token không hợp lệ hoặc thiếu thông tin người dùng.' });
+        return res.status(401).json({ message: 'Invalid token or missing user info.' });
     }
-    // =======================================
 
     const {
         vehicleType, fullName, dob, phone, relationship,
@@ -119,7 +109,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     } = req.body;
 
     if (!req.file) {
-        return res.status(400).json({ message: 'Ảnh minh chứng là bắt buộc.' });
+        return res.status(400).json({ message: 'Proof image is required.' });
     }
     const proofImageUrl = `/uploads/proofs/${req.file.filename}`;
 
@@ -129,7 +119,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     try {
         await client.query('BEGIN');
 
-        // (Logic kiểm tra giới hạn - Giữ nguyên)
+        // Logic kiểm tra giới hạn
         const activeCardRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status IN ($2, $3) GROUP BY vehicle_type',
             [residentId, 'active', 'inactive']
@@ -148,14 +138,14 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         }, { car: 0, motorbike: 0 });
         const totalCarCount = (activeCounts.car || 0) + (pendingCounts.car || 0);
         const totalMotorbikeCount = (activeCounts.motorbike || 0) + (pendingCounts.motorbike || 0);
+        
         if (vehicleType === 'car' && totalCarCount >= 2) {
-            throw new Error('Bạn đã đạt giới hạn 2 thẻ ô tô (bao gồm cả thẻ đang chờ duyệt).');
+            throw new Error('Limit reached: 2 car cards allowed.');
         }
         if (vehicleType === 'motorbike' && totalMotorbikeCount >= 2) {
-            throw new Error('Bạn đã đạt giới hạn 2 thẻ xe máy (bao gồm cả thẻ đang chờ duyệt).');
+            throw new Error('Limit reached: 2 motorbike cards allowed.');
         }
 
-        // (Dòng 163 - Giữ nguyên)
         await client.query(
             `INSERT INTO vehicle_card_requests (
                 resident_id, request_type, vehicle_type, full_name, dob, phone, relationship,
@@ -168,8 +158,10 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         );
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        const notificationMessage = `Cư dân ${residentFullName} vừa gửi yêu cầu đăng ký thẻ xe mới.`;
-        const linkTo = '/admin/vehicle-management'; 
+        
+        // --- SỬA TIẾNG ANH: Thông báo cho Admin ---
+        const notificationMessage = `Resident ${residentFullName} has submitted a new vehicle card registration request.`;
+        const linkTo = '/admin/vehicle-management';
 
         for (const admin of admins.rows) {
             await client.query(
@@ -179,7 +171,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         }
 
         await client.query('COMMIT');
-        res.status(201).json({ message: 'Đã gửi yêu cầu đăng ký thành công! Vui lòng chờ BQL duyệt.' });
+        res.status(201).json({ message: 'Registration request submitted successfully! Please wait for approval.' });
 
     } catch (err) {
         await client.query('ROLLBACK');
@@ -189,28 +181,25 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
                 if (unlinkErr) console.error("Error deleting uploaded file after DB error:", unlinkErr);
             });
         }
-        res.status(500).json({ message: err.message || 'Lỗi server khi gửi yêu cầu.' });
+        res.status(500).json({ message: err.message || 'Server error.' });
     } finally {
         client.release();
     }
 });
 
-
-// === POST /api/services/reissue-card ===
+// POST /api/services/reissue-card
 router.post('/reissue-card', protect, async (req, res) => {
-    // === SỬA LỖI AN TOÀN (DÒNG 218 & 219) ===
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
     if (!residentId || !residentFullName) {
-        return res.status(401).json({ message: 'Token không hợp lệ hoặc thiếu thông tin người dùng.' });
+        return res.status(401).json({ message: 'Invalid token or missing user info.' });
     }
-    // =======================================
     
     const { cardId, reason } = req.body;
 
     if (!cardId || !reason) {
-        return res.status(400).json({ message: 'Thiếu thông tin thẻ hoặc lý do.' });
+        return res.status(400).json({ message: 'Missing card info or reason.' });
     }
 
     const pool = db.getPool ? db.getPool() : db; 
@@ -221,14 +210,14 @@ router.post('/reissue-card', protect, async (req, res) => {
 
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
-            throw new Error('Không tìm thấy thẻ hợp lệ (đang hoạt động hoặc bị khoá) để cấp lại.');
+            throw new Error('Valid card not found.');
         }
         const card = cardRes.rows[0];
 
-         const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
-         if(pendingReq.rows.length > 0) {
-             throw new Error('Đã có một yêu cầu khác đang chờ xử lý cho thẻ này.');
-         }
+        const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
+        if(pendingReq.rows.length > 0) {
+             throw new Error('A request is already pending for this card.');
+        }
 
         await client.query(
             `INSERT INTO vehicle_card_requests (
@@ -242,7 +231,9 @@ router.post('/reissue-card', protect, async (req, res) => {
         );
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        const notificationMessage = `Cư dân ${residentFullName} vừa gửi yêu cầu cấp lại thẻ xe (BS: ${card.license_plate || 'N/A'}).`;
+        
+        // --- SỬA TIẾNG ANH: Thông báo cho Admin ---
+        const notificationMessage = `Resident ${residentFullName} has requested to reissue vehicle card (Plate: ${card.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management'; 
 
         for (const admin of admins.rows) {
@@ -253,33 +244,30 @@ router.post('/reissue-card', protect, async (req, res) => {
         }
 
         await client.query('COMMIT');
-        res.status(201).json({ message: 'Yêu cầu cấp lại thẻ đã được gửi! Vui lòng chờ BQL duyệt.' });
+        res.status(201).json({ message: 'Reissue request submitted successfully!' });
     
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error requesting card reissue:', err);
-        res.status(500).json({ message: err.message || 'Lỗi server khi gửi yêu cầu.' });
+        res.status(500).json({ message: err.message || 'Server error.' });
     } finally {
         client.release();
     }
 });
 
-
-// === POST /api/services/cancel-card ===
+// POST /api/services/cancel-card
 router.post('/cancel-card', protect, async (req, res) => {
-    // === SỬA LỖI AN TOÀN (DÒNG 283 & 284) ===
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
     if (!residentId || !residentFullName) {
-        return res.status(401).json({ message: 'Token không hợp lệ hoặc thiếu thông tin người dùng.' });
+        return res.status(401).json({ message: 'Invalid token or missing user info.' });
     }
-    // =======================================
     
     const { cardId, reason } = req.body;
 
-     if (!cardId || !reason) {
-         return res.status(400).json({ message: 'Thiếu thông tin thẻ hoặc lý do.' });
+    if (!cardId || !reason) {
+         return res.status(400).json({ message: 'Missing card info or reason.' });
     }
 
     const pool = db.getPool ? db.getPool() : db; 
@@ -290,13 +278,13 @@ router.post('/cancel-card', protect, async (req, res) => {
 
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
-            throw new Error('Không tìm thấy thẻ hợp lệ (đang hoạt động hoặc bị khoá) để hủy.');
+            throw new Error('Valid card not found.');
         }
          const card = cardRes.rows[0];
 
          const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
          if(pendingReq.rows.length > 0) {
-             throw new Error('Đã có một yêu cầu khác đang chờ xử lý cho thẻ này.');
+             throw new Error('A request is already pending for this card.');
          }
 
          await client.query(
@@ -311,7 +299,9 @@ router.post('/cancel-card', protect, async (req, res) => {
          );
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        const notificationMessage = `Cư dân ${residentFullName} vừa gửi yêu cầu hủy thẻ xe (BS: ${card.license_plate || 'N/A'}).`;
+        
+        // --- SỬA TIẾNG ANH: Thông báo cho Admin ---
+        const notificationMessage = `Resident ${residentFullName} has requested to cancel vehicle card (Plate: ${card.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management'; 
 
         for (const admin of admins.rows) {
@@ -322,16 +312,14 @@ router.post('/cancel-card', protect, async (req, res) => {
         }
 
         await client.query('COMMIT');
-        res.status(201).json({ message: 'Yêu cầu hủy thẻ đã được gửi! Vui lòng chờ BQL duyệt.' });
-    
+        res.status(201).json({ message: 'Cancellation request submitted successfully!' });
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error requesting card cancellation:', err);
-        res.status(500).json({ message: err.message || 'Lỗi server khi gửi yêu cầu.' });
+        res.status(500).json({ message: err.message || 'Server error.' });
     } finally {
         client.release();
     }
 });
-
 
 module.exports = router;

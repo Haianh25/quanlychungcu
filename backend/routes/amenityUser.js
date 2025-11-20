@@ -1,13 +1,11 @@
-// backend/routes/amenityUser.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { protect } = require('../middleware/authMiddleware');
 
-// 1. Lấy danh sách phòng (User xem) - Kèm giá từ bảng FEES
+// 1. Lấy danh sách phòng
 router.get('/rooms', protect, async (req, res) => {
     try {
-        // Chỉ lấy phòng đang hoạt động (active)
         const query = `
             SELECT r.*, f.price as current_price
             FROM community_rooms r
@@ -19,11 +17,11 @@ router.get('/rooms', protect, async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Failed to load room list.' });
+        res.status(500).json({ message: 'Failed to load rooms.' });
     }
 });
 
-// 2. Lấy lịch sử đặt của tôi
+// 2. Lấy lịch sử
 router.get('/my-bookings', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     try {
@@ -38,37 +36,32 @@ router.get('/my-bookings', protect, async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Failed to load booking history.' });
+        res.status(500).json({ message: 'Failed to load bookings.' });
     }
 });
 
-// 3. BOOK ROOM
+// 3. Đặt phòng
 router.post('/book', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const { roomId, date, startTime, endTime } = req.body;
 
     try {
-        // A. Validate ngày (Phải đặt trước ít nhất 1 ngày)
         const bookingDate = new Date(date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (bookingDate <= today) {
-            return res.status(400).json({ message: 'You have to book at least 1 day in advance.' });
+            return res.status(400).json({ message: 'Booking date must be in the future.' });
         }
 
-        // B. Validate giới hạn: Mỗi resident chỉ được giữ 1 lịch active (status = confirmed và ngày chưa qua)
-        // (Cho phép đặt nhiều lịch nếu lịch cũ đã hoàn thành/hủy, nhưng ở đây logic đơn giản là 1 lịch confirmed trong tương lai)
         const activeBooking = await db.query(
             `SELECT id FROM room_bookings 
              WHERE resident_id = $1 AND booking_date >= CURRENT_DATE AND status = 'confirmed'`,
             [residentId]
         );
         if (activeBooking.rows.length > 0) {
-            return res.status(400).json({ message: 'You already have an active booking. Each resident can only hold one booking.' });
+            return res.status(400).json({ message: 'You already have an active booking.' });
         }
 
-        // C. Check for overlapping bookings with others
-        // Logic: (StartA < EndB) and (EndA > StartB)
         const overlap = await db.query(
             `SELECT id FROM room_bookings 
              WHERE room_id = $1 AND booking_date = $2 AND status = 'confirmed'
@@ -77,10 +70,9 @@ router.post('/book', protect, async (req, res) => {
         );
 
         if (overlap.rows.length > 0) {
-            return res.status(400).json({ message: 'This time slot is already booked. Please choose a different time.' });
+            return res.status(400).json({ message: 'Time slot occupied.' });
         }
 
-        // D. Get price from Fees table through Rooms table
         const priceQuery = `
             SELECT f.price 
             FROM community_rooms r 
@@ -90,45 +82,73 @@ router.post('/book', protect, async (req, res) => {
         const priceRes = await db.query(priceQuery, [roomId]);
         const pricePerHour = parseFloat(priceRes.rows[0]?.price || 0);
 
-        // E. Tính tổng tiền
         const start = parseInt(startTime.split(':')[0]);
         const end = parseInt(endTime.split(':')[0]);
         const duration = end - start;
-        if (duration <= 0) return res.status(400).json({ message: 'Invalid time range.' });
+        if (duration <= 0) return res.status(400).json({ message: 'Invalid duration.' });
         
         const totalPrice = duration * pricePerHour;
 
-        // F. Save to DB
         await db.query(
             `INSERT INTO room_bookings (resident_id, room_id, booking_date, start_time, end_time, total_price)
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [residentId, roomId, date, startTime, endTime, totalPrice]
         );
 
-        res.json({ message: 'Booking successful! The fee has been recorded.' });
+        res.json({ message: 'Booking successful!' });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error when booking room.' });
+        res.status(500).json({ message: 'Server error.' });
     }
 });
 
-// 4. Cancel booking (User cancels)
+// 4. Hủy lịch (User hủy -> Báo cho Admin)
 router.post('/cancel/:id', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
+    const residentName = req.user.user ? req.user.user.full_name : req.user.full_name;
+
     try {
-        // Chỉ cho hủy lịch của chính mình
+        // Update trạng thái và trả về thông tin để thông báo
         const result = await db.query(
-            "UPDATE room_bookings SET status = 'cancelled' WHERE id = $1 AND resident_id = $2 RETURNING id",
+            `UPDATE room_bookings 
+             SET status = 'cancelled' 
+             WHERE id = $1 AND resident_id = $2 
+             RETURNING id, room_id, booking_date, start_time, end_time`,
             [req.params.id, residentId]
         );
         
         if (result.rows.length === 0) {
-            return res.status(400).json({ message: 'Booking not found or you do not have permission to cancel.' });
+            return res.status(400).json({ message: 'Booking not found or unauthorized.' });
         }
 
-        res.json({ message: 'Booking has been cancelled.' });
+        const booking = result.rows[0];
+        
+        // Lấy tên phòng để thông báo rõ ràng
+        const roomRes = await db.query("SELECT name FROM community_rooms WHERE id = $1", [booking.room_id]);
+        const roomName = roomRes.rows[0]?.name || 'Amenity Room';
+
+        // --- GỬI THÔNG BÁO CHO ADMIN ---
+        try {
+            const admins = await db.query("SELECT id FROM users WHERE role = 'admin'");
+            const dateStr = new Date(booking.booking_date).toLocaleDateString('en-GB');
+            const message = `Resident ${residentName} has CANCELLED their booking for ${roomName} on ${dateStr}.`;
+            const linkTo = '/admin/amenity-management';
+
+            for (const admin of admins.rows) {
+                await db.query(
+                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                    [admin.id, message, linkTo]
+                );
+            }
+        } catch (notifyError) {
+            console.error('Error notifying admin:', notifyError);
+        }
+        // -------------------------------
+
+        res.json({ message: 'Booking cancelled successfully.' });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error.' });
     }
 });

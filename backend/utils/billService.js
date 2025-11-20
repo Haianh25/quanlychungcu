@@ -1,6 +1,4 @@
-// NỘI DUNG TỆP ĐÃ CẬP NHẬT
-const db = require('../db'); // Đảm bảo bạn đang export 'pool' từ db.js
-// --- (THÊM MỚI 1) Import mailer ---
+const db = require('../db');
 const { sendNewBillEmail } = require('./mailer');
 
 /**
@@ -8,7 +6,7 @@ const { sendNewBillEmail } = require('./mailer');
  */
 async function generateBillsForMonth(month, year) {
     console.log('Running job: generateBillsForMonth...');
-    const pool = db.getPool ? db.getPool() : db; // Tương thích nếu db.js export getPool() hoặc pool
+    const pool = db.getPool ? db.getPool() : db;
     const client = await pool.connect();
     
     try {
@@ -17,16 +15,14 @@ async function generateBillsForMonth(month, year) {
         const issueDate = new Date(Date.UTC(year, month - 1, 1)); 
         const dueDate = new Date(Date.UTC(year, month - 1, 10));
         
-        // Tính toán tháng TRƯỚC
         const prevMonth = (month === 1) ? 12 : month - 1;
         const prevYear = (month === 1) ? year - 1 : year;
         
-        // Lấy ngày trong tháng TRƯỚC
         const daysInPrevMonth = new Date(year, month - 1, 0).getUTCDate();
         const prevMonthStartDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
         const currentMonthStartDate = `${year}-${String(month).padStart(2, '0')}-01`;
 
-        // --- (CẬP NHẬT 2) Lấy thông tin phòng VÀ thông tin user (email, name) ---
+        // Lấy thông tin phòng và user
         const resRooms = await client.query(
             `SELECT 
                 r.id AS room_id, 
@@ -41,10 +37,10 @@ async function generateBillsForMonth(month, year) {
         if (resRooms.rows.length === 0) {
             console.log('No occupied rooms found. No bills generated.');
             await client.query('COMMIT');
-            return { success: true, count: 0 }; // Trả về thành công
+            return { success: true, count: 0 }; 
         }
 
-        // 2. Lấy bảng giá phí từ CSDL (SỬA: Dùng đúng tên cột)
+        // Lấy bảng giá phí
         const resFees = await client.query('SELECT fee_code, price FROM fees');
         const fees = {};
         resFees.rows.forEach(fee => {
@@ -53,12 +49,9 @@ async function generateBillsForMonth(month, year) {
 
         let generatedCount = 0;
 
-        // 3. Tạo hóa đơn cho từng phòng
         for (const room of resRooms.rows) {
-            // SỬA: Lấy thêm email và full_name
             const { room_id, user_id, email, full_name } = room;
 
-            // Kiểm tra xem hóa đơn tháng này đã được tạo chưa
             const resCheck = await client.query(
                 `SELECT 1 FROM bills 
                  WHERE room_id = $1 AND EXTRACT(MONTH FROM issue_date) = $2 AND EXTRACT(YEAR FROM issue_date) = $3`,
@@ -73,23 +66,23 @@ async function generateBillsForMonth(month, year) {
             let totalAmount = 0;
             const billItems = [];
 
-            // 3a. Thêm các phí cố định (SỬA: Thêm kiểm tra 'if')
+            // --- 3a. Phí cố định (Đổi tên sang Tiếng Anh) ---
             if (fees['MANAGEMENT_FEE']) {
                 billItems.push({
-                    name: `Phí quản lý căn hộ (Tháng ${month}/${year})`,
+                    name: `Apartment Management Fee (${month}/${year})`,
                     price: fees['MANAGEMENT_FEE'],
                 });
                 totalAmount += fees['MANAGEMENT_FEE'];
             }
             if (fees['ADMIN_FEE']) {
                 billItems.push({
-                    name: `Phí ban quản trị (Tháng ${month}/${year})`,
+                    name: `Admin Fee (${month}/${year})`,
                     price: fees['ADMIN_FEE'],
                 });
                 totalAmount += fees['ADMIN_FEE'];
             }
 
-            // 3b. Phí xe HÀNG THÁNG (cho xe đã active)
+            // --- 3b. Phí gửi xe hàng tháng ---
             const vehicleRes = await client.query(
                 "SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = 'active' GROUP BY vehicle_type", 
                 [user_id]
@@ -97,16 +90,15 @@ async function generateBillsForMonth(month, year) {
             for (const vehicle of vehicleRes.rows) {
                 let fee = 0; let desc = ''; const count = parseInt(vehicle.count, 10);
                 
-                // SỬA: Thêm kiểm tra 'if (fees[...])'
                 if (vehicle.vehicle_type === 'car' && fees['CAR_FEE']) { 
                     fee = fees['CAR_FEE'] * count; 
-                    desc = `Phí gửi xe Ô tô (x${count})`; 
+                    desc = `Car Parking Fee (x${count})`; 
                 } else if (vehicle.vehicle_type === 'motorbike' && fees['MOTORBIKE_FEE']) {
                     fee = fees['MOTORBIKE_FEE'] * count; 
-                    desc = `Phí gửi xe Máy (x${count})`; 
+                    desc = `Motorbike Parking Fee (x${count})`; 
                 } else if (vehicle.vehicle_type === 'bicycle' && fees['BICYCLE_FEE']) {
                     fee = fees['BICYCLE_FEE'] * count; 
-                    desc = `Phí gửi xe Đạp (x${count})`; 
+                    desc = `Bicycle Parking Fee (x${count})`; 
                 }
                 
                 if (fee > 0) { 
@@ -115,7 +107,7 @@ async function generateBillsForMonth(month, year) {
                 }
             }
 
-            // 3c. Phí MỘT LẦN (đăng ký/cấp lại) đã duyệt tháng TRƯỚC (Logic từ file SQL của bạn)
+            // --- 3c. Phí một lần (Đăng ký/Cấp lại) ---
             const oneTimeFeeRes = await client.query(
                 `SELECT id, request_type, vehicle_type, one_time_fee_amount 
                  FROM vehicle_card_requests 
@@ -128,13 +120,14 @@ async function generateBillsForMonth(month, year) {
                 const amount = parseFloat(fee.one_time_fee_amount);
                 if (amount > 0) {
                     totalAmount += amount;
-                    const desc = fee.request_type === 'register' ? 'Phí đăng ký thẻ' : 'Phí cấp lại thẻ';
-                    billItems.push({ name: `${desc} (${fee.vehicle_type})`, price: amount });
+                    const typeName = fee.vehicle_type.charAt(0).toUpperCase() + fee.vehicle_type.slice(1);
+                    const desc = fee.request_type === 'register' ? `Card Registration Fee (${typeName})` : `Card Reissue Fee (${typeName})`;
+                    billItems.push({ name: desc, price: amount });
                     requestIdsToUpdate.push(fee.id);
                 }
             }
             
-            // 3d. Phí xe TÍNH TỶ LỆ cho thẻ mới đăng ký tháng TRƯỚC (Logic từ file SQL của bạn)
+            // --- 3d. Phí tính theo tỷ lệ (Prorated) ---
             const proratedCardsRes = await client.query(
                 `SELECT vehicle_type, issued_at 
                  FROM vehicle_cards 
@@ -151,21 +144,45 @@ async function generateBillsForMonth(month, year) {
                 if (daysToCharge <= 0 || daysToCharge > daysInPrevMonth) continue; 
 
                 let monthlyRate = 0; let vehicleName = '';
-                // SỬA: Thêm kiểm tra 'if (fees[...])'
+                
                 if (card.vehicle_type === 'car' && fees['CAR_FEE']) { 
-                    monthlyRate = fees['CAR_FEE']; vehicleName = 'Ô tô'; 
+                    monthlyRate = fees['CAR_FEE']; vehicleName = 'Car'; 
                 } else if (card.vehicle_type === 'motorbike' && fees['MOTORBIKE_FEE']) {
-                    monthlyRate = fees['MOTORBIKE_FEE']; vehicleName = 'Xe máy'; 
+                    monthlyRate = fees['MOTORBIKE_FEE']; vehicleName = 'Motorbike'; 
                 } else if (card.vehicle_type === 'bicycle' && fees['BICYCLE_FEE']) {
-                    monthlyRate = fees['BICYCLE_FEE']; vehicleName = 'Xe đạp'; 
+                    monthlyRate = fees['BICYCLE_FEE']; vehicleName = 'Bicycle'; 
                 }
 
                 if (monthlyRate > 0) {
                     const proratedFee = Math.round((monthlyRate / daysInPrevMonth) * daysToCharge);
                     totalAmount += proratedFee;
                     billItems.push({ 
-                        name: `Phí gửi xe ${vehicleName} (Tỷ lệ T${prevMonth}: ${daysToCharge}/${daysInPrevMonth} ngày)`, 
+                        name: `${vehicleName} Parking (Prorated ${prevMonth}/${prevYear}: ${daysToCharge}/${daysInPrevMonth} days)`, 
                         price: proratedFee 
+                    });
+                }
+            }
+
+            // --- 3e. Phí đặt phòng (Amenities) ---
+            const bookingRes = await client.query(
+                `SELECT b.id, r.name as room_name, b.booking_date, b.start_time, b.end_time, b.total_price
+                 FROM room_bookings b
+                 JOIN community_rooms r ON b.room_id = r.id
+                 WHERE b.resident_id = $1 
+                 AND b.status = 'confirmed' 
+                 AND b.booking_date >= $2 AND b.booking_date < $3`,
+                [user_id, prevMonthStartDate, currentMonthStartDate]
+            );
+
+            for (const booking of bookingRes.rows) {
+                const amount = parseFloat(booking.total_price);
+                if (amount > 0) {
+                    totalAmount += amount;
+                    const dateStr = new Date(booking.booking_date).toLocaleDateString('en-GB');
+                    const timeStr = `${booking.start_time.slice(0,5)} - ${booking.end_time.slice(0,5)}`;
+                    billItems.push({
+                        name: `Booking: ${booking.room_name} (${dateStr} ${timeStr})`,
+                        price: amount
                     });
                 }
             }
@@ -187,28 +204,26 @@ async function generateBillsForMonth(month, year) {
                 );
             }
             
-            // 6. Đánh dấu các phí một lần là "đã lập hóa đơn"
+            // 6. Cập nhật trạng thái request thẻ
             if (requestIdsToUpdate.length > 0) {
                 await client.query('UPDATE vehicle_card_requests SET billed_in_bill_id = $1 WHERE id = ANY($2::int[])', [billId, requestIdsToUpdate]);
             }
 
-            // --- (THÊM MỚI 3) Gửi Email thông báo hóa đơn ---
+            // Gửi Email thông báo
             if (email && full_name) {
                 const billDetails = {
                     billId: billId,
                     monthYear: `${month}/${year}`,
                     totalAmount: totalAmount,
-                    dueDate: dueDate.toLocaleDateString('vi-VN') // Format: "10/11/2025"
+                    dueDate: dueDate.toLocaleDateString('vi-VN')
                 };
                 try {
                     await sendNewBillEmail(email, full_name, billDetails);
                     console.log(`Sent new bill email to ${email} for bill ${billId}`);
                 } catch (emailError) {
                     console.error(`Failed to send bill email to ${email} (Bill ${billId}):`, emailError.message);
-                    // Không dừng vòng lặp, chỉ log lỗi
                 }
             }
-            // --- (KẾT THÚC THÊM MỚI 3) ---
             
             generatedCount++;
             console.log(`Generated bill ${billId} for room ${room_id}`);
@@ -216,11 +231,11 @@ async function generateBillsForMonth(month, year) {
 
         await client.query('COMMIT');
         console.log('Monthly bills generation complete.');
-        return { success: true, count: generatedCount }; // Trả về kết quả
+        return { success: true, count: generatedCount }; 
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error generating monthly bills:', err);
-        return { success: false, error: err.message }; // Trả về lỗi
+        return { success: false, error: err.message };
     } finally {
         client.release();
     }

@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Container, Table, Button, Spinner, Alert, Modal, Badge, Form, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios';
-import './BillManagement.css'; // Import CSS mới
+import './BillManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const BillManagement = () => {
-    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [generating, setGenerating] = useState(false);
+    
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedBill, setSelectedBill] = useState(null); 
     const [lineItems, setLineItems] = useState([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    
     const [filterStatus, setFilterStatus] = useState('');
     const [filterRoom, setFilterRoom] = useState('');
 
@@ -64,7 +65,6 @@ const BillManagement = () => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
     
-    // THAY ĐỔI: Style lại Badge
     const getStatusBadge = (status) => {
         switch (status) {
             case 'paid': return <span className="status-badge status-success">Paid</span>;
@@ -77,7 +77,7 @@ const BillManagement = () => {
 
     const handleGenerateBills = async () => {
         const config = getAuthConfig();
-        if (!config || !window.confirm('Bạn chắc chắn muốn tạo hóa đơn cho tháng này? (Sẽ bỏ qua các phòng đã có hóa đơn)')) return;
+        if (!config || !window.confirm('Are you sure you want to generate bills for this month?')) return;
         setGenerating(true); setError(''); setSuccess('');
         try {
             const res = await axios.post(`${API_BASE_URL}/api/admin/bills/generate-bills`, {}, config);
@@ -92,7 +92,7 @@ const BillManagement = () => {
 
     const handleMarkAsPaid = async (billId) => {
         const config = getAuthConfig();
-        if (!config || !window.confirm(`Bạn chắc chắn muốn đánh dấu hóa đơn #${billId} là ĐÃ THANH TOÁN?`)) return;
+        if (!config || !window.confirm(`Mark bill #${billId} as PAID?`)) return;
         
         setError(''); setSuccess('');
         try {
@@ -100,7 +100,7 @@ const BillManagement = () => {
             setSuccess(res.data.message);
             setBills(bills.map(b => b.bill_id === billId ? { ...b, status: 'paid', paid_at: new Date().toISOString() } : b));
         } catch (err) {
-            setError(err.response?.data?.message || 'Không thể đánh dấu thanh toán.');
+            setError(err.response?.data?.message || 'Failed to mark as paid.');
         }
     };
 
@@ -131,12 +131,10 @@ const BillManagement = () => {
         }
     };
 
-    // --- JSX ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     return (
         <div className="management-page-container fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title">Bill Management</h2>
-                {/* THAY ĐỔI: Style lại nút */}
                 <Button className="btn-residem-primary" onClick={handleGenerateBills} disabled={generating}>
                     {generating ? <Spinner as="span" size="sm" /> : 'Generate This Month\'s Bills'}
                 </Button>
@@ -145,16 +143,14 @@ const BillManagement = () => {
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
             
-            {/* THAY ĐỔI: Bọc Card trắng chuyên nghiệp */}
             <Card className="residem-card">
                 <Card.Body>
-                    {/* --- BỘ LỌC (Style lại) --- */}
                     <Form as={Row} className="g-2 align-items-end mb-3">
                         <Col md={4}>
                             <Form.Group controlId="filterRoom">
                                 <Form.Label className="residem-form-label">Filter by Room</Form.Label>
                                 <Form.Control 
-                                    className="residem-form-control" // Style lại
+                                    className="residem-form-control"
                                     type="text"
                                     name="filterRoom"
                                     placeholder="Enter room number..."
@@ -167,7 +163,7 @@ const BillManagement = () => {
                             <Form.Group controlId="filterStatus">
                                 <Form.Label className="residem-form-label">Filter by Status</Form.Label>
                                 <Form.Select 
-                                    className="residem-form-select" // Style lại
+                                    className="residem-form-select"
                                     name="filterStatus"
                                     value={filterStatus}
                                     onChange={handleFilterChange}
@@ -181,16 +177,14 @@ const BillManagement = () => {
                         </Col>
                     </Form>
                     
-                    {/* Bọc bảng */}
                     <div className="table-wrapper">
                         {loading ? (
                             <div className="text-center p-5"><Spinner animation="border" /></div>
                         ) : (
                             <Table striped hover responsive size="sm" className="residem-table align-middle">
-                                <thead /* Bỏ class table-dark */>
+                                <thead>
                                     <tr>
-                                        {/* THÊM DẤU * (hoặc chú thích) */}
-                                        <th>ID</th>
+                                        <th>STT</th>
                                         <th>Resident</th>
                                         <th>Room</th>
                                         <th>Period</th>
@@ -204,17 +198,16 @@ const BillManagement = () => {
                                     {filteredBills.length === 0 ? (
                                         <tr><td colSpan="8" className="text-center">No bills found.</td></tr>
                                     ) : (
-                                        filteredBills.map(bill => (
+                                        filteredBills.map((bill, index) => (
                                             <tr key={bill.bill_id}>
-                                                <td>{bill.bill_id}</td>
+                                                <td>{index + 1}</td>
                                                 <td title={bill.resident_name}>{bill.resident_name}</td>
-                                                <td>{bill.room_name}</td>
+                                                <td>{bill.block_name ? `${bill.block_name} - ${bill.room_name}` : bill.room_name}</td>
                                                 <td>{formatMonth(bill.issue_date)}</td>
                                                 <td>{getStatusBadge(bill.status)}</td>
                                                 <td>{formatCurrency(bill.total_amount)}</td>
                                                 <td>{formatDate(bill.paid_at)}</td>
                                                 <td className="bill-actions">
-                                                    {/* THAY ĐỔI: Style lại nút */}
                                                     <Button className="btn-residem-secondary btn-sm me-1" onClick={() => handleShowDetails(bill)}>
                                                         Details
                                                     </Button>
@@ -234,27 +227,36 @@ const BillManagement = () => {
                 </Card.Body>
             </Card>
 
-            {/* Bill Details Modal (Style lại) */}
-            <Modal show={showDetailModal} onHide={handleCloseDetailModal} centered>
+            {/* Bill Details Modal */}
+            <Modal show={showDetailModal} onHide={handleCloseDetailModal} centered size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title className="residem-modal-title">Bill Details #{selectedBill?.bill_id}</Modal.Title>
+                    <Modal.Title className="residem-modal-title">Invoice Details #{selectedBill?.bill_id}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {selectedBill && (
-                        <div className="bill-info-summary">
-                            <p><strong>Resident:</strong> {selectedBill.resident_name}</p>
-                            <p><strong>Room:</strong> {selectedBill.room_name}</p>
-                            <p><strong>Period:</strong> {formatMonth(selectedBill.issue_date)}</p>
+                        <div className="bill-info-summary mb-4 p-3 bg-light rounded border">
+                            <Row>
+                                <Col md={6}>
+                                    <p><strong>Resident:</strong> {selectedBill.resident_name}</p>
+                                    <p><strong>Room:</strong> <Badge bg="info" className="text-dark">{selectedBill.block_name ? `${selectedBill.block_name} - ${selectedBill.room_name}` : selectedBill.room_name}</Badge></p>
+                                </Col>
+                                <Col md={6} className="text-md-end">
+                                    <p><strong>Billing Period:</strong> {formatMonth(selectedBill.issue_date)}</p>
+                                    <p><strong>Status:</strong> {getStatusBadge(selectedBill.status)}</p>
+                                </Col>
+                            </Row>
                         </div>
                     )}
-                    {loadingDetails ? <div className="text-center"><Spinner animation="border" /></div> :
-                        lineItems.length === 0 ? <p>No details found.</p> :
+
+                    <h6 className="mb-3 border-bottom pb-2">Items Breakdown</h6>
+                    
+                    {loadingDetails ? <div className="text-center py-4"><Spinner animation="border" /></div> :
+                        lineItems.length === 0 ? <p className="text-center text-muted">No items found.</p> :
                         (
-                            <Table striped size="sm" className="residem-table">
-                                <thead>
+                            <Table hover className="align-middle mb-0">
+                                <thead className="bg-light">
                                     <tr>
-                                        {/* THÊM CHÚ THÍCH */}
-                                        <th>Item Description</th>
+                                        <th style={{width: '70%'}}>Description</th>
                                         <th className="text-end">Amount</th>
                                     </tr>
                                 </thead>
@@ -262,12 +264,12 @@ const BillManagement = () => {
                                     {lineItems.map((item, index) => (
                                         <tr key={index}>
                                             <td>{item.item_name}</td>
-                                            <td className="text-end">{formatCurrency(item.total_item_amount)}</td>
+                                            <td className="text-end font-monospace">{formatCurrency(item.total_item_amount)}</td>
                                         </tr>
                                     ))}
-                                    <tr className="table-group-divider">
-                                        <td className="fw-bold">TOTAL (From Bill)</td>
-                                        <td className="fw-bold text-end">
+                                    <tr className="table-active border-top border-2 border-dark">
+                                        <td className="fw-bold text-uppercase">Total Due</td>
+                                        <td className="fw-bold text-end fs-5 text-primary-accent">
                                             {selectedBill ? formatCurrency(selectedBill.total_amount) : 'N/A'}
                                         </td>
                                     </tr>
@@ -276,6 +278,9 @@ const BillManagement = () => {
                         )
                     }
                 </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="residem-secondary" onClick={handleCloseDetailModal}>Close</Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );

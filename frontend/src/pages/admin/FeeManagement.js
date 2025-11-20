@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Table, Button, Spinner, Alert, Modal, Form, InputGroup, Card } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Form, InputGroup, Card } from 'react-bootstrap';
 import axios from 'axios';
-// SỬA: Thêm icon Trash (Thùng rác)
-import { PencilSquare, PlusCircleFill, Trash } from 'react-bootstrap-icons';
-import './FeeManagement.css'; // Import CSS MỚI
+import { PencilSquare, PlusCircleFill, Trash, ExclamationTriangle } from 'react-bootstrap-icons';
+import './FeeManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const FeeManagement = () => {
-    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [fees, setFees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -32,7 +30,7 @@ const FeeManagement = () => {
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            setError("Lỗi xác thực: Không tìm thấy Admin token.");
+            setError("Authentication failed: Admin token not found.");
             return null;
         }
         return { headers: { 'Authorization': `Bearer ${token}` } };
@@ -47,7 +45,7 @@ const FeeManagement = () => {
             const res = await axios.get(`${API_BASE_URL}/api/admin/fees`, config);
             setFees(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Không thể tải danh sách phí.');
+            setError(err.response?.data?.message || 'Failed to load fee list.');
         } finally {
             setLoading(false);
         }
@@ -91,11 +89,11 @@ const FeeManagement = () => {
 
         try {
             await axios.put(`${API_BASE_URL}/api/admin/fees/${currentFee.fee_id}`, editFormData, config);
-            setSuccess('Cập nhật phí thành công!');
+            setSuccess('Fee updated successfully!');
             handleClose();
             fetchFees(); 
         } catch (err) {
-            setError(err.response?.data?.message || 'Cập nhật thất bại.');
+            setError(err.response?.data?.message || 'Update failed.');
         } finally {
             setModalLoading(false);
         }
@@ -121,11 +119,11 @@ const FeeManagement = () => {
 
         try {
             await axios.post(`${API_BASE_URL}/api/admin/fees`, newFeeData, config);
-            setSuccess('Thêm phí mới thành công!');
+            setSuccess('New fee added successfully!');
             handleClose();
             fetchFees(); 
         } catch (err) {
-            setError(err.response?.data?.message || 'Thêm mới thất bại.');
+            setError(err.response?.data?.message || 'Failed to add new fee.');
         } finally {
             setModalLoading(false);
         }
@@ -148,11 +146,11 @@ const FeeManagement = () => {
 
         try {
             await axios.delete(`${API_BASE_URL}/api/admin/fees/${currentFee.fee_id}`, config);
-            setSuccess('Đã xóa phí thành công!');
+            setSuccess('Fee deleted successfully!');
             handleClose();
             fetchFees(); 
         } catch (err) {
-            setError(err.response?.data?.message || 'Xóa thất bại.');
+            setError(err.response?.data?.message || 'Delete failed.');
         } finally {
             setModalLoading(false);
         }
@@ -162,12 +160,10 @@ const FeeManagement = () => {
         return parseFloat(value).toLocaleString('vi-VN');
     };
 
-    // --- JSX ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     return (
         <div className="management-page-container fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title">Fee Management</h2>
-                {/* THAY ĐỔI: Style lại nút */}
                 <Button className="btn-residem-primary" onClick={handleShowAddModal}>
                     <PlusCircleFill className="me-2" /> Add New Fee
                 </Button>
@@ -179,11 +175,9 @@ const FeeManagement = () => {
             {loading ? (
                 <div className="text-center"><Spinner animation="border" /></div>
             ) : (
-                // THAY ĐỔI: Bọc Card
                 <Card className="residem-card">
                     <Card.Body>
                         <div className="table-wrapper">
-                            {/* THAY ĐỔI: Style lại Table */}
                             <Table striped hover responsive className="residem-table align-middle">
                                 <thead>
                                     <tr>
@@ -199,13 +193,11 @@ const FeeManagement = () => {
                                         <tr key={fee.fee_id}>
                                             <td><strong>{fee.fee_name}</strong></td>
                                             <td>
-                                                {/* THAY ĐỔI: Style lại Badge */}
                                                 <span className="status-badge status-info fee-code-badge">{fee.fee_code}</span>
                                             </td>
                                             <td>{formatCurrency(fee.price)} VND</td>
                                             <td>{fee.description}</td>
                                             <td>
-                                                {/* THAY ĐỔI: Style lại nút */}
                                                 <Button className="btn-residem-warning btn-sm me-2" onClick={() => handleShowEditModal(fee)}>
                                                     <PencilSquare className="me-1" /> Edit
                                                 </Button>
@@ -215,6 +207,7 @@ const FeeManagement = () => {
                                             </td>
                                         </tr>
                                     ))}
+                                    {fees.length === 0 && <tr><td colSpan="5" className="text-center text-muted">No fee configurations found.</td></tr>}
                                 </tbody>
                             </Table>
                         </div>
@@ -222,23 +215,24 @@ const FeeManagement = () => {
                 </Card>
             )}
 
-            {/* Modal chỉnh sửa (EDIT) - Style lại */}
+            {/* Modal EDIT */}
             <Modal show={showEditModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title className="residem-modal-title">Edit Fee</Modal.Title>
+                    <Modal.Title className="residem-modal-title">Edit Fee Configuration</Modal.Title>
                 </Modal.Header>
                 <Form onSubmit={handleEditSave}>
                     <Modal.Body>
                         {error && showEditModal && <Alert variant="danger">{error}</Alert>}
                         <Form.Group className="mb-3">
-                            <Form.Label className="residem-form-label">Fee Code (Key)</Form.Label>
+                            <Form.Label className="residem-form-label">Fee Code (System Key)</Form.Label>
                             <Form.Control 
-                                className="residem-form-control"
+                                className="residem-form-control bg-light"
                                 type="text" 
                                 value={currentFee?.fee_code || ''} 
                                 readOnly 
                                 disabled 
                             />
+                            <Form.Text className="text-muted">System code cannot be changed.</Form.Text>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label className="residem-form-label">Fee Name (Display)<span className="required-star">*</span></Form.Label>
@@ -275,7 +269,7 @@ const FeeManagement = () => {
                                 name="description"
                                 value={editFormData.description} 
                                 onChange={handleEditFormChange}
-                                placeholder="e.g., Monthly management fee, Car parking fee..."
+                                placeholder="e.g., Monthly management fee..."
                             />
                         </Form.Group>
                     </Modal.Body>
@@ -290,16 +284,16 @@ const FeeManagement = () => {
                 </Form>
             </Modal>
 
-            {/* Modal Thêm Mới (ADD) - Style lại */}
+            {/* Modal ADD */}
             <Modal show={showAddModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title className="residem-modal-title">Add New Fee</Modal.Title>
+                    <Modal.Title className="residem-modal-title">Add New Fee Configuration</Modal.Title>
                 </Modal.Header>
                 <Form onSubmit={handleAddNewSave}>
                     <Modal.Body>
                         {error && showAddModal && <Alert variant="danger">{error}</Alert>}
                         <Form.Group className="mb-3">
-                            <Form.Label className="residem-form-label">Fee Code (Key)<span className="required-star">*</span></Form.Label>
+                            <Form.Label className="residem-form-label">Fee Code (System Key)<span className="required-star">*</span></Form.Label>
                             <Form.Control 
                                 className="residem-form-control"
                                 type="text" 
@@ -307,10 +301,10 @@ const FeeManagement = () => {
                                 value={newFeeData.fee_code} 
                                 onChange={handleNewFeeChange}
                                 required 
-                                placeholder="e.g., CAR_FEE, BICYCLE_FEE (ALL CAPS)"
+                                placeholder="e.g., CAR_FEE (UPPERCASE_UNDERSCORE)"
                             />
                             <Form.Text className="text-muted">
-                                This code must match system logic (e.g., CAR_FEE).
+                                Unique identifier used in system logic. Must be UPPERCASE with UNDERSCORES.
                             </Form.Text>
                         </Form.Group>
                         <Form.Group className="mb-3">
@@ -359,30 +353,31 @@ const FeeManagement = () => {
                             Cancel
                         </Button>
                         <Button className="btn-residem-primary" type="submit" disabled={modalLoading}>
-                            {modalLoading ? <Spinner as="span" size="sm" /> : 'Add New Fee'}
+                            {modalLoading ? <Spinner as="span" size="sm" /> : 'Add Fee'}
                         </Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
 
-            {/* Modal Xác nhận Xóa (DELETE) - Style lại */}
+            {/* Modal DELETE */}
             <Modal show={showDeleteModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title className="residem-modal-title">Confirm Deletion</Modal.Title>
+                    <Modal.Title className="residem-modal-title text-danger">
+                        <ExclamationTriangle className="me-2 mb-1"/> Confirm Deletion
+                    </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {error && showDeleteModal && <Alert variant="danger">{error}</Alert>}
-                    Are you sure you want to delete the fee <strong>"{currentFee?.fee_name}"</strong> (Code: {currentFee?.fee_code})?
-                    <br />
-                    <small className="text-warning">
-                        Note: This fee cannot be deleted if it is already used in past bills.
-                    </small>
+                    <p>Are you sure you want to delete the fee configuration: <strong>{currentFee?.fee_name}</strong>?</p>
+                    <div className="alert alert-warning small">
+                        <strong>Warning:</strong> This action cannot be undone. If this fee code is used in past bills or active services, deletion may fail to maintain data integrity.
+                    </div>
+                    <div className="text-muted small">Fee Code: <code>{currentFee?.fee_code}</code></div>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="residem-secondary" onClick={handleClose} disabled={modalLoading}>
                         Cancel
                     </Button>
-                    {/* THAY ĐỔI: Style nút Delete */}
                     <Button className="btn-residem-danger" onClick={handleDeleteConfirm} disabled={modalLoading}>
                         {modalLoading ? <Spinner as="span" size="sm" /> : 'Confirm Delete'}
                     </Button>

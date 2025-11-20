@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Tabs, Tab, Table, Button, Spinner, Alert, Modal, Image, Form, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios';
-import { PencilFill, PauseCircleFill, PlayCircleFill, PlusCircleFill, Trash } from 'react-bootstrap-icons';
-import './VehicleManagement.css'; // Import CSS MỚI
+import { PencilFill, PauseCircleFill, PlayCircleFill, Trash } from 'react-bootstrap-icons';
+import './VehicleManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
-// --- (Component Edit Modal - ĐÃ STYLE LẠI) ---
+// --- (Component Edit Modal) ---
 const getVehicleTypeText = (type) => ({ car: 'Car', motorbike: 'Motorbike', bicycle: 'Bicycle' }[type] || type);
 
 const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
@@ -37,7 +37,6 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
     };
 
     return (
-        // Style lại Modal
         <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
                 <Modal.Title className="residem-modal-title">Edit Vehicle Card #{cardData?.id}</Modal.Title>
@@ -76,12 +75,10 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
         </Modal>
     );
 };
-// --- (End EditCardModal) ---
 
 const getRequestTypeText = (type) => ({ register: 'New Registration', reissue: 'Reissue', cancel: 'Cancel' }[type] || type);
 
 const VehicleManagement = () => {
-    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [key, setKey] = useState('pending');
     const [pendingRequests, setPendingRequests] = useState([]);
     const [allCards, setAllCards] = useState([]);
@@ -128,13 +125,8 @@ const VehicleManagement = () => {
         finally { setLoadingCards(false); }
     }, [getAuthConfig]); 
 
-    useEffect(() => {
-        fetchAllCards();
-    }, [fetchAllCards]);
-
-    useEffect(() => {
-        fetchPendingRequests();
-    }, [fetchPendingRequests]);
+    useEffect(() => { fetchAllCards(); }, [fetchAllCards]);
+    useEffect(() => { fetchPendingRequests(); }, [fetchPendingRequests]);
 
     const handleApprove = async (requestId) => {
          const config = getAuthConfig(); if (!config) return;
@@ -147,9 +139,7 @@ const VehicleManagement = () => {
         } catch (err) { setError(err.response?.data?.message || `Approve failed.`);}
     };
 
-    const openRejectModal = (request) => {
-        setRequestToReject(request); setRejectReason(''); setShowRejectModal(true);
-    };
+    const openRejectModal = (request) => { setRequestToReject(request); setRejectReason(''); setShowRejectModal(true); };
 
     const handleReject = async () => {
          const config = getAuthConfig(); if (!config) return;
@@ -169,7 +159,6 @@ const VehicleManagement = () => {
         const fullUrl = url && url.startsWith('/uploads') ? `${API_BASE_URL}${url}` : url;
         setImageUrlToShow(fullUrl || ''); setShowImageModal(true);
     };
-
     const handleCloseImageModal = () => setShowImageModal(false);
     const handleCloseRejectModal = () => setShowRejectModal(false);
 
@@ -207,46 +196,35 @@ const VehicleManagement = () => {
         } catch (err) { setError(err.response?.data?.message || `Update status card #${cardId} failed.`); }
     };
 
-    // --- JSX Render Chính (ĐÃ STYLE LẠI) ---
     return (
         <div className="management-page-container fadeIn">
             <h2 className="page-main-title mb-4">Vehicle Card Management</h2>
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
 
-            {/* THAY ĐỔI: Style lại Tabs */}
             <Tabs id="vehicle-management-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
-                
-                {/* --- Tab Pending Requests --- */}
                 <Tab eventKey="pending" title={`Pending Requests (${loadingRequests ? '...' : pendingRequests.length})`}>
                     <Card className="residem-card">
                         <Card.Body>
-                            {/* Bộ lọc sắp xếp (Style lại) */}
                             <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortRequestsBy">
-                                <Form.Label column sm="auto" className="residem-form-label mb-0">
-                                    Sort by:
-                                </Form.Label>
+                                <Form.Label column sm="auto" className="residem-form-label mb-0">Sort by:</Form.Label>
                                 <Col sm="4" md="3" lg="2">
-                                    <Form.Select
-                                        className="residem-form-select"
-                                        value={sortRequestsBy}
-                                        onChange={(e) => setSortRequestsBy(e.target.value)}
-                                    >
+                                    <Form.Select className="residem-form-select" value={sortRequestsBy} onChange={(e) => setSortRequestsBy(e.target.value)}>
                                         <option value="newest">Newest Requests</option>
                                         <option value="oldest">Oldest Requests</option>
                                     </Form.Select>
                                 </Col>
                             </Form.Group>
 
-                            {/* Bảng (Style lại) */}
                             <div className="table-wrapper">
                                 {loadingRequests ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                                 pendingRequests.length === 0 ? <Alert variant="residem-info" className="no-news-alert">No pending requests.</Alert> : (
                                     <Table striped hover responsive size="sm" className="residem-table align-middle">
-                                        <thead><tr><th>ID</th><th>Resident</th><th>Req. Type</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Proof/Reason</th><th>Time</th><th>Actions</th></tr></thead>
-                                        <tbody>{pendingRequests.map(req => (
+                                        <thead><tr><th>STT</th><th>Resident</th><th>Req. Type</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Proof/Reason</th><th>Time</th><th>Actions</th></tr></thead>
+                                        <tbody>{pendingRequests.map((req, index) => (
                                             <tr key={req.id}>
-                                                <td>{req.id}</td><td>{req.resident_name || `ID:${req.resident_id}`}</td>
+                                                <td>{index + 1}</td>
+                                                <td>{req.resident_name || `ID:${req.resident_id}`}</td>
                                                 <td>{getRequestTypeText(req.request_type)}</td>
                                                 <td>{getVehicleTypeText(req.vehicle_type)}</td><td>{req.full_name}</td><td>{req.license_plate || 'N/A'}</td><td>{req.brand}</td>
                                                 <td>
@@ -268,7 +246,6 @@ const VehicleManagement = () => {
                     </Card>
                 </Tab>
 
-                {/* --- Tab All Cards --- */}
                 <Tab eventKey="all" title="All Cards">
                     <Card className="residem-card">
                         <Card.Body>
@@ -276,12 +253,13 @@ const VehicleManagement = () => {
                                 {loadingCards ? <div className="text-center p-5"><Spinner animation="border" /></div> :
                                 allCards.length === 0 ? <Alert variant="residem-info" className="no-news-alert">No vehicle cards found.</Alert> : (
                                     <Table striped hover responsive size="sm" className="residem-table align-middle">
-                                        <thead><tr><th>ID</th><th>Resident</th><th>User</th><th>Type</th><th>License Plate</th><th>Brand</th><th>Status</th><th>Issued At</th><th>Actions</th></tr></thead>
-                                        <tbody>{allCards.map(card => {
+                                        <thead><tr><th>STT</th><th>Resident</th><th>User</th><th>Type</th><th>License Plate</th><th>Brand</th><th>Status</th><th>Issued At</th><th>Actions</th></tr></thead>
+                                        <tbody>{allCards.map((card, index) => {
                                             const isChangableStatus = card.status === 'active' || card.status === 'inactive';
                                             return (
                                             <tr key={card.id}>
-                                                <td>{card.id}</td><td>{card.resident_name || `ID:${card.resident_id}`}</td><td>{card.card_user_name}</td><td>{getVehicleTypeText(card.vehicle_type)}</td><td>{card.license_plate || 'N/A'}</td><td>{card.brand}</td>
+                                                <td>{index + 1}</td>
+                                                <td>{card.resident_name || `ID:${card.resident_id}`}</td><td>{card.card_user_name}</td><td>{getVehicleTypeText(card.vehicle_type)}</td><td>{card.license_plate || 'N/A'}</td><td>{card.brand}</td>
                                                 <td>
                                                     <span className={`status-badge ${
                                                         {'active':'status-success', 'inactive':'status-warning', 'lost':'status-secondary', 'canceled':'status-danger'}[card.status] || 'status-secondary'
@@ -315,45 +293,20 @@ const VehicleManagement = () => {
                 </Tab>
             </Tabs>
 
-            {/* --- Modals (Style lại) --- */}
             <Modal show={showImageModal} onHide={handleCloseImageModal} centered size="lg">
-                 <Modal.Header closeButton>
-                    <Modal.Title className="residem-modal-title">Proof Document</Modal.Title>
-                 </Modal.Header>
+                 <Modal.Header closeButton><Modal.Title className="residem-modal-title">Proof Document</Modal.Title></Modal.Header>
                  <Modal.Body className="text-center">
-                     {imageUrlToShow ?
-                         <Image src={imageUrlToShow} fluid onError={(e) => { e.target.onerror = null; e.target.alt="Image failed to load or does not exist"; e.target.src="/images/placeholder-error.png"}} />
-                         : <p>No image URL provided.</p>
-                     }
+                     {imageUrlToShow ? <Image src={imageUrlToShow} fluid onError={(e) => { e.target.onerror = null; e.target.alt="Image failed to load or does not exist"; e.target.src="/images/placeholder-error.png"}} /> : <p>No image URL provided.</p>}
                  </Modal.Body>
              </Modal>
 
             <Modal show={showRejectModal} onHide={handleCloseRejectModal} centered>
-                 <Modal.Header closeButton>
-                    <Modal.Title className="residem-modal-title">Reject Request #{requestToReject?.id}</Modal.Title>
-                 </Modal.Header>
-                 <Modal.Body>
-                    <Form.Group>
-                        <Form.Label className="residem-form-label">Reason for rejection<span className="required-star">*</span></Form.Label>
-                        <Form.Control className="residem-form-control" as="textarea" rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required />
-                    </Form.Group>
-                 </Modal.Body>
-                 <Modal.Footer>
-                     <Button variant="residem-secondary" onClick={handleCloseRejectModal}>Cancel</Button>
-                     <Button className="btn-residem-danger" onClick={handleReject} disabled={rejectLoading}>
-                        {rejectLoading ? <Spinner size="sm"/> : 'Confirm Rejection'}
-                    </Button>
-                 </Modal.Footer>
+                 <Modal.Header closeButton><Modal.Title className="residem-modal-title">Reject Request #{requestToReject?.id}</Modal.Title></Modal.Header>
+                 <Modal.Body><Form.Group><Form.Label className="residem-form-label">Reason for rejection<span className="required-star">*</span></Form.Label><Form.Control className="residem-form-control" as="textarea" rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required /></Form.Group></Modal.Body>
+                 <Modal.Footer><Button variant="residem-secondary" onClick={handleCloseRejectModal}>Cancel</Button><Button className="btn-residem-danger" onClick={handleReject} disabled={rejectLoading}>{rejectLoading ? <Spinner size="sm"/> : 'Confirm Rejection'}</Button></Modal.Footer>
              </Modal>
 
-            {/* Edit modal đã được style lại (component riêng) */}
-            <EditCardModal
-                show={showEditModal}
-                handleClose={handleCloseEditModal}
-                cardData={cardToEditDetails}
-                onSave={handleSaveChanges}
-                loading={editLoading}
-            />
+            <EditCardModal show={showEditModal} handleClose={handleCloseEditModal} cardData={cardToEditDetails} onSave={handleSaveChanges} loading={editLoading} />
         </div>
     );
 };

@@ -2,13 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
-// SỬA: Import hàm logic từ file utils (chúng ta đã tạo ở bước trước)
-const { generateBillsForMonth } = require('../utils/billService'); 
+const { generateBillsForMonth } = require('../utils/billService');
 
 // --- API Endpoints ---
 
-// SỬA: Xóa '/bills' khỏi route. Giờ đây là '/generate-bills'
-// Route đầy đủ sẽ là: POST /api/admin/bills/generate-bills
+// POST /api/admin/bills/generate-bills
 router.post('/generate-bills', protect, isAdmin, async (req, res) => {
     const localDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
     const month = localDate.getMonth() + 1; 
@@ -17,18 +15,16 @@ router.post('/generate-bills', protect, isAdmin, async (req, res) => {
     console.log(`[Bills] Admin triggered generation for ${month}/${year}`);
     const result = await generateBillsForMonth(month, year);
     if (result.success) {
-        res.json({ message: `Create Success ${result.count} new bills for ${month}/${year}.` });
+        res.json({ message: `Successfully generated ${result.count} new bills for ${month}/${year}.` });
     } else {
         res.status(500).json({ message: result.error });
     }
 });
 
-// SỬA: Xóa '/bills' khỏi route. Giờ đây là '/'
-// Route đầy đủ sẽ là: GET /api/admin/bills
+// GET /api/admin/bills (Lấy danh sách hóa đơn)
 router.get('/', protect, isAdmin, async (req, res) => {
-    console.log("[Bills GET] API /api/admin/bills called");
     try {
-        // SỬA: Dùng schema mới (bills.bill_id, bills.issue_date)
+        // SỬA LỖI TẠI ĐÂY: Thêm JOIN với bảng blocks để lấy block_name
         const query = `
             SELECT b.bill_id, b.status, 
                    to_char(b.issue_date, 'YYYY-MM-DD') AS issue_date,
@@ -36,14 +32,15 @@ router.get('/', protect, isAdmin, async (req, res) => {
                    b.total_amount, 
                    to_char(b.updated_at, 'YYYY-MM-DD HH24:MI') AS paid_at,
                    u.full_name AS resident_name, 
-                   r.room_number AS room_name
+                   r.room_number AS room_name,
+                   bl.name AS block_name  -- <--- Lấy thêm tên Block
             FROM bills b
             LEFT JOIN users u ON b.user_id = u.id
             LEFT JOIN rooms r ON b.room_id = r.id 
+            LEFT JOIN blocks bl ON r.block_id = bl.id -- <--- JOIN bảng blocks
             ORDER BY b.issue_date DESC, b.bill_id DESC
         `;
         const { rows } = await db.query(query);
-        console.log(`[Bills GET] Query returned ${rows.length} total bills.`);
         res.json(rows);
     } catch (err) {
         console.error('[Bills GET] Error fetching bills:', err);
@@ -51,12 +48,10 @@ router.get('/', protect, isAdmin, async (req, res) => {
     }
 });
 
-// SỬA: Xóa '/bills' khỏi route. Giờ đây là '/:id'
-// Route đầy đủ sẽ là: GET /api/admin/bills/:id
+// GET /api/admin/bills/:id (Chi tiết hóa đơn)
 router.get('/:id', protect, isAdmin, async (req, res) => {
     const billId = parseInt(req.params.id);
     try {
-        // SỬA: Đọc từ bảng 'bill_items' mới
         const lineItemsRes = await db.query(
             'SELECT item_name, total_item_amount FROM bill_items WHERE bill_id = $1', 
             [billId]
@@ -68,12 +63,10 @@ router.get('/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// SỬA: Xóa '/bills' khỏi route. Giờ đây là '/:id/mark-paid'
-// Route đầy đủ sẽ là: POST /api/admin/bills/:id/mark-paid
+// POST /api/admin/bills/:id/mark-paid
 router.post('/:id/mark-paid', protect, isAdmin, async (req, res) => {
     const billId = parseInt(req.params.id);
     try {
-        // SỬA: Dùng 'bill_id' và 'updated_at'
         const result = await db.query(
             "UPDATE bills SET status = 'paid', updated_at = NOW() WHERE bill_id = $1 AND status != 'paid' RETURNING bill_id",
             [billId]
@@ -88,5 +81,4 @@ router.post('/:id/mark-paid', protect, isAdmin, async (req, res) => {
     }
 });
 
-// SỬA: Chỉ export router. Hàm logic đã được chuyển đi.
 module.exports = router;

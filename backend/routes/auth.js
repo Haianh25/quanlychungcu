@@ -74,8 +74,9 @@ router.get('/verify-email/:token', async (req, res) => {
         // --- (THÊM MỚI) GỬI THÔNG BÁO CHO ADMIN ---
         try {
             const admins = await db.query("SELECT id FROM users WHERE role = 'admin'");
-            const notificationMessage = `Tài khoản mới '${user.full_name}' (email: ${user.email}) vừa xác thực email.`;
-            const linkTo = '/admin/user-management'; // Link tới trang quản lý User
+            // Sửa tiếng Anh
+            const notificationMessage = `New user '${user.full_name}' (email: ${user.email}) has verified their email.`;
+            const linkTo = '/admin/user-management'; 
 
             for (const admin of admins.rows) {
                 await db.query(
@@ -84,8 +85,7 @@ router.get('/verify-email/:token', async (req, res) => {
                 );
             }
         } catch (notifyError) {
-            // Nếu gửi thông báo lỗi, cũng không cần dừng tiến trình chính
-            console.error('Lỗi khi tạo thông báo cho admin:', notifyError);
+            console.error('Error notifying admin:', notifyError);
         }
         // --- (KẾT THÚC THÊM MỚI) ---
 

@@ -58,7 +58,7 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
         const requestRes = await client.query('SELECT * FROM vehicle_card_requests WHERE id = $1 AND status = $2', [requestId, 'pending']);
         if (requestRes.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ message: 'Yêu cầu không tồn tại hoặc đã được xử lý' });
+            return res.status(404).json({ message: 'Request not found or already processed' });
         }
         const request = requestRes.rows[0];
 
@@ -76,7 +76,7 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
                 if (feeRes.rows.length > 0) {
                     oneTimeFeeAmount = parseFloat(feeRes.rows[0].price);
                 } else {
-                    console.warn(`[Admin Approve] Không tìm thấy mã phí '${feeCode}' trong bảng 'fees'. Đặt phí là 0.`);
+                    console.warn(`[Admin Approve] Fee code '${feeCode}' not found in 'fees'. Setting fee to 0.`);
                 }
             }
         }
@@ -91,13 +91,14 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
         let notificationMessage = ''; 
         const linkTo = '/services'; 
 
+        // --- SỬA TIẾNG ANH: Thông báo Duyệt ---
         if (request.request_type === 'register') {
             await client.query(
                 `INSERT INTO vehicle_cards (resident_id, card_user_name, vehicle_type, license_plate, brand, color, status, created_from_request_id, issued_at)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
                 [request.resident_id, request.full_name, request.vehicle_type, request.license_plate, request.brand, request.color, 'active', requestId]
             );
-            notificationMessage = `Yêu cầu đăng ký thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã được duyệt.`;
+            notificationMessage = `Your vehicle card registration request (Plate: ${request.license_plate || 'N/A'}) has been approved.`;
         
         } else if (request.request_type === 'reissue' && request.target_card_id) {
             await client.query('UPDATE vehicle_cards SET status = $1 WHERE id = $2', ['lost', request.target_card_id]);
@@ -106,11 +107,11 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
                 [request.resident_id, request.full_name, request.vehicle_type, request.license_plate, request.brand, request.color, 'active', requestId]
             );
-            notificationMessage = `Yêu cầu cấp lại thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã được duyệt.`;
+            notificationMessage = `Your vehicle card reissue request (Plate: ${request.license_plate || 'N/A'}) has been approved.`;
 
         } else if (request.request_type === 'cancel' && request.target_card_id) {
             await client.query('UPDATE vehicle_cards SET status = $1 WHERE id = $2', ['canceled', request.target_card_id]);
-            notificationMessage = `Yêu cầu hủy thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã được duyệt.`;
+            notificationMessage = `Your vehicle card cancellation request (Plate: ${request.license_plate || 'N/A'}) has been approved.`;
         }
 
         if (notificationMessage) {
@@ -163,7 +164,8 @@ router.post('/vehicle-requests/:id/reject', protect, isAdmin, async (req, res) =
             ['rejected', adminUserId, admin_notes, requestId, 'pending']
         );
 
-        const notificationMessage = `Yêu cầu (${request.request_type}) cho thẻ xe (BS: ${request.license_plate || 'N/A'}) của bạn đã bị từ chối. Lý do: ${admin_notes}`;
+        // --- SỬA TIẾNG ANH: Thông báo Từ chối ---
+        const notificationMessage = `Your ${request.request_type} request for vehicle card (Plate: ${request.license_plate || 'N/A'}) has been rejected. Reason: ${admin_notes}`;
         const linkTo = '/services'; 
 
         await client.query(
@@ -177,7 +179,6 @@ router.post('/vehicle-requests/:id/reject', protect, isAdmin, async (req, res) =
     } catch (err) {
         await client.query('ROLLBACK');
         console.error(`[REJECT] ERROR rejecting request ID: ${requestId}:`, err);
-        // SỬA: Xóa ký tự 'V'
         res.status(500).json({ message: err.message || 'Server error rejecting request' });
     } finally {
         client.release();
@@ -193,12 +194,12 @@ router.get('/vehicle-cards/:id', protect, isAdmin, async (req, res) => {
             WHERE vc.id = $1`;
         const { rows } = await db.query(query, [cardId]);
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy thẻ xe.' });
+            return res.status(404).json({ message: 'Vehicle card not found.' });
         }
         res.json(rows[0]);
     } catch (err) {
         console.error(`Error fetching vehicle card ${cardId}:`, err);
-        res.status(500).json({ message: 'Lỗi server khi tải chi tiết thẻ.' });
+        res.status(500).json({ message: 'Server error fetching card details.' });
     }
 });
 
@@ -208,7 +209,7 @@ router.put('/vehicle-cards/:id', protect, isAdmin, async (req, res) => {
     const { card_user_name, license_plate, brand, color } = req.body;
 
     if (!card_user_name || !brand || !color) {
-        return res.status(400).json({ message: 'Thiếu thông tin bắt buộc (tên người dùng, nhãn hiệu, màu).' });
+        return res.status(400).json({ message: 'Missing required fields (user name, brand, color).' });
     }
 
     try {
@@ -221,32 +222,31 @@ router.put('/vehicle-cards/:id', protect, isAdmin, async (req, res) => {
         );
 
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy thẻ xe để cập nhật.' });
+            return res.status(404).json({ message: 'Card not found.' });
         }
-        res.json({ message: `Đã cập nhật thành công thông tin thẻ #${cardId}` });
+        res.json({ message: `Card #${cardId} updated successfully.` });
     } catch (err) {
         console.error(`Error updating vehicle card ${cardId}:`, err);
-        res.status(500).json({ message: 'Lỗi server khi cập nhật thẻ.' });
+        res.status(500).json({ message: 'Server error updating card.' });
     }
 });
 
 // PATCH /api/admin/vehicle-cards/:id/status
 router.patch('/vehicle-cards/:id/status', protect, isAdmin, async (req, res) => {
-    // SỬA: Xóa ký tự '_'
     const cardId = parseInt(req.params.id);
     const { status } = req.body;
 
     if (!status || !['active', 'inactive'].includes(status)) {
-        return res.status(400).json({ message: 'Trạng thái không hợp lệ. Chỉ chấp nhận "active" hoặc "inactive".' });
+        return res.status(400).json({ message: 'Invalid status. Only "active" or "inactive" allowed.' });
     }
 
     try {
         const currentCard = await db.query('SELECT status FROM vehicle_cards WHERE id = $1', [cardId]);
         if (currentCard.rows.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy thẻ xe.' });
+            return res.status(404).json({ message: 'Card not found.' });
         }
         if (currentCard.rows[0].status === 'canceled' || currentCard.rows[0].status === 'lost') {
-            return res.status(400).json({ message: `Không thể thay đổi trạng thái của thẻ đã ${currentCard.rows[0].status}.` });
+            return res.status(400).json({ message: `Cannot change status of a ${currentCard.rows[0].status} card.` });
         }
 
         const result = await db.query(
@@ -255,13 +255,12 @@ router.patch('/vehicle-cards/:id/status', protect, isAdmin, async (req, res) => 
         );
 
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy thẻ xe để cập nhật trạng thái.' });
+            return res.status(404).json({ message: 'Card not found.' });
         }
-        res.json({ message: `Đã cập nhật trạng thái thẻ #${cardId} thành "${status}"` });
+        res.json({ message: `Card #${cardId} status updated to "${status}".` });
     } catch (err) {
         console.error(`Error updating status for vehicle card ${cardId}:`, err);
-        // SỬA: Xóa ký tự 's'
-        res.status(500).json({ message: 'Lỗi server khi cập nhật trạng thái thẻ.' });
+        res.status(500).json({ message: 'Server error updating card status.' });
     }
 });
 
