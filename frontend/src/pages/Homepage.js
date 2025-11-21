@@ -31,15 +31,14 @@ const Homepage = () => {
                 {/* Wrapper để căn lề nội dung */}
                 <div className="hero-content-wrapper">
                     <div className="hero-content">
-                        {/* SỬA: Text mô tả về PTIT Apartment */}
+                        {/* Text mô tả về PTIT Apartment */}
                         <h1>Modern Living, Thoughtfully Designed</h1>
                         
-                        
-                        {/* SỬA: Địa chỉ */}
+                        {/* Địa chỉ */}
                         <p className="hero-address">Km10, Nguyen Trai Street, Ha Dong District, Hanoi</p>
                         
                         <div className="hero-buttons">
-                            {/* SỬA: Nút điều hướng */}
+                            {/* Nút điều hướng */}
                             <Link to="/about" className="btn btn-residem-primary">ABOUT US</Link>
                             <Link to="/news" className="btn btn-residem-secondary">LATEST NEWS</Link>
                         </div>
@@ -63,14 +62,11 @@ const Homepage = () => {
             <section className="gallery-section-light container my-5">
                 <div className="text-center mb-4">
                     <p className="sub-heading">Discover Gallery</p>
-                    <h2>Exterior & Interior</h2>
+                    {/* --- ĐÃ XÓA TIÊU ĐỀ "Exterior & Interior" Ở ĐÂY --- */}
                 </div>
-                <div className="filter-buttons text-center mb-4">
-                    <button className="btn btn-residem-filter active">View All</button>
-                    <button className="btn btn-residem-filter">Exterior</button>
-                    <button className="btn btn-residem-filter">Interior</button>
-                    <button className="btn btn-residem-filter">Facilities</button>
-                </div>
+                
+                {/* --- ĐÃ XÓA CÁC NÚT LỌC Ở ĐÂY --- */}
+
                 <div className="row g-3">
                     {galleryImages.map((image, index) => (
                         <div className="col-lg-3 col-md-4 col-sm-6" key={index}>

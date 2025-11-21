@@ -3,8 +3,10 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Pagination from '../components/admin/Pagination'; 
 import './News.css';
-// Import các component của Bootstrap
 import { Container, Row, Col, Dropdown, Alert, Spinner } from 'react-bootstrap';
+
+// Define API URL
+const API_BASE_URL = 'http://localhost:5000';
 
 const News = () => {
     // --- LOGIC GIỮ NGUYÊN ---
@@ -13,13 +15,20 @@ const News = () => {
     const [error, setError] = useState(null);
     const [sortOrder, setSortOrder] = useState('desc');
     const [currentPage, setCurrentPage] = useState(1);
-    const postsPerPage = 9; // Tăng số bài mỗi trang lên 9 vì giao diện rộng hơn
+    const postsPerPage = 9; 
+
+    // --- HELPER TO FIX IMAGE URL ---
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http')) return path; // Keep external links
+        return `${API_BASE_URL}${path}`; // Prepend backend URL for local uploads
+    };
 
     useEffect(() => {
         const fetchNews = async () => {
             try {
                 setLoading(true);
-                const res = await axios.get('http://localhost:5000/api/news');
+                const res = await axios.get(`${API_BASE_URL}/api/news`); // Use constant
                 setNewsList(res.data);
             } catch (err) {
                 console.error('Error fetching public news:', err);
@@ -67,7 +76,7 @@ const News = () => {
     const featuredPost = currentNewsList.length > 0 ? currentNewsList[0] : null;
     const remainingPosts = currentNewsList.length > 1 ? currentNewsList.slice(1) : [];
 
-    // --- GIAO DIỆN ĐÃ CẬP NHẬT (BỎ SIDEBAR) ---
+    // --- GIAO DIỆN ĐÃ CẬP NHẬT ---
     return (
         <Container className="news-page-container my-5 fadeIn">
             
@@ -108,7 +117,7 @@ const News = () => {
                 </Alert>
             ) : (
                 <div className="news-grid-wrapper">
-                    {/* 1. BÀI VIẾT NỔI BẬT */}
+                    {/* 1. FEATURED POST */}
                     {featuredPost && (
                         <Row className="mb-5">
                             <Col xs={12}>
@@ -116,7 +125,12 @@ const News = () => {
                                     <Row g={0}>
                                         <Col lg={8}> {/* Ảnh rộng hơn */}
                                             {featuredPost.imageurl || featuredPost.image_url ? (
-                                                <img src={featuredPost.imageurl || featuredPost.image_url} className="featured-news-image" alt={featuredPost.title} />
+                                                // UPDATE: Use getImageUrl
+                                                <img 
+                                                    src={getImageUrl(featuredPost.imageurl || featuredPost.image_url)} 
+                                                    className="featured-news-image" 
+                                                    alt={featuredPost.title} 
+                                                />
                                             ) : (
                                                 <div className="news-image-placeholder featured-news-image">
                                                     <i className="bi bi-image-alt"></i>
@@ -144,14 +158,19 @@ const News = () => {
                         </Row>
                     )}
 
-                    {/* 2. CÁC BÀI VIẾT CÒN LẠI (Lưới 3 cột cho đẹp) */}
+                    {/* 2. REMAINING POSTS */}
                     <Row>
                         {remainingPosts.map(item => (
                             <Col md={6} lg={4} className="mb-4" key={item.id}>
                                 <div className="card news-card h-100">
                                     <div className="news-img-top-wrapper">
                                         {item.imageurl || item.image_url ? (
-                                            <img src={item.imageurl || item.image_url} className="card-img-top news-image" alt={item.title} />
+                                            // UPDATE: Use getImageUrl
+                                            <img 
+                                                src={getImageUrl(item.imageurl || item.image_url)} 
+                                                className="card-img-top news-image" 
+                                                alt={item.title} 
+                                            />
                                         ) : (
                                             <div className="news-image-placeholder">
                                                 <i className="bi bi-image-alt"></i>

@@ -199,3 +199,69 @@
     color: #FFFFFF;
     box-shadow: 0 2px 8px rgba(185, 154, 123, 0.4);
 }
+/* ... (Giữ nguyên code cũ ở trên) ... */
+
+/* --- SIDEBAR RECENT POSTS (FIX) --- */
+.recent-posts-list .list-group-item {
+    border: none;
+    border-bottom: 1px dashed var(--color-border-light);
+    padding: 12px 0;
+    background: transparent;
+    display: flex;       /* Đảm bảo layout ngang */
+    align-items: flex-start;
+}
+
+.recent-posts-list .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Quy định kích thước ảnh thumbnail nhỏ */
+.recent-post-img {
+    width: 80px;         /* Chiều rộng cố định */
+    height: 60px;        /* Chiều cao cố định */
+    object-fit: cover;   /* Cắt ảnh vừa khung, không bị méo */
+    border-radius: 6px;  /* Bo góc */
+    flex-shrink: 0;      /* Ngăn ảnh bị co lại */
+    margin-right: 15px;  /* Khoảng cách với chữ */
+}
+
+/* Placeholder khi không có ảnh */
+.recent-post-img-placeholder {
+    width: 80px;
+    height: 60px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 1.5rem;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+/* Phần thông tin bài viết bên cạnh ảnh */
+.recent-post-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.recent-post-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    color: var(--color-text-dark);
+    
+    /* Tự động cắt dòng nếu tiêu đề quá dài (tối đa 2 dòng) */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.2s;
+}
+
+.list-group-item:hover .recent-post-title {
+    color: var(--color-primary-accent);
+}

@@ -1,9 +1,9 @@
+// backend/routes/news.js
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
-// (Bạn có thể cần import 'protect' và 'isAdmin' ở đây nếu bạn thêm route admin)
-// const { protect, isAdmin } = require('../middleware/authMiddleware');
-
+const upload = require('../utils/upload'); // Sử dụng lại file upload có sẵn
+const { protect, isAdmin } = require('../middleware/authMiddleware');
 
 // --- Public News endpoints for residents ---
 // GET /api/news - public list of active news
@@ -38,6 +38,17 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// (Các route admin cho news nên được thêm ở đây)
+// --- Admin Routes ---
+
+// POST /api/news/upload-image (Upload ảnh cho bài viết)
+router.post('/upload-image', protect, isAdmin, upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+    }
+    // Trả về đường dẫn file (lưu ý: đường dẫn này phải khớp với cách bạn serve static files trong index.js)
+    // Giả sử bạn đang serve folder uploads tại /uploads
+    const imageUrl = `/uploads/proofs/${req.file.filename}`; // Dùng chung folder proofs cho tiện
+    res.json({ imageUrl });
+});
 
 module.exports = router;

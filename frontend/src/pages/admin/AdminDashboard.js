@@ -2,7 +2,31 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, ProgressBar } from 'react-bootstrap';
 import axios from 'axios';
 import { PeopleFill, CarFrontFill, Newspaper, CashCoin, ArrowUpRight, GraphUp } from 'react-bootstrap-icons';
-import './AdminDashboard.css'; // CSS riêng
+import './AdminDashboard.css'; // Keep your CSS file
+
+// --- CHART.JS IMPORTS ---
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+} from 'chart.js';
+import { Bar, Doughnut } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const API_BASE_URL = 'http://localhost:5000';
 
@@ -29,23 +53,103 @@ const AdminDashboard = () => {
         fetchStats();
     }, [fetchStats]);
 
-    // Format tiền tệ
+    // Format Currency (Keep VND format for numbers, but labels are English)
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
     if (loading) return <div className="text-center p-5"><Spinner animation="border" variant="primary" /></div>;
     if (error) return <Alert variant="danger">{error}</Alert>;
     if (!stats) return null;
 
-    // Tính % thanh toán
+    // Calculate Payment Progress
     const paymentProgress = stats.bills.total_expected > 0 
         ? (stats.bills.collected / stats.bills.expected) * 100 
         : 0;
+
+    // --- CHART CONFIGURATION ---
+
+    // 1. Bar Chart Data (Revenue History)
+    const revenueLabels = stats.charts?.revenue_history.map(item => item.month) || [];
+    const revenueExpected = stats.charts?.revenue_history.map(item => item.expected) || [];
+    const revenueCollected = stats.charts?.revenue_history.map(item => item.collected) || [];
+
+    const barChartData = {
+        labels: revenueLabels,
+        datasets: [
+            {
+                label: 'Collected', // Translated
+                data: revenueCollected,
+                backgroundColor: 'rgba(25, 135, 84, 0.7)', // Green (Success)
+                borderColor: 'rgba(25, 135, 84, 1)',
+                borderWidth: 1,
+            },
+            {
+                label: 'Expected', // Translated
+                data: revenueExpected,
+                backgroundColor: 'rgba(185, 154, 123, 0.5)', // Brown/Gold (Primary Accent)
+                borderColor: 'rgba(185, 154, 123, 1)',
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const barChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Revenue Overview (Last 6 Months)' },
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        // Abbreviate large numbers (1M, 500k)
+                        if (value >= 1000000) return value / 1000000 + 'M';
+                        if (value >= 1000) return value / 1000 + 'k';
+                        return value;
+                    }
+                }
+            }
+        }
+    };
+
+    // 2. Doughnut Chart Data (Bill Status)
+    const statusCounts = { paid: 0, unpaid: 0, overdue: 0 };
+    if (stats.charts?.bill_status) {
+        stats.charts.bill_status.forEach(item => {
+            if (statusCounts[item.status] !== undefined) {
+                statusCounts[item.status] = item.count;
+            }
+        });
+    }
+
+    const doughnutData = {
+        labels: ['Paid', 'Unpaid', 'Overdue'], // Translated
+        datasets: [
+            {
+                label: '# of Bills',
+                data: [statusCounts.paid, statusCounts.unpaid, statusCounts.overdue],
+                backgroundColor: [
+                    'rgba(25, 135, 84, 0.7)',  // Paid - Green
+                    'rgba(255, 193, 7, 0.7)',  // Unpaid - Yellow
+                    'rgba(220, 53, 69, 0.7)',  // Overdue - Red
+                ],
+                borderColor: [
+                    'rgba(25, 135, 84, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
 
     return (
         <div className="dashboard-container fadeIn">
             <h2 className="page-main-title mb-4">Dashboard Overview</h2>
             
-            {/* --- HÀNG 1: CÁC THẺ THỐNG KÊ CHÍNH --- */}
+            {/* --- ROW 1: STATS CARDS --- */}
             <Row className="g-4 mb-4">
                 {/* 1. Residents */}
                 <Col md={6} xl={3}>
@@ -138,33 +242,33 @@ const AdminDashboard = () => {
                 </Col>
             </Row>
 
-            {/* --- HÀNG 2: BIỂU ĐỒ HOẶC CHI TIẾT HÓA ĐƠN (Placeholder để trang đỡ trống) --- */}
-            <Row>
+            {/* --- ROW 2: CHARTS --- */}
+            <Row className="g-4">
+                {/* 1. Bar Chart: Revenue History */}
                 <Col lg={8}>
                     <Card className="border-0 shadow-sm h-100">
-                        <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
-                            <h5 className="fw-bold mb-0">Billing Status (This Month)</h5>
-                        </Card.Header>
-                        <Card.Body className="d-flex align-items-center justify-content-center" style={{minHeight: '200px'}}>
-                             {/* Chỗ này sau này có thể vẽ biểu đồ tròn (Pie Chart) */}
-                             <div className="text-center">
-                                <GraphUp size={40} className="text-muted mb-3 opacity-50"/>
-                                <p className="text-muted">
-                                    Paid: <strong>{stats.bills.paid}</strong> / Unpaid: <strong>{stats.bills.count - stats.bills.paid}</strong>
-                                </p>
-                             </div>
+                        <Card.Body>
+                            <div style={{ height: '350px' }}>
+                                <Bar data={barChartData} options={barChartOptions} />
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>
+
+                {/* 2. Doughnut Chart: Bill Status */}
                 <Col lg={4}>
-                    <Card className="border-0 shadow-sm h-100 bg-primary-accent text-white welcome-card">
-                        <Card.Body className="p-4 d-flex flex-column justify-content-center">
-                            <h3>Welcome Admin!</h3>
-                            <p className="opacity-75 mb-4">
-                                Manage your apartment complex efficiently. Check the sidebar for management tools.
-                            </p>
-                            <button className="btn btn-light fw-bold text-primary-accent align-self-start">View Reports</button>
+                    <Card className="border-0 shadow-sm h-100">
+                        <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
+                            <h5 className="fw-bold mb-0">Bill Status (This Month)</h5>
+                        </Card.Header>
+                        <Card.Body className="d-flex align-items-center justify-content-center" style={{ minHeight: '300px' }}>
+                            <div style={{ width: '100%', maxWidth: '280px' }}>
+                                <Doughnut data={doughnutData} />
+                            </div>
                         </Card.Body>
+                        <Card.Footer className="bg-white border-0 text-center pb-4">
+                            <small className="text-muted">Total Bills: <strong>{stats.bills.count}</strong></small>
+                        </Card.Footer>
                     </Card>
                 </Col>
             </Row>
