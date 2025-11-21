@@ -6,20 +6,16 @@
     --color-text-dark: #333333;
     --color-text-muted-dark: #555555;
     --color-border-light: #e0e0e0;
-    
     /* Màu cho ô phòng */
-    --color-room-available: #28a745; /* Xanh lá */
-    --color-room-available-hover: #218838;
-    --color-room-occupied: #dc3545; /* Đỏ */
-    --color-room-occupied-hover: #c82333;
+    --color-room-available: #28a745; 
+    --color-room-occupied: #6c757d;
 }
 /* -------------------------------- */
 
 /* Container chính của trang */
 .management-page-container {
-    /* (File này không cần max-width vì nó nằm trong layout admin) */
-    /* Quan trọng: Phải để nó 100% width của container cha */
     width: 100%;
+    margin: 0;
 }
 
 /* Animation */
@@ -43,10 +39,10 @@
     border: 1px solid var(--color-border-light);
     border-radius: 0.5rem;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    padding: 0; /* Xóa padding mặc định */
+    padding: 0;
 }
 .residem-card .card-body {
-    padding: 1.5rem; /* Thêm padding chuẩn */
+    padding: 1.5rem;
 }
 .residem-card-header {
     background-color: #fdfdfd;
@@ -80,56 +76,92 @@
     box-shadow: 0 0 0 0.25rem rgba(185, 154, 123, 0.25);
 }
 
+/* --- STATS BAR & LEGEND --- */
+.stats-bar {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-item {
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--color-text-muted-dark);
+    margin-left: 1rem;
+}
+
+.legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 8px;
+    border: 1px solid transparent;
+}
+.legend-box.available {
+    background-color: var(--color-primary-accent); 
+}
+.legend-box.occupied {
+    background-color: #6c757d;
+}
+
 /* --- GRID HIỂN THỊ PHÒNG --- */
 .floor-card .card-body.room-grid {
     padding: 1.5rem;
-    /* === SỬA LỖI TẠI ĐÂY === */
     display: grid;
-    /* Sử dụng auto-fit: Tự động lấp đầy 
-      minmax(90px, 1fr): Mỗi ô rộng tối thiểu 90px, 
-                       và tự co giãn (1fr) để lấp đầy hàng
-    */
     grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-    gap: 15px; /* Khoảng cách giữa các ô phòng */
+    gap: 15px; 
 }
 
 .room-box {
     border: 1px solid;
-    padding: 15px;
+    padding: 5px;
     text-align: center;
-    font-weight: bold;
-    border-radius: 5px; /* Bo góc 5px */
-    cursor: pointer; /* Luôn là con trỏ */
+    font-weight: 600;
+    border-radius: 5px; 
+    cursor: pointer;
     color: white;
-    aspect-ratio: 1 / 1; /* Giữ tỷ lệ 1:1 */
+    aspect-ratio: 1 / 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.1rem;
+    font-size: 1rem;
     transition: all 0.2s ease-out;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Màu VÀNG ĐỒNG cho phòng trống */
 .room-box.available {
     background-color: var(--color-primary-accent);
-    border-color: var(--color-primary-accent-hover);
+    border-color: var(--color-primary-accent);
 }
 .room-box.available:hover {
     background-color: var(--color-primary-accent-hover);
     transform: scale(1.05);
 }
 
-/* Màu XÁM CHÌ cho phòng đã có người */
 .room-box.occupied {
-    background-color: #6c757d; /* Màu xám chì (secondary) */
-    border-color: #5a6268;
+    background-color: #6c757d;
+    border-color: #6c757d;
+    opacity: 0.8;
 }
 .room-box.occupied:hover {
-    background-color: #5a6268;
+    opacity: 1;
     transform: scale(1.05);
 }
 
-/* Thông báo khi không có tin */
 .no-news-alert.alert-residem-info,
 .alert-residem-info {
     background-color: #FFFFFF;
@@ -142,7 +174,68 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-/* --- MODAL (Style lại) --- */
+/* --- [CẬP NHẬT] FLOOR PAGINATION STYLE (HÌNH TRÒN) --- */
+.floor-pagination-container {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border-light);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.floor-pagination-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted-dark);
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.floor-pagination-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Khoảng cách giữa các nút */
+    justify-content: center;
+}
+
+.floor-btn {
+    width: 38px; /* Kích thước nút */
+    height: 38px;
+    border-radius: 50%; /* [QUAN TRỌNG] Bo tròn thành hình tròn */
+    border: 1px solid var(--color-border-light);
+    background-color: #FFFFFF; /* Nền trắng cho nút thường */
+    color: var(--color-text-muted-dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.floor-btn:hover {
+    border-color: var(--color-primary-accent);
+    color: var(--color-primary-accent);
+    transform: translateY(-2px);
+    background-color: #f9f9f9;
+}
+
+/* Style cho nút đang Active (Giống Resident Management) */
+.floor-btn.active {
+    background-color: var(--color-primary-accent); /* Nền vàng đồng */
+    color: #FFFFFF; /* Chữ trắng */
+    border-color: var(--color-primary-accent);
+    box-shadow: 0 4px 10px rgba(185, 154, 123, 0.4); /* Đổ bóng nhẹ */
+}
+
+/* --- MODAL --- */
 .modal-content {
     background-color: var(--color-bg-light);
     border: 1px solid var(--color-border-light);
@@ -175,36 +268,4 @@
 }
 .modal-footer {
     border-top: 1px solid var(--color-border-light);
-}
-
-/* Nút bấm (Style chung) */
-.btn-residem-primary {
-    background-color: var(--color-primary-accent);
-    border-color: var(--color-primary-accent);
-    color: var(--color-text-light) !important;
-    padding: 10px 25px;
-    font-weight: 600;
-    font-size: 1rem;
-    border-radius: 5px;
-    transition: all 0.3s ease;
-}
-.btn-residem-primary:hover {
-    background-color: var(--color-primary-accent-hover);
-    color: var(--color-text-light);
-    transform: translateY(-2px);
-}
-.btn-residem-secondary {
-    background-color: #FFFFFF;
-    border: 1px solid var(--color-border-light);
-    color: var(--color-text-muted-dark) !important;
-    padding: 10px 25px;
-    font-weight: 600;
-    font-size: 1rem;
-    border-radius: 5px;
-    transition: all 0.3s ease;
-}
-.btn-residem-secondary:hover {
-    background-color: var(--color-bg-light);
-    color: var(--color-text-dark) !important;
-    border-color: #ccc;
 }

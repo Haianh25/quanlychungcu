@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, ProgressBar, Badge } from 'react-bootstrap';
 import axios from 'axios';
-import { PeopleFill, CarFrontFill, Newspaper, CashCoin, ArrowUpRight, GraphUp } from 'react-bootstrap-icons';
-import './AdminDashboard.css'; // Keep your CSS file
+// [MỚI] Import thêm icon ExclamationTriangle
+import { PeopleFill, CarFrontFill, CashCoin, ArrowUpRight, GraphUp, ExclamationTriangleFill } from 'react-bootstrap-icons';
+import './AdminDashboard.css'; 
 
 // --- CHART.JS IMPORTS ---
 import {
@@ -17,7 +18,6 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -53,21 +53,17 @@ const AdminDashboard = () => {
         fetchStats();
     }, [fetchStats]);
 
-    // Format Currency (Keep VND format for numbers, but labels are English)
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
     if (loading) return <div className="text-center p-5"><Spinner animation="border" variant="primary" /></div>;
     if (error) return <Alert variant="danger">{error}</Alert>;
     if (!stats) return null;
 
-    // Calculate Payment Progress
     const paymentProgress = stats.bills.total_expected > 0 
         ? (stats.bills.collected / stats.bills.expected) * 100 
         : 0;
 
-    // --- CHART CONFIGURATION ---
-
-    // 1. Bar Chart Data (Revenue History)
+    // --- CHART DATA ---
     const revenueLabels = stats.charts?.revenue_history.map(item => item.month) || [];
     const revenueExpected = stats.charts?.revenue_history.map(item => item.expected) || [];
     const revenueCollected = stats.charts?.revenue_history.map(item => item.collected) || [];
@@ -76,16 +72,16 @@ const AdminDashboard = () => {
         labels: revenueLabels,
         datasets: [
             {
-                label: 'Collected', // Translated
+                label: 'Collected',
                 data: revenueCollected,
-                backgroundColor: 'rgba(25, 135, 84, 0.7)', // Green (Success)
+                backgroundColor: 'rgba(25, 135, 84, 0.7)', 
                 borderColor: 'rgba(25, 135, 84, 1)',
                 borderWidth: 1,
             },
             {
-                label: 'Expected', // Translated
+                label: 'Expected',
                 data: revenueExpected,
-                backgroundColor: 'rgba(185, 154, 123, 0.5)', // Brown/Gold (Primary Accent)
+                backgroundColor: 'rgba(185, 154, 123, 0.5)',
                 borderColor: 'rgba(185, 154, 123, 1)',
                 borderWidth: 1,
             },
@@ -104,7 +100,6 @@ const AdminDashboard = () => {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        // Abbreviate large numbers (1M, 500k)
                         if (value >= 1000000) return value / 1000000 + 'M';
                         if (value >= 1000) return value / 1000 + 'k';
                         return value;
@@ -114,7 +109,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // 2. Doughnut Chart Data (Bill Status)
     const statusCounts = { paid: 0, unpaid: 0, overdue: 0 };
     if (stats.charts?.bill_status) {
         stats.charts.bill_status.forEach(item => {
@@ -125,25 +119,20 @@ const AdminDashboard = () => {
     }
 
     const doughnutData = {
-        labels: ['Paid', 'Unpaid', 'Overdue'], // Translated
+        labels: ['Paid', 'Unpaid', 'Overdue'],
         datasets: [
             {
                 label: '# of Bills',
                 data: [statusCounts.paid, statusCounts.unpaid, statusCounts.overdue],
-                backgroundColor: [
-                    'rgba(25, 135, 84, 0.7)',  // Paid - Green
-                    'rgba(255, 193, 7, 0.7)',  // Unpaid - Yellow
-                    'rgba(220, 53, 69, 0.7)',  // Overdue - Red
-                ],
-                borderColor: [
-                    'rgba(25, 135, 84, 1)',
-                    'rgba(255, 193, 7, 1)',
-                    'rgba(220, 53, 69, 1)',
-                ],
+                backgroundColor: ['rgba(25, 135, 84, 0.7)', 'rgba(255, 193, 7, 0.7)', 'rgba(220, 53, 69, 0.7)'],
+                borderColor: ['rgba(25, 135, 84, 1)', 'rgba(255, 193, 7, 1)', 'rgba(220, 53, 69, 1)'],
                 borderWidth: 1,
             },
         ],
     };
+
+    // [MỚI] Tính tổng việc cần làm
+    const totalPending = (stats.pending_actions?.vehicles || 0) + (stats.pending_actions?.residents || 0);
 
     return (
         <div className="dashboard-container fadeIn">
@@ -221,21 +210,38 @@ const AdminDashboard = () => {
                     </Card>
                 </Col>
 
-                {/* 4. News / Activities */}
+                {/* 4. [MỚI] Action Required (Thay thế News) */}
                 <Col md={6} xl={3}>
                     <Card className="dashboard-card h-100 border-0 shadow-sm">
                         <Card.Body>
                             <div className="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <p className="text-muted mb-1 fw-bold text-uppercase small">News Posted</p>
-                                    <h3 className="mb-0 fw-bold text-dark">{stats.news}</h3>
+                                    <p className="text-muted mb-1 fw-bold text-uppercase small">Action Required</p>
+                                    <h3 className={`mb-0 fw-bold ${totalPending > 0 ? 'text-danger' : 'text-dark'}`}>
+                                        {totalPending}
+                                    </h3>
                                 </div>
-                                <div className="dashboard-icon-box bg-info-soft">
-                                    <Newspaper className="text-info" size={24}/>
+                                <div className="dashboard-icon-box bg-danger-soft" style={{backgroundColor: 'rgba(220, 53, 69, 0.15)'}}>
+                                    <ExclamationTriangleFill className="text-danger" size={24}/>
                                 </div>
                             </div>
                             <div className="mt-3">
-                                <span className="text-muted small"> updates published this month</span>
+                                {totalPending === 0 ? (
+                                    <span className="text-success small"><i className="bi bi-check-circle me-1"></i>All caught up!</span>
+                                ) : (
+                                    <div className="d-flex flex-column small">
+                                        {stats.pending_actions.vehicles > 0 && (
+                                            <span className="text-danger mb-1">
+                                                <strong>{stats.pending_actions.vehicles}</strong> vehicle requests
+                                            </span>
+                                        )}
+                                        {stats.pending_actions.residents > 0 && (
+                                            <span className="text-warning text-dark">
+                                                <strong>{stats.pending_actions.residents}</strong> users waiting
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </Card.Body>
                     </Card>
@@ -244,7 +250,6 @@ const AdminDashboard = () => {
 
             {/* --- ROW 2: CHARTS --- */}
             <Row className="g-4">
-                {/* 1. Bar Chart: Revenue History */}
                 <Col lg={8}>
                     <Card className="border-0 shadow-sm h-100">
                         <Card.Body>
@@ -255,7 +260,6 @@ const AdminDashboard = () => {
                     </Card>
                 </Col>
 
-                {/* 2. Doughnut Chart: Bill Status */}
                 <Col lg={4}>
                     <Card className="border-0 shadow-sm h-100">
                         <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">

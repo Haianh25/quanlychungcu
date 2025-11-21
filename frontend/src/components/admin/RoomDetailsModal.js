@@ -5,8 +5,8 @@ import { Modal, Button } from 'react-bootstrap';
 const RoomDetailsModal = ({ show, handleClose, roomData, blockName }) => {
     if (!roomData) return null; // Tránh lỗi nếu chưa có dữ liệu
 
-    const statusText = roomData.resident_name ? 'Đã sở hữu' : 'Chưa sở hữu';
-    const ownerText = roomData.resident_name || 'Trống';
+    const statusText = roomData.resident_name ? 'Owned' : 'Not Owned';
+    const ownerText = roomData.resident_name || 'Empty';
     const roomFullName = `${blockName} - ${roomData.room_number}`;
 
     return (

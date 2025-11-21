@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Container, Table, Button, Spinner, Alert, Modal, Badge, Form, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios';
+import * as XLSX from 'xlsx'; // [MỚI] Import thư viện XLSX
+import { FileEarmarkExcelFill } from 'react-bootstrap-icons'; // [MỚI] Import icon Excel
 import './BillManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -131,13 +133,45 @@ const BillManagement = () => {
         }
     };
 
+    // [MỚI] Hàm Xuất Excel
+    const handleExportExcel = () => {
+        // 1. Chuẩn bị dữ liệu để xuất (chỉ lấy các trường cần thiết và format lại)
+        const dataToExport = filteredBills.map((bill, index) => ({
+            'STT': index + 1,
+            'Resident Name': bill.resident_name,
+            'Room': bill.block_name ? `${bill.block_name} - ${bill.room_name}` : bill.room_name,
+            'Period': formatMonth(bill.issue_date),
+            'Status': bill.status,
+            'Total Amount (VND)': parseInt(bill.total_amount), // Để dạng số cho Excel dễ tính toán
+            'Payment Date': bill.paid_at ? formatDate(bill.paid_at) : 'N/A'
+        }));
+
+        // 2. Tạo Worksheet
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+        // 3. Tạo Workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Bills");
+
+        // 4. Xuất file
+        const fileName = `Bills_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    };
+
     return (
         <div className="management-page-container fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title">Bill Management</h2>
-                <Button className="btn-residem-primary" onClick={handleGenerateBills} disabled={generating}>
-                    {generating ? <Spinner as="span" size="sm" /> : 'Generate This Month\'s Bills'}
-                </Button>
+                <div className="d-flex gap-2">
+                    {/* [MỚI] Nút Export Excel */}
+                    <Button variant="success" onClick={handleExportExcel} disabled={loading || filteredBills.length === 0}>
+                        <FileEarmarkExcelFill className="me-2" /> Export Excel
+                    </Button>
+                    
+                    <Button className="btn-residem-primary" onClick={handleGenerateBills} disabled={generating}>
+                        {generating ? <Spinner as="span" size="sm" /> : 'Generate This Month\'s Bills'}
+                    </Button>
+                </div>
             </div>
 
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
