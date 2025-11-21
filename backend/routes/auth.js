@@ -115,6 +115,13 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Incorrect email or password.' });
         }
         const foundUser = user.rows[0];
+        
+        // --- [MỚI] KIỂM TRA TÀI KHOẢN BỊ KHÓA ---
+        if (foundUser.is_active === false) {
+             return res.status(403).json({ message: 'Your account has been disabled. Please contact support.' });
+        }
+        // ---------------------------------------
+
         if (!foundUser.is_verified) {
              // Changed message to English
             return res.status(403).json({ message: 'Please verify your email before logging in.' });

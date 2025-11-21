@@ -18,14 +18,43 @@ const isStrongPassword = (password) => {
 
 router.get('/users', protect, isAdmin, async (req, res) => {
     try {
+        // [UPDATED] Added 'phone' and 'is_active' to selection
         const users = await query(
-            'SELECT id, full_name, email, role, is_verified, created_at FROM users WHERE id != $1 ORDER BY created_at DESC',
+            'SELECT id, full_name, email, phone, role, is_verified, is_active, created_at FROM users WHERE id != $1 ORDER BY created_at DESC',
             [req.user.id]
         );
         res.status(200).json(users.rows);
     } catch (error) {
         console.error('Error fetching user list:', error);
         res.status(500).json({ message: 'Server error fetching user list.' });
+    }
+});
+
+// Toggle User Status (Enable/Disable)
+router.patch('/users/:id/status', protect, isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { isActive } = req.body; 
+
+    if (isActive === undefined) {
+        return res.status(400).json({ message: 'Missing status value.' });
+    }
+
+    try {
+        const result = await query(
+            'UPDATE users SET is_active = $1 WHERE id = $2 RETURNING id, is_active',
+            [isActive, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const statusText = isActive ? 'enabled' : 'disabled';
+        res.status(200).json({ message: `User has been ${statusText}.`, user: result.rows[0] });
+
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        res.status(500).json({ message: 'Server error updating user status.' });
     }
 });
 
@@ -46,7 +75,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         const oldRole = userResult.rows[0].role;
 
         // --- LOGIC: DEMOTION (Resident -> User) ---
-        // If demoted, clean up all resident-related data
         if (oldRole === 'resident' && role === 'user') {
             console.log(`[Admin] Demoting user ${id}. Cleaning up services...`);
             
@@ -69,7 +97,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
                 [id]
             );
         }
-        // -------------------------------------------
 
         const setClauses = [];
         const queryParams = [];
@@ -112,7 +139,7 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
             try {
                 const residentName = updatedUser.rows[0].full_name;
                 const residentId = updatedUser.rows[0].id;
-                // Notification in English
+                // Notification
                 const message = `Welcome ${residentName}! You have officially become a resident of PTIT Apartment.`;
                 
                 await client.query(
@@ -256,7 +283,6 @@ router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
 // 3. NEWS MANAGEMENT
 // ==========================================
 
-// Create News
 router.post('/news', protect, isAdmin, async (req, res) => {
     const { title, content, status, imageUrl } = req.body;
     const authorId = req.user.id;
@@ -273,7 +299,6 @@ router.post('/news', protect, isAdmin, async (req, res) => {
         
         const createdPost = newNewsItem.rows[0];
 
-        // Notification for active news
         if (createdPost.status === 'active') {
             try {
                 const message = `New Announcement: ${createdPost.title.substring(0, 50)}...`;
@@ -296,7 +321,6 @@ router.post('/news', protect, isAdmin, async (req, res) => {
     }
 });
 
-// Get All News (Admin)
 router.get('/news', protect, isAdmin, async (req, res) => {
     const { sortBy } = req.query; 
     
@@ -319,7 +343,6 @@ router.get('/news', protect, isAdmin, async (req, res) => {
     }
 });
 
-// Get One News
 router.get('/news/:id', protect, isAdmin, async (req, res) => {
     try {
         const result = await query("SELECT * FROM news WHERE id = $1", [req.params.id]);
@@ -333,7 +356,6 @@ router.get('/news/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// Update News
 router.put('/news/:id', protect, isAdmin, async (req, res) => {
     const { id } = req.params;
     const { title, content, status, imageUrl } = req.body;
@@ -353,7 +375,6 @@ router.put('/news/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// Delete News
 router.delete('/news/:id', protect, isAdmin, async (req, res) => {
     const { id } = req.params;
     try {
