@@ -3,6 +3,7 @@ const { sendNewBillEmail } = require('./mailer');
 
 /**
  * Hàm tạo hóa đơn tự động cho tất cả các phòng có người ở (resident)
+ * Chạy vào ngày 1 hàng tháng
  */
 async function generateBillsForMonth(month, year) {
     console.log('Running job: generateBillsForMonth...');
@@ -66,7 +67,7 @@ async function generateBillsForMonth(month, year) {
             let totalAmount = 0;
             const billItems = [];
 
-            // --- 3a. Phí cố định (Đổi tên sang Tiếng Anh) ---
+            // --- 3a. Phí cố định ---
             if (fees['MANAGEMENT_FEE']) {
                 billItems.push({
                     name: `Apartment Management Fee (${month}/${year})`,
@@ -241,6 +242,86 @@ async function generateBillsForMonth(month, year) {
     }
 }
 
+/**
+ * [MỚI] Hàm tạo hóa đơn chuyển đến (Move-in Bill) cho tháng hiện tại
+ * Tính phí quản lý Prorated dựa trên số ngày còn lại của tháng.
+ * @param {string} userId - ID cư dân
+ * @param {string} roomId - ID phòng
+ * @param {object} client - DB client (đang trong transaction)
+ */
+async function generateMoveInBill(userId, roomId, client) {
+    console.log(`[MoveInBill] Generating prorated bill for user ${userId} room ${roomId}...`);
+    
+    const now = new Date();
+    const currentDay = now.getDate();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    
+    // Lấy ngày cuối cùng của tháng hiện tại
+    const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
+    
+    // Số ngày phải trả tiền (từ hôm nay đến hết tháng)
+    const daysToCharge = (lastDayOfMonth - currentDay) + 1;
+
+    // Nếu còn ít hơn 3 ngày thì thôi, để tháng sau tính luôn (tùy chính sách)
+    // Nhưng ở đây cứ tính luôn cho chính xác
+    if (daysToCharge <= 0) return; 
+
+    // Lấy bảng giá
+    const resFees = await client.query("SELECT fee_code, price FROM fees WHERE fee_code IN ('MANAGEMENT_FEE', 'ADMIN_FEE')");
+    const fees = {};
+    resFees.rows.forEach(fee => fees[fee.fee_code] = parseFloat(fee.price));
+
+    let totalAmount = 0;
+    const billItems = [];
+
+    // Tính phí quản lý theo tỷ lệ
+    if (fees['MANAGEMENT_FEE']) {
+        const dailyRate = fees['MANAGEMENT_FEE'] / lastDayOfMonth;
+        const proratedAmount = Math.round(dailyRate * daysToCharge);
+        totalAmount += proratedAmount;
+        billItems.push({
+            name: `Management Fee (Move-in Prorated: ${daysToCharge}/${lastDayOfMonth} days)`,
+            price: proratedAmount
+        });
+    }
+
+    // Tính phí Admin theo tỷ lệ (hoặc thu full, ở đây tính theo tỷ lệ cho công bằng)
+    if (fees['ADMIN_FEE']) {
+        const dailyRate = fees['ADMIN_FEE'] / lastDayOfMonth;
+        const proratedAmount = Math.round(dailyRate * daysToCharge);
+        totalAmount += proratedAmount;
+        billItems.push({
+            name: `Admin Fee (Move-in Prorated: ${daysToCharge}/${lastDayOfMonth} days)`,
+            price: proratedAmount
+        });
+    }
+
+    if (totalAmount > 0) {
+        // Hạn thanh toán: 5 ngày sau khi chuyển đến
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 5); 
+
+        const resBill = await client.query(
+            `INSERT INTO bills (user_id, room_id, issue_date, due_date, total_amount, status)
+             VALUES ($1, $2, NOW(), $3, $4, 'unpaid') RETURNING bill_id`,
+            [userId, roomId, dueDate, totalAmount]
+        );
+        const billId = resBill.rows[0].bill_id;
+
+        for (const item of billItems) {
+            await client.query(
+                `INSERT INTO bill_items (bill_id, item_name, unit_price, total_item_amount, quantity)
+                 VALUES ($1, $2, $3, $4, 1)`,
+                [billId, item.name, item.price, item.price]
+            );
+        }
+
+        console.log(`[MoveInBill] Generated bill #${billId} amount ${totalAmount}`);
+    }
+}
+
 module.exports = {
     generateBillsForMonth,
+    generateMoveInBill // [MỚI] Export hàm này
 };

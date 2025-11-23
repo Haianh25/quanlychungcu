@@ -75,14 +75,24 @@ const BillPage = () => {
         setProcessingBillId(null);
     };
 
-    // Helpers (Giữ nguyên)
-    const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-    const formatMonth = (dateStr) => {
-        const date = new Date(dateStr);
-        return `Tháng ${date.getUTCMonth() + 1}/${date.getUTCFullYear()}`;
+    // --- HELPER FORMAT (ĐÃ SỬA SANG TIẾNG ANH & FORMAT CHUẨN) ---
+    
+    const formatCurrency = (amount) => {
+        // Dùng en-US để dấu phẩy ngăn cách hàng nghìn, nhưng vẫn giữ đơn vị VND
+        return new Intl.NumberFormat('en-US').format(amount) + ' VND';
     };
-    const formatDate = (dateStr) => new Date(dateStr).toLocaleString('vi-VN');
-    const formatDueDate = (dateStr) => new Date(dateStr).toLocaleDateString('vi-VN');
+
+    // [SỬA] Hiển thị tên Tháng/Năm tiếng Anh (VD: October 2025)
+    const formatMonthHeader = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    };
+
+    // [SỬA] Hiển thị ngày tháng năm chuẩn (DD/MM/YYYY)
+    const formatDate = (dateStr) => {
+        if (!dateStr) return 'N/A';
+        return new Date(dateStr).toLocaleDateString('en-GB'); 
+    };
 
     const getStatusBadge = (status) => {
         if (status === 'unpaid') return <Badge bg="warning" text="dark">Unpaid</Badge>;
@@ -95,19 +105,25 @@ const BillPage = () => {
     // Render Tab 1 (Unpaid)
     const renderUnpaidBills = () => {
         if (loading) return <div className="text-center p-5"><Spinner animation="border"/></div>;
-        if (unpaidBills.length === 0) return <Alert variant="residem-info">You have no unpaid bills.</Alert>; // Đổi style Alert
+        if (unpaidBills.length === 0) return <Alert variant="residem-info">You have no unpaid bills.</Alert>; 
 
         return unpaidBills.map(bill => (
             <Card className="unpaid-bill-card" key={bill.bill_id}>
                 <Card.Header className="unpaid-bill-header">
                     <div>
-                        <h4>{formatMonth(bill.issue_date)}</h4>
+                        {/* [SỬA] Tiêu đề tiếng Anh */}
+                        <h4>{formatMonthHeader(bill.issue_date)}</h4>
                         {getStatusBadge(bill.status)}
                     </div>
-                    {/* Chú thích rõ ràng */}
-                    <span className="due-date-text">Due Date: {formatDueDate(bill.due_date)}</span>
+                    {/* [SỬA] Ngày đến hạn chuẩn */}
+                    <span className="due-date-text">Due Date: {formatDate(bill.due_date)}</span>
                 </Card.Header>
                 <Card.Body className="unpaid-bill-body">
+                    {/* [THÊM] Ngày phát hành */}
+                    <div className="text-muted small mb-3">
+                        Issue Date: {formatDate(bill.issue_date)}
+                    </div>
+
                     {bill.line_items.map(item => (
                         <div className="line-item" key={item.item_id}>
                             <span>{item.item_name}</span>
@@ -120,7 +136,6 @@ const BillPage = () => {
                     </div>
                 </Card.Body>
                 <Card.Footer className="unpaid-bill-footer">
-                    {/* Chú thích rõ ràng */}
                     <p className="payment-note">International payment via PayPal (USD)</p>
                     <PayPalPayment
                         bill={bill}
@@ -137,14 +152,13 @@ const BillPage = () => {
     // Render Tab 2 (Paid)
     const renderPaidBills = () => {
         if (loading) return null;
-        if (paidBills.length === 0) return <Alert variant="residem-info">No paid bills found.</Alert>; // Đổi style Alert
+        if (paidBills.length === 0) return <Alert variant="residem-info">No paid bills found.</Alert>; 
 
         return (
-            <div className="table-wrapper"> {/* Bọc bảng để style */}
+            <div className="table-wrapper"> 
                 <Table striped hover responsive size="sm" className="residem-table">
                     <thead>
                         <tr>
-                            {/* Chú thích rõ ràng */}
                             <th>Invoice ID</th>
                             <th>Billing Period</th>
                             <th>Total Amount</th>
@@ -154,8 +168,8 @@ const BillPage = () => {
                     <tbody>
                         {paidBills.map(bill => (
                             <tr key={bill.bill_id}>
-                                <td>{bill.bill_id}</td>
-                                <td>{formatMonth(bill.issue_date)}</td>
+                                <td>#{bill.bill_id}</td>
+                                <td>{formatMonthHeader(bill.issue_date)}</td>
                                 <td>{formatCurrency(bill.total_amount)}</td>
                                 <td>{formatDate(bill.updated_at)}</td>
                             </tr>
@@ -169,15 +183,14 @@ const BillPage = () => {
     // Render Tab 3 (Transaction History)
     const renderTransactionHistory = () => {
         if (loading) return null;
-        if (transactions.length === 0) return <Alert variant="residem-info">No transaction history found.</Alert>; // Đổi style Alert
+        if (transactions.length === 0) return <Alert variant="residem-info">No transaction history found.</Alert>; 
         
         return (
-            <div className="table-wrapper"> {/* Bọc bảng để style */}
+            <div className="table-wrapper"> 
                 <Table striped hover responsive size="sm" className="residem-table history-table">
                     <thead>
                         <tr>
-                            {/* Chú thích rõ ràng */}
-                            <th>Transaction ID</th>
+                            <th>Trans ID</th>
                             <th>Bill ID</th>
                             <th>Amount</th>
                             <th>Method</th>
@@ -189,7 +202,7 @@ const BillPage = () => {
                         {transactions.map(t => (
                             <tr key={t.transaction_id}>
                                 <td className="transaction-id">{t.paypal_transaction_id || t.transaction_id}</td>
-                                <td>{t.bill_id}</td>
+                                <td>#{t.bill_id}</td>
                                 <td>{formatCurrency(t.amount)}</td>
                                 <td>{t.payment_method}</td>
                                 <td className={t.status === 'success' ? 'status-success' : (t.status === 'failed' ? 'status-failed' : '')}>
@@ -204,7 +217,7 @@ const BillPage = () => {
         );
     };
 
-    // --- JSX CHÍNH (ĐÃ CẬP NHẬT BỐ CỤC 2 CỘT) ---
+    // --- JSX CHÍNH ---
     return (
         <Container className="bill-page-container my-5 fadeIn">
             <Row>
@@ -216,7 +229,7 @@ const BillPage = () => {
                     {paymentError && <Alert variant="danger" onClose={() => setPaymentError('')} dismissible>{paymentError}</Alert>}
                     {paymentSuccess && <Alert variant="success" onClose={() => setPaymentSuccess('')} dismissible>{paymentSuccess}</Alert>}
                     
-                    {/* Tabs (Giữ nguyên) */}
+                    {/* Tabs */}
                     <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
                         <Tab eventKey="unpaid" title={`Unpaid (${unpaidBills.length})`}>
                             {renderUnpaidBills()}

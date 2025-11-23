@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
+const { generateMoveInBill } = require('../utils/billService'); // [MỚI] Import
 
 const pool = require('../db').getPool();
 const { query } = require('../db');
@@ -18,7 +19,7 @@ const isStrongPassword = (password) => {
 
 router.get('/users', protect, isAdmin, async (req, res) => {
     try {
-        // [UPDATED] Added 'phone' and 'is_active' to selection
+        // [UPDATED] Added 'phone' and 'is_active'
         const users = await query(
             'SELECT id, full_name, email, phone, role, is_verified, is_active, created_at FROM users WHERE id != $1 ORDER BY created_at DESC',
             [req.user.id]
@@ -139,7 +140,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
             try {
                 const residentName = updatedUser.rows[0].full_name;
                 const residentId = updatedUser.rows[0].id;
-                // Notification
                 const message = `Welcome ${residentName}! You have officially become a resident of PTIT Apartment.`;
                 
                 await client.query(
@@ -213,6 +213,7 @@ router.get('/blocks/:blockId/available-rooms', protect, isAdmin, async (req, res
     }
 });
 
+// [UPDATED] Assign Room + Generate Move-in Bill
 router.post('/assign-room', protect, isAdmin, async (req, res) => {
     const { residentId, roomId } = req.body;
     const client = await pool.connect();
@@ -228,7 +229,10 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Room does not exist or is already occupied.' });
         }
 
+        // Clear old assignments if any
         await client.query("UPDATE rooms SET resident_id = NULL WHERE resident_id = $1", [residentId]);
+        
+        // Assign new room
         await client.query("UPDATE rooms SET resident_id = $1 WHERE id = $2", [residentId, roomId]);
         
         const apartmentFullName = `${roomInfo.rows[0].block_name} - ${roomInfo.rows[0].room_number}`;
@@ -245,8 +249,16 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
             console.error('Error sending room assignment notification:', notifyError);
         }
 
+        // [MỚI] Tự động tạo hóa đơn Move-in (Prorated) cho những ngày còn lại trong tháng
+        try {
+            await generateMoveInBill(residentId, roomId, client); 
+        } catch (billError) {
+            console.error('Error generating move-in bill:', billError);
+            // Không throw lỗi để giao dịch Assign Room vẫn thành công
+        }
+
         await client.query('COMMIT');
-        res.status(200).json({ message: 'Room assigned successfully!' });
+        res.status(200).json({ message: 'Room assigned successfully! Move-in bill generated.' });
     } catch (error) {
         await client.query('ROLLBACK');
         console.error("Error assigning room:", error);
