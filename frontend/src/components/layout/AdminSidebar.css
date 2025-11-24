@@ -1,0 +1,39 @@
+/* AdminSidebar.css */
+.admin-sidebar-container {
+    background-color: #ffffff;
+    height: 100%;
+    min-height: calc(100vh - 70px);
+    border-right: 1px solid #e0e0e0;
+    padding-top: 1.5rem;
+}
+
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #555555;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.sidebar-nav-link:hover {
+    background-color: #f8f6f3; /* Màu kem nhạt */
+    color: #333;
+}
+
+.sidebar-nav-link.active {
+    background-color: rgba(185, 154, 123, 0.1); /* Vàng đồng nhạt */
+    color: #b99a7b; /* Vàng đồng đậm */
+    border-left-color: #b99a7b;
+    font-weight: 600;
+}
+
+/* Tùy chỉnh icon nếu muốn thêm icon vào sidebar */
+.sidebar-nav-link svg {
+    margin-right: 12px;
+    font-size: 1.1rem;
+}

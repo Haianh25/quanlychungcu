@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Tabs, Tab, Table, Button, Spinner, Alert, Modal, Image, Form, Row, Col, Card } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Tabs, Tab, Table, Button, Spinner, Alert, Modal, Image, Form, Row, Col, Card, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
-import { PencilFill, PauseCircleFill, PlayCircleFill, Trash } from 'react-bootstrap-icons';
+import { PencilFill, PauseCircleFill, PlayCircleFill, Trash, ArrowUp, ArrowDown, Funnel, Search } from 'react-bootstrap-icons';
 import './VehicleManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
-// --- (Component Edit Modal) ---
+// --- (Component Edit Modal - Giữ nguyên) ---
 const getVehicleTypeText = (type) => ({ car: 'Car', motorbike: 'Motorbike', bicycle: 'Bicycle' }[type] || type);
 
 const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
@@ -46,7 +46,7 @@ const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
                     <Form>
                         <Form.Group className="mb-3">
                             <Form.Label className="residem-form-label">Vehicle Type</Form.Label>
-                            <Form.Control className="residem-form-control" type="text" value={getVehicleTypeText(cardData.vehicle_type)} disabled readOnly />
+                            <Form.Control className="residem-form-control bg-light" type="text" value={getVehicleTypeText(cardData.vehicle_type)} disabled readOnly />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label className="residem-form-label">Card User Name<span className="required-star">*</span></Form.Label>
@@ -86,6 +86,7 @@ const VehicleManagement = () => {
     const [loadingCards, setLoadingCards] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    
     const [showImageModal, setShowImageModal] = useState(false);
     const [imageUrlToShow, setImageUrlToShow] = useState('');
     const [showRejectModal, setShowRejectModal] = useState(false);
@@ -95,7 +96,15 @@ const VehicleManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [cardToEditDetails, setCardToEditDetails] = useState(null);
     const [editLoading, setEditLoading] = useState(false);
+    
+    // Sort state for Pending Requests
     const [sortRequestsBy, setSortRequestsBy] = useState('newest');
+
+    // [MỚI] Filter & Sort states for All Cards
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
 
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('adminToken');
@@ -196,9 +205,69 @@ const VehicleManagement = () => {
         } catch (err) { setError(err.response?.data?.message || `Update status card #${cardId} failed.`); }
     };
 
+    // [MỚI] Logic sắp xếp & Lọc cho All Cards
+    const requestSort = (key) => {
+        let direction = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const processedCards = useMemo(() => {
+        let cards = [...allCards];
+
+        // 1. Filter
+        if (searchTerm) {
+            const lowerTerm = searchTerm.toLowerCase();
+            cards = cards.filter(c => 
+                (c.resident_name && c.resident_name.toLowerCase().includes(lowerTerm)) ||
+                (c.card_user_name && c.card_user_name.toLowerCase().includes(lowerTerm)) ||
+                (c.license_plate && c.license_plate.toLowerCase().includes(lowerTerm))
+            );
+        }
+        if (filterType) {
+            cards = cards.filter(c => c.vehicle_type === filterType);
+        }
+        if (filterStatus) {
+            cards = cards.filter(c => c.status === filterStatus);
+        }
+
+        // 2. Sort
+        if (sortConfig.key !== null) {
+            cards.sort((a, b) => {
+                let aValue = a[sortConfig.key] || '';
+                let bValue = b[sortConfig.key] || '';
+                
+                if(sortConfig.key === 'resident_name') {
+                    aValue = a.resident_name || `ID:${a.resident_id}`;
+                    bValue = b.resident_name || `ID:${b.resident_id}`;
+                }
+
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toLowerCase();
+                    bValue = bValue.toLowerCase();
+                }
+
+                if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+                if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+                return 0;
+            });
+        }
+        return cards;
+    }, [allCards, sortConfig, searchTerm, filterType, filterStatus]);
+
+    const getSortIcon = (columnName) => {
+        if (sortConfig.key !== columnName) return <span style={{opacity: 0.3, marginLeft: '5px', fontSize: '0.7em'}}>⇅</span>;
+        return sortConfig.direction === 'ascending' ? <ArrowUp size={12} className="ms-1"/> : <ArrowDown size={12} className="ms-1"/>;
+    };
+
     return (
         <div className="management-page-container fadeIn">
-            <h2 className="page-main-title mb-4">Vehicle Card Management</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="page-main-title">Vehicle Card Management</h2>
+            </div>
+            
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
 
@@ -207,29 +276,29 @@ const VehicleManagement = () => {
                     <Card className="residem-card">
                         <Card.Body>
                             <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortRequestsBy">
-                                <Form.Label column sm="auto" className="residem-form-label mb-0">Sort by:</Form.Label>
+                                <Form.Label column sm="auto" className="residem-form-label mb-0 d-flex align-items-center"><Funnel className="me-2"/> Sort requests:</Form.Label>
                                 <Col sm="4" md="3" lg="2">
                                     <Form.Select className="residem-form-select" value={sortRequestsBy} onChange={(e) => setSortRequestsBy(e.target.value)}>
-                                        <option value="newest">Newest Requests</option>
-                                        <option value="oldest">Oldest Requests</option>
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
                                     </Form.Select>
                                 </Col>
                             </Form.Group>
 
                             <div className="table-wrapper">
-                                {loadingRequests ? <div className="text-center p-5"><Spinner animation="border" /></div> :
-                                pendingRequests.length === 0 ? <Alert variant="residem-info" className="no-news-alert">No pending requests.</Alert> : (
+                                {loadingRequests ? <div className="text-center p-5"><Spinner animation="border" variant="secondary" /></div> :
+                                pendingRequests.length === 0 ? <Alert variant="light" className="text-center text-muted m-3">No pending requests.</Alert> : (
                                     <Table striped hover responsive size="sm" className="residem-table align-middle">
                                         <thead><tr><th>STT</th><th>Resident</th><th>Req. Type</th><th>Type</th><th>User</th><th>License Plate</th><th>Brand</th><th>Proof/Reason</th><th>Time</th><th>Actions</th></tr></thead>
                                         <tbody>{pendingRequests.map((req, index) => (
                                             <tr key={req.id}>
                                                 <td>{index + 1}</td>
                                                 <td>{req.resident_name || `ID:${req.resident_id}`}</td>
-                                                <td>{getRequestTypeText(req.request_type)}</td>
+                                                <td><span className="badge bg-light text-dark border">{getRequestTypeText(req.request_type)}</span></td>
                                                 <td>{getVehicleTypeText(req.vehicle_type)}</td><td>{req.full_name}</td><td>{req.license_plate || 'N/A'}</td><td>{req.brand}</td>
                                                 <td>
                                                     {req.proof_image_url ? (<Button variant="link" size="sm" className="residem-link" onClick={() => handleShowImage(req.proof_image_url)}>View Photo</Button>)
-                                                      : req.reason ? (<span title={req.reason}>{req.reason.substring(0, 30)}{req.reason.length > 30 ? '...' : ''}</span>)
+                                                      : req.reason ? (<span title={req.reason} className="text-muted fst-italic">{req.reason.substring(0, 30)}{req.reason.length > 30 ? '...' : ''}</span>)
                                                       : '-'}
                                                 </td>
                                                 <td>{new Date(req.requested_at).toLocaleString('vi-VN')}</td>
@@ -249,17 +318,78 @@ const VehicleManagement = () => {
                 <Tab eventKey="all" title="All Cards">
                     <Card className="residem-card">
                         <Card.Body>
+                            {/* [MỚI] Khu vực Filter */}
+                            <Form as={Row} className="g-3 mb-4 align-items-end">
+                                <Col md={4}>
+                                    <Form.Group>
+                                        <Form.Label className="residem-form-label">Search</Form.Label>
+                                        <InputGroup>
+                                            <InputGroup.Text className="bg-white border-end-0"><Search /></InputGroup.Text>
+                                            <Form.Control 
+                                                type="text" 
+                                                placeholder="Search Name / Plate..." 
+                                                className="residem-form-control border-start-0 ps-0"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                        </InputGroup>
+                                    </Form.Group>
+                                </Col>
+                                <Col md={3}>
+                                    <Form.Group>
+                                        <Form.Label className="residem-form-label">Vehicle Type</Form.Label>
+                                        <Form.Select 
+                                            className="residem-form-select" 
+                                            value={filterType}
+                                            onChange={(e) => setFilterType(e.target.value)}
+                                        >
+                                            <option value="">All Types</option>
+                                            <option value="car">Car</option>
+                                            <option value="motorbike">Motorbike</option>
+                                            <option value="bicycle">Bicycle</option>
+                                        </Form.Select>
+                                    </Form.Group>
+                                </Col>
+                                <Col md={3}>
+                                    <Form.Group>
+                                        <Form.Label className="residem-form-label">Status</Form.Label>
+                                        <Form.Select 
+                                            className="residem-form-select"
+                                            value={filterStatus}
+                                            onChange={(e) => setFilterStatus(e.target.value)}
+                                        >
+                                            <option value="">All Statuses</option>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Locked</option>
+                                            <option value="lost">Lost</option>
+                                        </Form.Select>
+                                    </Form.Group>
+                                </Col>
+                            </Form>
+
                             <div className="table-wrapper">
-                                {loadingCards ? <div className="text-center p-5"><Spinner animation="border" /></div> :
-                                allCards.length === 0 ? <Alert variant="residem-info" className="no-news-alert">No vehicle cards found.</Alert> : (
+                                {loadingCards ? <div className="text-center p-5"><Spinner animation="border" variant="secondary" /></div> :
+                                processedCards.length === 0 ? <Alert variant="light" className="text-center text-muted m-3">No cards match your filters.</Alert> : (
                                     <Table striped hover responsive size="sm" className="residem-table align-middle">
-                                        <thead><tr><th>STT</th><th>Resident</th><th>User</th><th>Type</th><th>License Plate</th><th>Brand</th><th>Status</th><th>Issued At</th><th>Actions</th></tr></thead>
-                                        <tbody>{allCards.map((card, index) => {
+                                        <thead>
+                                            <tr>
+                                                <th>STT</th>
+                                                <th onClick={() => requestSort('resident_name')}>Resident {getSortIcon('resident_name')}</th>
+                                                <th>User</th>
+                                                <th onClick={() => requestSort('vehicle_type')}>Type {getSortIcon('vehicle_type')}</th>
+                                                <th onClick={() => requestSort('license_plate')}>License Plate {getSortIcon('license_plate')}</th>
+                                                <th>Brand</th>
+                                                <th onClick={() => requestSort('status')}>Status {getSortIcon('status')}</th>
+                                                <th onClick={() => requestSort('issued_at')}>Issued At {getSortIcon('issued_at')}</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>{processedCards.map((card, index) => {
                                             const isChangableStatus = card.status === 'active' || card.status === 'inactive';
                                             return (
                                             <tr key={card.id}>
                                                 <td>{index + 1}</td>
-                                                <td>{card.resident_name || `ID:${card.resident_id}`}</td><td>{card.card_user_name}</td><td>{getVehicleTypeText(card.vehicle_type)}</td><td>{card.license_plate || 'N/A'}</td><td>{card.brand}</td>
+                                                <td className="fw-bold text-dark">{card.resident_name || `ID:${card.resident_id}`}</td><td>{card.card_user_name}</td><td>{getVehicleTypeText(card.vehicle_type)}</td><td>{card.license_plate || 'N/A'}</td><td>{card.brand}</td>
                                                 <td>
                                                     <span className={`status-badge ${
                                                         {'active':'status-success', 'inactive':'status-warning', 'lost':'status-secondary', 'canceled':'status-danger'}[card.status] || 'status-secondary'
@@ -301,7 +431,7 @@ const VehicleManagement = () => {
              </Modal>
 
             <Modal show={showRejectModal} onHide={handleCloseRejectModal} centered>
-                 <Modal.Header closeButton><Modal.Title className="residem-modal-title">Reject Request #{requestToReject?.id}</Modal.Title></Modal.Header>
+                 <Modal.Header closeButton><Modal.Title className="residem-modal-title text-danger">Reject Request #{requestToReject?.id}</Modal.Title></Modal.Header>
                  <Modal.Body><Form.Group><Form.Label className="residem-form-label">Reason for rejection<span className="required-star">*</span></Form.Label><Form.Control className="residem-form-control" as="textarea" rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} required /></Form.Group></Modal.Body>
                  <Modal.Footer><Button variant="residem-secondary" onClick={handleCloseRejectModal}>Cancel</Button><Button className="btn-residem-danger" onClick={handleReject} disabled={rejectLoading}>{rejectLoading ? <Spinner size="sm"/> : 'Confirm Rejection'}</Button></Modal.Footer>
              </Modal>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Container, Table, Button, Spinner, Alert, Modal, Badge, Form, Row, Col, Card } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Badge, Form, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios';
-import * as XLSX from 'xlsx'; // [MỚI] Import thư viện XLSX
-import { FileEarmarkExcelFill } from 'react-bootstrap-icons'; // [MỚI] Import icon Excel
+import * as XLSX from 'xlsx'; 
+import { FileEarmarkExcelFill, LightningChargeFill, EyeFill, CheckCircleFill } from 'react-bootstrap-icons'; // Thêm icons
 import './BillManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -64,7 +64,7 @@ const BillManagement = () => {
          return date.toLocaleString('vi-VN');
     };
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
     };
     
     const getStatusBadge = (status) => {
@@ -133,29 +133,23 @@ const BillManagement = () => {
         }
     };
 
-    // [MỚI] Hàm Xuất Excel
     const handleExportExcel = () => {
-        // 1. Chuẩn bị dữ liệu để xuất (chỉ lấy các trường cần thiết và format lại)
         const dataToExport = filteredBills.map((bill, index) => ({
-            'STT': index + 1,
-            'Resident Name': bill.resident_name,
+            'No.': index + 1,
+            'Resident': bill.resident_name || 'Unknown',
             'Room': bill.block_name ? `${bill.block_name} - ${bill.room_name}` : bill.room_name,
-            'Period': formatMonth(bill.issue_date),
-            'Status': bill.status,
-            'Total Amount (VND)': parseInt(bill.total_amount), // Để dạng số cho Excel dễ tính toán
+            'Billing Period': formatMonth(bill.issue_date),
+            'Status': bill.status.toUpperCase(),
+            'Total Amount (VND)': parseInt(bill.total_amount),
             'Payment Date': bill.paid_at ? formatDate(bill.paid_at) : 'N/A'
         }));
 
-        // 2. Tạo Worksheet
         const ws = XLSX.utils.json_to_sheet(dataToExport);
-
-        // 3. Tạo Workbook
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Bills");
+        XLSX.utils.book_append_sheet(wb, ws, "Bills Report");
 
-        // 4. Xuất file
-        const fileName = `Bills_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
-        XLSX.writeFile(wb, fileName);
+        const dateStr = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Bills_Report_${dateStr}.xlsx`);
     };
 
     return (
@@ -163,13 +157,12 @@ const BillManagement = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title">Bill Management</h2>
                 <div className="d-flex gap-2">
-                    {/* [MỚI] Nút Export Excel */}
-                    <Button variant="success" onClick={handleExportExcel} disabled={loading || filteredBills.length === 0}>
+                    <Button className="btn-export-excel d-flex align-items-center" onClick={handleExportExcel} disabled={loading || filteredBills.length === 0}>
                         <FileEarmarkExcelFill className="me-2" /> Export Excel
                     </Button>
                     
-                    <Button className="btn-residem-primary" onClick={handleGenerateBills} disabled={generating}>
-                        {generating ? <Spinner as="span" size="sm" /> : 'Generate This Month\'s Bills'}
+                    <Button className="btn-residem-primary d-flex align-items-center" onClick={handleGenerateBills} disabled={generating}>
+                        {generating ? <><Spinner as="span" size="sm" className="me-2"/> Generating...</> : <><LightningChargeFill className="me-2"/> Generate Monthly Bills</>}
                     </Button>
                 </div>
             </div>
@@ -179,7 +172,7 @@ const BillManagement = () => {
             
             <Card className="residem-card">
                 <Card.Body>
-                    <Form as={Row} className="g-2 align-items-end mb-3">
+                    <Form as={Row} className="g-3 align-items-end mb-4">
                         <Col md={4}>
                             <Form.Group controlId="filterRoom">
                                 <Form.Label className="residem-form-label">Filter by Room</Form.Label>
@@ -213,9 +206,9 @@ const BillManagement = () => {
                     
                     <div className="table-wrapper">
                         {loading ? (
-                            <div className="text-center p-5"><Spinner animation="border" /></div>
+                            <div className="text-center p-5"><Spinner animation="border" variant="secondary" /></div>
                         ) : (
-                            <Table striped hover responsive size="sm" className="residem-table align-middle">
+                            <Table striped hover responsive className="residem-table align-middle">
                                 <thead>
                                     <tr>
                                         <th>STT</th>
@@ -230,24 +223,26 @@ const BillManagement = () => {
                                 </thead>
                                 <tbody>
                                     {filteredBills.length === 0 ? (
-                                        <tr><td colSpan="8" className="text-center">No bills found.</td></tr>
+                                        <tr><td colSpan="8" className="text-center text-muted py-4">No bills found matching your criteria.</td></tr>
                                     ) : (
                                         filteredBills.map((bill, index) => (
                                             <tr key={bill.bill_id}>
                                                 <td>{index + 1}</td>
-                                                <td title={bill.resident_name}>{bill.resident_name}</td>
-                                                <td>{bill.block_name ? `${bill.block_name} - ${bill.room_name}` : bill.room_name}</td>
+                                                <td>
+                                                    <div className="fw-bold text-dark">{bill.resident_name}</div>
+                                                </td>
+                                                <td><Badge bg="light" text="dark" className="border fw-normal">{bill.block_name ? `${bill.block_name} - ${bill.room_name}` : bill.room_name}</Badge></td>
                                                 <td>{formatMonth(bill.issue_date)}</td>
                                                 <td>{getStatusBadge(bill.status)}</td>
-                                                <td>{formatCurrency(bill.total_amount)}</td>
-                                                <td>{formatDate(bill.paid_at)}</td>
+                                                <td className="fw-bold text-dark">{formatCurrency(bill.total_amount)}</td>
+                                                <td className="small text-muted">{formatDate(bill.paid_at)}</td>
                                                 <td className="bill-actions">
-                                                    <Button className="btn-residem-secondary btn-sm me-1" onClick={() => handleShowDetails(bill)}>
-                                                        Details
+                                                    <Button className="btn-residem-secondary btn-sm me-2" onClick={() => handleShowDetails(bill)}>
+                                                        <EyeFill className="me-1"/> Details
                                                     </Button>
                                                     {bill.status === 'unpaid' && (
                                                         <Button className="btn-residem-success btn-sm" onClick={() => handleMarkAsPaid(bill.bill_id)}>
-                                                            Mark Paid
+                                                            <CheckCircleFill className="me-1"/> Mark Paid
                                                         </Button>
                                                     )}
                                                 </td>
@@ -268,11 +263,11 @@ const BillManagement = () => {
                 </Modal.Header>
                 <Modal.Body>
                     {selectedBill && (
-                        <div className="bill-info-summary mb-4 p-3 bg-light rounded border">
+                        <div className="bill-info-summary">
                             <Row>
                                 <Col md={6}>
                                     <p><strong>Resident:</strong> {selectedBill.resident_name}</p>
-                                    <p><strong>Room:</strong> <Badge bg="info" className="text-dark">{selectedBill.block_name ? `${selectedBill.block_name} - ${selectedBill.room_name}` : selectedBill.room_name}</Badge></p>
+                                    <p><strong>Room:</strong> <Badge bg="secondary" className="ms-1">{selectedBill.block_name ? `${selectedBill.block_name} - ${selectedBill.room_name}` : selectedBill.room_name}</Badge></p>
                                 </Col>
                                 <Col md={6} className="text-md-end">
                                     <p><strong>Billing Period:</strong> {formatMonth(selectedBill.issue_date)}</p>
@@ -282,28 +277,28 @@ const BillManagement = () => {
                         </div>
                     )}
 
-                    <h6 className="mb-3 border-bottom pb-2">Items Breakdown</h6>
+                    <h6 className="mb-3 fw-bold text-dark border-bottom pb-2">Items Breakdown</h6>
                     
-                    {loadingDetails ? <div className="text-center py-4"><Spinner animation="border" /></div> :
+                    {loadingDetails ? <div className="text-center py-4"><Spinner animation="border" variant="secondary" /></div> :
                         lineItems.length === 0 ? <p className="text-center text-muted">No items found.</p> :
                         (
-                            <Table hover className="align-middle mb-0">
+                            <Table hover className="align-middle mb-0" style={{border: '1px solid #eee'}}>
                                 <thead className="bg-light">
                                     <tr>
-                                        <th style={{width: '70%'}}>Description</th>
-                                        <th className="text-end">Amount</th>
+                                        <th style={{width: '70%', borderBottom: 'none'}}>Description</th>
+                                        <th className="text-end" style={{borderBottom: 'none'}}>Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {lineItems.map((item, index) => (
                                         <tr key={index}>
-                                            <td>{item.item_name}</td>
+                                            <td className="text-dark">{item.item_name}</td>
                                             <td className="text-end font-monospace">{formatCurrency(item.total_item_amount)}</td>
                                         </tr>
                                     ))}
-                                    <tr className="table-active border-top border-2 border-dark">
+                                    <tr className="table-active" style={{borderTop: '2px solid #333'}}>
                                         <td className="fw-bold text-uppercase">Total Due</td>
-                                        <td className="fw-bold text-end fs-5 text-primary-accent">
+                                        <td className="fw-bold text-end fs-5" style={{color: '#b99a7b'}}>
                                             {selectedBill ? formatCurrency(selectedBill.total_amount) : 'N/A'}
                                         </td>
                                     </tr>

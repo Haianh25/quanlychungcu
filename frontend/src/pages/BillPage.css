@@ -1,4 +1,7 @@
-/* --- BIẾN MÀU (TỪ index.css) --- */
+/* --- BillPage.css (Theme Residem) --- */
+
+/* ... (Giữ nguyên các phần trên: root, container, animation, tabs, card, table...) ... */
+
 :root {
     --color-bg-light: #f8f6f3;
     --color-primary-accent: #b99a7b;
@@ -7,32 +10,24 @@
     --color-text-muted-dark: #555555;
     --color-border-light: #e0e0e0;
 }
-/* -------------------------------- */
 
-/* Container chính (giờ là 1200px) */
 .bill-page-container {
     max-width: 1200px;
 }
 
-/* Animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-.fadeIn {
-    animation: fadeIn 0.5s ease-out;
-}
+.fadeIn { animation: fadeIn 0.5s ease-out; }
 
-/* Tiêu đề trang */
 .page-main-title {
     color: var(--color-text-dark);
     font-weight: 700;
 }
 
-/* --- TABS STYLE (THEME RESIDEM) --- */
-.residem-tabs .nav-tabs {
-    border-bottom: 1px solid var(--color-border-light);
-}
+/* Tabs */
+.residem-tabs .nav-tabs { border-bottom: 1px solid var(--color-border-light); }
 .residem-tabs .nav-tabs .nav-link {
     color: var(--color-text-muted-dark);
     background-color: transparent;
@@ -40,12 +35,9 @@
     border-bottom: 2px solid transparent;
     padding: 0.75rem 1.25rem;
     font-weight: 500;
-    transition: color 0.2s ease, border-color 0.2s ease;
+    transition: all 0.2s ease;
 }
-.residem-tabs .nav-tabs .nav-link:hover {
-    color: var(--color-text-dark);
-    border-bottom-color: var(--color-border-light);
-}
+.residem-tabs .nav-tabs .nav-link:hover { color: var(--color-text-dark); border-bottom-color: var(--color-border-light); }
 .residem-tabs .nav-tabs .nav-link.active {
     color: var(--color-primary-accent);
     background-color: transparent;
@@ -53,7 +45,7 @@
     font-weight: 600;
 }
 
-/* --- THẺ HÓA ĐƠN CHƯA THANH TOÁN (THEME SÁNG) --- */
+/* Unpaid Bill Card */
 .unpaid-bill-card {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -70,111 +62,70 @@
     border-bottom: 1px solid var(--color-border-light);
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
+    padding: 1rem 1.25rem;
 }
-.unpaid-bill-header h4 {
-    margin-bottom: 0;
-    font-size: 1.25rem;
-    color: var(--color-text-dark);
-}
-.unpaid-bill-header .due-date-text {
-    font-size: 0.9rem;
-    color: var(--color-text-muted-dark);
-    font-weight: 500;
-}
+.unpaid-bill-header h4 { margin-bottom: 0; font-size: 1.2rem; color: var(--color-text-dark); font-weight: 700; display: inline-block; margin-right: 10px;}
+.unpaid-bill-header .due-date-text { font-size: 0.9rem; color: var(--color-text-muted-dark); font-weight: 500; }
+
+.unpaid-bill-body { padding: 1.25rem; }
 .unpaid-bill-body .line-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
     border-bottom: 1px dashed var(--color-border-light);
 }
-.unpaid-bill-body .line-item:last-child {
-    border-bottom: none;
-}
+.unpaid-bill-body .line-item:last-child { border-bottom: none; }
 .unpaid-bill-body .line-item-total {
     display: flex;
     justify-content: space-between;
     padding: 0.75rem 0;
     margin-top: 0.5rem;
-    border-top: 1px solid var(--color-border-light);
-    font-weight: bold;
+    border-top: 2px solid var(--color-border-light);
+    font-weight: 800;
     font-size: 1.1rem;
     color: var(--color-text-dark);
 }
+
 .unpaid-bill-footer {
-    background-color: #fdfdfd;
+    background-color: #fbfbfb;
     border-top: 1px solid var(--color-border-light);
     border-bottom-left-radius: 0.5rem;
     border-bottom-right-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+    text-align: center;
 }
-.unpaid-bill-footer .payment-note {
-    font-size: 0.9rem;
-    color: var(--color-text-muted-dark);
-    margin-bottom: 0.75rem;
-}
+.unpaid-bill-footer .payment-note { font-size: 0.85rem; color: var(--color-text-muted-dark); margin-bottom: 0.75rem; font-style: italic; }
 
-/* PayPal Button Container */
-.paypal-button-container {
-    position: relative;
-    max-width: 300px;
-}
-.payment-loading-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: var(--color-text-dark);
-    border-radius: inherit;
-}
-.unpaid-bill-card .payment-loading-overlay {
-    border-radius: var(--bs-card-border-radius);
-}
-
-/* --- BẢNG (ĐÃ THANH TOÁN & LỊCH SỬ) (THEME SÁNG) --- */
+/* Tables */
 .table-wrapper {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
     border-radius: 0.5rem;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    padding: 0.5rem;
-    overflow: hidden; /* Giúp bo góc cho table */
+    padding: 0;
+    overflow: hidden;
 }
-
-/* Ghi đè variant="dark" của Bootstrap */
-.residem-table.table {
-    --bs-table-bg: #FFFFFF;
-    --bs-table-border-color: var(--color-border-light);
-    --bs-table-color: var(--color-text-dark);
-    --bs-table-striped-bg: var(--color-bg-light);
-    --bs-table-striped-color: var(--color-text-dark);
-    --bs-table-hover-bg: #e9e5e0;
-    --bs-table-hover-color: var(--color-text-dark);
-    margin-bottom: 0; /* Bỏ margin cuối của table */
-}
-
+.residem-table.table { margin-bottom: 0; }
 .residem-table thead th {
     font-weight: 600;
     color: var(--color-text-muted-dark);
     border-bottom-width: 2px;
+    background-color: #f8f9fa;
 }
-.residem-table .transaction-id {
-    font-family: monospace;
-    font-size: 0.9rem;
-    color: var(--color-text-muted-dark);
+.residem-table .transaction-id { font-family: monospace; font-size: 0.9rem; color: var(--color-text-muted-dark); }
+
+/* [ĐÃ SỬA] Đổi tên class để tránh xung đột với Admin CSS */
+.bill-text-success {
+    color: #198754 !important;
+    font-weight: 700;
+    background-color: transparent !important; /* Đảm bảo không có nền */
 }
-.history-table .status-success {
-    color: #198754;
-    font-weight: bold;
-}
-.history-table .status-failed {
-    color: #dc3545;
-    font-weight: bold;
+.bill-text-failed {
+    color: #dc3545 !important;
+    font-weight: 700;
+    background-color: transparent !important;
 }
 
-/* Thông báo khi không có bill */
 .alert-residem-info {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -186,7 +137,7 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-/* --- CSS CHO SIDEBAR MỚI (Giống News.css) --- */
+/* Sidebar Widgets */
 .sidebar-widget {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -195,62 +146,36 @@
     margin-bottom: 2rem;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
-@media (max-width: 991.98px) {
-    .bill-sidebar {
-        margin-top: 3rem;
-    }
-}
-
 .widget-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--color-text-dark);
     padding-bottom: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid var(--color-border-light);
 }
 
-/* Widget Hỗ trợ */
-.faq-list .list-group-item {
-    border: none;
-    padding: 0.5rem 0;
-    background: none;
-}
-.faq-list .list-group-item strong {
-    color: var(--color-text-dark);
-}
-.faq-list .list-group-item p {
-    font-size: 0.9rem;
-    color: var(--color-text-muted-dark);
-    margin-bottom: 0;
-    margin-top: 0.25rem;
-}
-
-/* Widget Hoạt động gần đây */
-.recent-activity-list .list-group-item {
+.faq-list .list-group-item, .recent-activity-list .list-group-item {
     border: none;
     padding: 0.75rem 0;
-    border-bottom: 1px dashed var(--color-border-light);
     background: none;
 }
-.recent-activity-list .list-group-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-.activity-info span {
-    display: block;
-    font-weight: 500;
-    color: var(--color-text-dark);
-}
-.activity-info small {
-    font-size: 0.85rem;
-}
+.recent-activity-list .list-group-item { border-bottom: 1px dashed var(--color-border-light); }
+.recent-activity-list .list-group-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.activity-info span { display: block; font-weight: 600; color: var(--color-text-dark); font-size: 0.95rem; }
+.activity-info small { font-size: 0.85rem; color: #888; }
+
+/* [ĐÃ SỬA] Activity Amount dùng class mới */
 .activity-amount {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.95rem;
 }
-.activity-amount.status-success {
-    color: #198754;
-}
-.activity-amount.status-failed {
-    color: #dc3545;
+
+/* PayPal */
+.paypal-button-container { position: relative; max-width: 100%; margin: 0 auto; }
+.payment-loading-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8); z-index: 10;
+    display: flex; flex-direction: column; justify-content: center; alignItems: center; border-radius: inherit;
 }

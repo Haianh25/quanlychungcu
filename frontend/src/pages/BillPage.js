@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Container, Tabs, Tab, Card, Button, Spinner, Alert, Table, Badge, Row, Col, ListGroup } from 'react-bootstrap';
 import axios from 'axios';
-import './BillPage.css'; // Import CSS
+import './BillPage.css'; 
 import PayPalPayment from '../components/PayPalbutton';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const BillPage = () => {
-    // --- TOÀN BỘ LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [key, setKey] = useState('unpaid');
     const [allBills, setAllBills] = useState([]);
     const [transactions, setTransactions] = useState([]);
@@ -54,9 +53,7 @@ const BillPage = () => {
         return { unpaidBills: unpaid, paidBills: paid };
     }, [allBills]);
 
-    // --- LOGIC MỚI CHO SIDEBAR ---
     const recentTransactions = useMemo(() => {
-        // Sắp xếp transactions (mới nhất lên đầu) và lấy 3
         return [...transactions]
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 3);
@@ -75,20 +72,15 @@ const BillPage = () => {
         setProcessingBillId(null);
     };
 
-    // --- HELPER FORMAT (ĐÃ SỬA SANG TIẾNG ANH & FORMAT CHUẨN) ---
-    
     const formatCurrency = (amount) => {
-        // Dùng en-US để dấu phẩy ngăn cách hàng nghìn, nhưng vẫn giữ đơn vị VND
-        return new Intl.NumberFormat('en-US').format(amount) + ' VND';
+        return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
     };
 
-    // [SỬA] Hiển thị tên Tháng/Năm tiếng Anh (VD: October 2025)
     const formatMonthHeader = (dateStr) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     };
 
-    // [SỬA] Hiển thị ngày tháng năm chuẩn (DD/MM/YYYY)
     const formatDate = (dateStr) => {
         if (!dateStr) return 'N/A';
         return new Date(dateStr).toLocaleDateString('en-GB'); 
@@ -100,9 +92,8 @@ const BillPage = () => {
         return <Badge bg="secondary">{status}</Badge>;
     };
 
-    // --- RENDER FUNCTIONS (ĐÃ CẬP NHẬT) ---
+    // --- RENDER FUNCTIONS ---
 
-    // Render Tab 1 (Unpaid)
     const renderUnpaidBills = () => {
         if (loading) return <div className="text-center p-5"><Spinner animation="border"/></div>;
         if (unpaidBills.length === 0) return <Alert variant="residem-info">You have no unpaid bills.</Alert>; 
@@ -111,19 +102,15 @@ const BillPage = () => {
             <Card className="unpaid-bill-card" key={bill.bill_id}>
                 <Card.Header className="unpaid-bill-header">
                     <div>
-                        {/* [SỬA] Tiêu đề tiếng Anh */}
                         <h4>{formatMonthHeader(bill.issue_date)}</h4>
                         {getStatusBadge(bill.status)}
                     </div>
-                    {/* [SỬA] Ngày đến hạn chuẩn */}
                     <span className="due-date-text">Due Date: {formatDate(bill.due_date)}</span>
                 </Card.Header>
                 <Card.Body className="unpaid-bill-body">
-                    {/* [THÊM] Ngày phát hành */}
                     <div className="text-muted small mb-3">
                         Issue Date: {formatDate(bill.issue_date)}
                     </div>
-
                     {bill.line_items.map(item => (
                         <div className="line-item" key={item.item_id}>
                             <span>{item.item_name}</span>
@@ -149,7 +136,6 @@ const BillPage = () => {
         ));
     };
 
-    // Render Tab 2 (Paid)
     const renderPaidBills = () => {
         if (loading) return null;
         if (paidBills.length === 0) return <Alert variant="residem-info">No paid bills found.</Alert>; 
@@ -180,7 +166,6 @@ const BillPage = () => {
         );
     };
 
-    // Render Tab 3 (Transaction History)
     const renderTransactionHistory = () => {
         if (loading) return null;
         if (transactions.length === 0) return <Alert variant="residem-info">No transaction history found.</Alert>; 
@@ -205,7 +190,8 @@ const BillPage = () => {
                                 <td>#{t.bill_id}</td>
                                 <td>{formatCurrency(t.amount)}</td>
                                 <td>{t.payment_method}</td>
-                                <td className={t.status === 'success' ? 'status-success' : (t.status === 'failed' ? 'status-failed' : '')}>
+                                {/* [ĐÃ SỬA] ClassName mới */}
+                                <td className={t.status === 'success' ? 'bill-text-success' : (t.status === 'failed' ? 'bill-text-failed' : '')}>
                                     {t.status}
                                 </td>
                                 <td>{formatDate(t.created_at)}</td>
@@ -217,11 +203,9 @@ const BillPage = () => {
         );
     };
 
-    // --- JSX CHÍNH ---
     return (
         <Container className="bill-page-container my-5 fadeIn">
             <Row>
-                {/* === CỘT NỘI DUNG CHÍNH (8) === */}
                 <Col lg={8}>
                     <h2 className="mb-4 page-main-title">Billing & Payments</h2>
 
@@ -229,7 +213,6 @@ const BillPage = () => {
                     {paymentError && <Alert variant="danger" onClose={() => setPaymentError('')} dismissible>{paymentError}</Alert>}
                     {paymentSuccess && <Alert variant="success" onClose={() => setPaymentSuccess('')} dismissible>{paymentSuccess}</Alert>}
                     
-                    {/* Tabs */}
                     <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
                         <Tab eventKey="unpaid" title={`Unpaid (${unpaidBills.length})`}>
                             {renderUnpaidBills()}
@@ -243,11 +226,8 @@ const BillPage = () => {
                     </Tabs>
                 </Col>
 
-                {/* === CỘT SIDEBAR (4) === */}
                 <Col lg={4}>
                     <aside className="bill-sidebar">
-                        
-                        {/* Widget: Hỗ trợ thanh toán */}
                         <div className="sidebar-widget">
                             <h5 className="widget-title">Payment Support</h5>
                             <ListGroup variant="flush" className="faq-list">
@@ -262,7 +242,6 @@ const BillPage = () => {
                             </ListGroup>
                         </div>
 
-                        {/* Widget: Hoạt động gần đây */}
                         <div className="sidebar-widget">
                             <h5 className="widget-title">Recent Activity</h5>
                             <ListGroup variant="flush" className="recent-activity-list">
@@ -275,7 +254,8 @@ const BillPage = () => {
                                                 <span>{t.payment_method} Payment</span>
                                                 <small className="text-muted">{formatDate(t.created_at)}</small>
                                             </div>
-                                            <span className={`activity-amount ${t.status === 'success' ? 'status-success' : 'status-failed'}`}>
+                                            {/* [ĐÃ SỬA] ClassName mới */}
+                                            <span className={`activity-amount ${t.status === 'success' ? 'bill-text-success' : 'bill-text-failed'}`}>
                                                 {formatCurrency(t.amount)}
                                             </span>
                                         </ListGroup.Item>
@@ -285,7 +265,6 @@ const BillPage = () => {
                                 )}
                             </ListGroup>
                         </div>
-
                     </aside>
                 </Col>
             </Row>

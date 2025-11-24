@@ -1,189 +1,237 @@
-/* =============================================
-   PHẦN 1: ADMIN AMENITIES (GIỮ NGUYÊN CŨ)
-   ============================================= */
+/* --- AmenityManagement.css --- */
 
-/* Stats Cards */
-.stats-card {
-    background-color: #fff;
-    border-radius: 10px;
-    height: 100%;
-    transition: transform 0.2s;
-}
-.stats-card:hover {
-    transform: translateY(-2px);
-}
-.stats-icon {
-    width: 50px; height: 50px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-}
-.bg-primary-soft { background: rgba(185, 154, 123, 0.15); color: #b99a7b; }
-.bg-info-soft { background: rgba(13, 202, 240, 0.15); color: #0dcaf0; }
-.bg-success-soft { background: rgba(25, 135, 84, 0.15); color: #198754; }
-.bg-warning-soft { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+/* 1. BIẾN MÀU & THEME */
+:root {
+    --amenity-primary: #b99a7b;       /* Vàng đồng */
+    --amenity-primary-hover: #a38568;
+    --amenity-text-dark: #333333;
+    --amenity-text-muted: #6c757d;
+    --amenity-bg-card: #ffffff;
+    --amenity-border: #e0e0e0;
 
-/* Thumbnail */
-.room-thumbnail {
-    width: 70px; height: 45px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #e0e0e0;
-}
-.room-thumbnail-placeholder {
-    width: 70px; height: 45px;
-    background: #f0f0f0;
-    color: #999;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem;
-    border-radius: 6px;
+    /* Soft Colors cho Icon */
+    --bg-soft-gold: rgba(185, 154, 123, 0.15);
+    --bg-soft-green: rgba(25, 135, 84, 0.15);
+    --bg-soft-blue: rgba(13, 202, 240, 0.15);
+    --bg-soft-yellow: rgba(255, 193, 7, 0.15);
 }
 
-/* Custom Badge */
-.status-badge {
-    padding: 0.4em 0.8em;
-    font-weight: 500;
-    border-radius: 6px;
-    text-transform: uppercase;
-    font-size: 0.75rem;
+/* Container & Animation */
+.management-page-container {
+    width: 100%;
+    animation: fadeIn 0.5s ease-out;
+    font-family: 'Be Vietnam Pro', sans-serif;
 }
 
-/* Buttons - Đồng bộ với theme */
-.btn-residem-warning {
-    background-color: #ffc107; border-color: #ffc107; color: #000;
-}
-.btn-residem-warning:hover {
-    background-color: #e0a800;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Modal */
-.residem-modal-title {
+.page-main-title {
+    color: var(--amenity-text-dark);
     font-weight: 700;
-    color: #333;
-}
-.residem-form-label {
-    font-weight: 600;
-    color: #555;
-    font-size: 0.9rem;
-}
-.residem-form-control:focus, .residem-form-select:focus {
-    border-color: #b99a7b;
-    box-shadow: 0 0 0 0.2rem rgba(185, 154, 123, 0.25);
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
 }
 
-/* =============================================
-   PHẦN 2: USER AMENITIES BOOKING (THÊM MỚI)
-   ============================================= */
-
-/* --- Card & Ảnh --- */
-.amenity-card {
-    background-color: #fff;
-    border: none; /* Bỏ viền mặc định nếu có */
-    border-radius: 12px; /* Bo cong thẻ */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Đổ bóng nhẹ */
-    transition: transform 0.2s ease-in-out;
-    overflow: hidden; /* Để ảnh bo góc theo card */
+/* 2. STATS CARDS (Giống Dashboard) */
+.stats-card {
+    background-color: var(--amenity-bg-card);
+    border: 1px solid var(--amenity-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
 }
 
-.amenity-card:hover {
+.stats-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    border-color: var(--amenity-primary);
 }
 
-.amenity-img-wrapper {
-    position: relative; /* Quan trọng để định vị tag giá */
-    height: 220px; /* Chiều cao ảnh cố định */
-    background-color: #eee;
-    overflow: hidden;
+.stats-card .card-body {
+    padding: 1.5rem;
 }
 
-.amenity-img-wrapper .card-img-top {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.amenity-card:hover .amenity-img-wrapper .card-img-top {
-    transform: scale(1.05); /* Zoom nhẹ ảnh khi hover */
-}
-
-.amenity-img-placeholder {
-    width: 100%;
-    height: 100%;
+.stats-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
-    background-color: #e9ecef;
+    font-size: 1.4rem;
 }
 
-/* --- Tag Giá (Căn chỉnh lại vị trí & màu sắc) --- */
-.price-badge-overlay {
-    position: absolute;
-    bottom: 15px; /* Cách đáy ảnh 15px */
-    left: 15px;   /* Cách trái ảnh 15px */
-    background-color: #ffc107; /* Màu vàng nổi bật */
-    color: #333;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 2;
-}
+/* Màu nền icon */
+.bg-primary-soft { background-color: var(--bg-soft-gold); color: var(--amenity-primary); }
+.bg-info-soft { background-color: var(--bg-soft-blue); color: #0dcaf0; }
+.bg-success-soft { background-color: var(--bg-soft-green); color: #198754; }
+.bg-warning-soft { background-color: var(--bg-soft-yellow); color: #ffc107; }
 
-/* --- Nút Book Now (Căn giữa & nhỏ gọn) --- */
-.btn-custom-brown {
-    background-color: #b99a7b; /* Màu nâu be */
-    border: none;
-    color: white;
-    padding: 10px 0;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    
-    /* Căn giữa nút */
-    width: 90%;       /* Chiều rộng nút bằng 90% thẻ card */
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: auto; /* Đẩy nút xuống đáy nếu nội dung trên ngắn */
-    margin-bottom: 5px;
-    border-radius: 8px;
-}
-
-.btn-custom-brown:hover {
-    background-color: #a38568; /* Màu đậm hơn khi hover */
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(163, 133, 104, 0.3);
-}
-
-.btn-custom-brown:disabled {
-    background-color: #d3c0ab;
-    transform: none;
-    box-shadow: none;
-}
-
-/* --- Mô tả & Sidebar --- */
-.description-text {
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* Giới hạn 2 dòng mô tả */
-    -webkit-box-orient: vertical;
+/* 3. MAIN CARD & TABS */
+.residem-card {
+    background-color: var(--amenity-bg-card);
+    border: 1px solid var(--amenity-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    padding: 0;
     overflow: hidden;
-    margin-bottom: 1rem;
 }
 
-.booking-list-scroll {
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 5px;
+.residem-card .card-body {
+    padding: 1.5rem;
 }
 
-.booking-item {
-    transition: background-color 0.2s;
+/* Tabs Style */
+.residem-tabs .nav-link {
+    color: var(--amenity-text-muted);
+    font-weight: 600;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s;
 }
-.booking-item:hover {
-    background-color: #f8f9fa;
+
+.residem-tabs .nav-link:hover {
+    color: var(--amenity-primary);
+    background-color: rgba(185, 154, 123, 0.05);
+}
+
+.residem-tabs .nav-link.active {
+    color: var(--amenity-primary);
+    background-color: transparent;
+    border-bottom-color: var(--amenity-primary);
+}
+
+/* 4. TABLE STYLE */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--amenity-border);
+}
+
+.residem-table {
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.residem-table thead th {
+    background-color: #f9f9f9;
+    color: var(--amenity-text-muted);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    padding: 12px 15px;
+    border-bottom: 2px solid var(--amenity-border);
+    vertical-align: middle;
+}
+
+.residem-table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    color: var(--amenity-text-dark);
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+}
+
+/* Thumbnail Ảnh Phòng */
+.room-thumbnail {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--amenity-border);
+}
+
+.room-thumbnail-placeholder {
+    width: 60px;
+    height: 40px;
+    background-color: #f0f0f0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    border: 1px solid var(--amenity-border);
+}
+
+/* 5. BUTTONS & BADGES */
+.btn-residem-primary {
+    background-color: var(--amenity-primary);
+    border-color: var(--amenity-primary);
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 8px 16px;
+    transition: all 0.2s;
+}
+.btn-residem-primary:hover {
+    background-color: var(--amenity-primary-hover);
+    border-color: var(--amenity-primary-hover);
+    transform: translateY(-1px);
+}
+.btn-residem-secondary {
+    background-color: #fff;
+    border: 1px solid var(--amenity-border);
+    color: var(--amenity-text-muted) !important;
+    font-weight: 600;
+    border-radius: 6px;
+}
+.btn-residem-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #856404 !important;
+    font-weight: 600;
+}
+.btn-residem-warning:hover {
+    background-color: #ffe69c;
+}
+.btn-residem-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24 !important;
+    font-weight: 600;
+}
+
+/* Badges */
+.status-badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.bg-success { background-color: #198754 !important; color: #fff; }
+.bg-secondary { background-color: #6c757d !important; color: #fff; }
+
+/* 6. MODAL & FORMS */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+}
+.residem-modal-title {
+    font-weight: 700;
+    color: var(--amenity-text-dark);
+}
+.residem-form-label {
+    font-weight: 600;
+    color: var(--amenity-text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+}
+.form-control, .form-select {
+    border-radius: 6px;
+    border: 1px solid var(--amenity-border);
+    padding: 0.6rem 0.8rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--amenity-primary);
+    box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15);
 }

@@ -20,7 +20,7 @@ const AmenityManagement = () => {
     const [formData, setFormData] = useState({ name: '', description: '', image_url: '', status: 'active' });
     const [modalLoading, setModalLoading] = useState(false);
 
-    // Modal Cancel Booking (MỚI)
+    // Modal Cancel Booking
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [bookingToCancel, setBookingToCancel] = useState(null);
     const [cancelReason, setCancelReason] = useState('');
@@ -59,7 +59,7 @@ const AmenityManagement = () => {
         return { activeRooms, totalBookings, confirmedBookings, totalRevenue };
     }, [rooms, bookings]);
 
-    // --- ROOM HANDLERS ---
+    // --- HANDLERS ---
     const handleShowModal = (room) => {
         setEditingRoom(room);
         setFormData({ 
@@ -87,7 +87,6 @@ const AmenityManagement = () => {
         }
     };
 
-    // --- BOOKING CANCEL HANDLERS (LOGIC MỚI) ---
     const handleOpenCancelModal = (booking) => {
         setBookingToCancel(booking);
         setCancelReason('');
@@ -105,7 +104,6 @@ const AmenityManagement = () => {
         const config = getAuthConfig();
         setCancelLoading(true);
         try {
-            // Gửi kèm lý do hủy
             await axios.post(`${API_BASE_URL}/api/admin/amenities/bookings/${bookingToCancel.id}/cancel`, { reason: cancelReason }, config);
             setSuccess(`Booking #${bookingToCancel.id} cancelled successfully. Notification sent to resident.`);
             setShowCancelModal(false);
@@ -117,8 +115,10 @@ const AmenityManagement = () => {
         }
     };
 
-    const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
-    const renderTooltip = (props, text) => ( <Tooltip id="button-tooltip" {...props}>{text}</Tooltip> );
+    // [ĐÃ SỬA] Format chuẩn "VND"
+    const formatCurrency = (val) => {
+        return new Intl.NumberFormat('vi-VN').format(val) + ' VND';
+    };
 
     return (
         <div className="management-page-container fadeIn">
@@ -167,6 +167,7 @@ const AmenityManagement = () => {
                             <div className="stats-icon bg-warning-soft"><Wallet2 /></div>
                             <div className="ms-3">
                                 <h6 className="text-muted mb-0">Est. Revenue</h6>
+                                {/* [ĐÃ SỬA] Format tiền chuẩn */}
                                 <h4>{formatCurrency(stats.totalRevenue)}</h4>
                             </div>
                         </Card.Body>
@@ -210,6 +211,7 @@ const AmenityManagement = () => {
                                                     <div className="text-muted small text-truncate" style={{maxWidth: '200px'}}>{room.description}</div>
                                                 </td>
                                                 <td>
+                                                    {/* [ĐÃ SỬA] Xóa chữ / Hr thừa nếu format đã có VND */}
                                                     <span className="fw-bold text-primary-accent">{formatCurrency(room.current_price)} / Hr</span>
                                                     <div className="small text-muted">Code: <code>{room.fee_code}</code></div>
                                                 </td>
@@ -219,7 +221,7 @@ const AmenityManagement = () => {
                                                     </Badge>
                                                 </td>
                                                 <td>
-                                                    <Button variant="residem-warning" size="sm" onClick={() => handleShowModal(room)}>
+                                                    <Button variant="light" className="btn-residem-warning btn-sm" onClick={() => handleShowModal(room)}>
                                                         <PencilSquare className="me-1" /> Edit
                                                     </Button>
                                                 </td>
@@ -278,7 +280,7 @@ const AmenityManagement = () => {
                                         }
                                     </tbody>
                                 </Table>
-                             </div>
+                            </div>
                         </Tab>
                     </Tabs>
                 </Card.Body>

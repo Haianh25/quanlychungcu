@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Spinner, Alert, Modal, Form, InputGroup, Card } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Form, InputGroup, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
-import { PencilSquare, PlusCircleFill, Trash, ExclamationTriangle } from 'react-bootstrap-icons';
+import { PencilSquare, PlusCircleFill, Trash, ExclamationTriangleFill, TagFill } from 'react-bootstrap-icons';
 import './FeeManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -17,7 +17,7 @@ const FeeManagement = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     
     const [modalLoading, setModalLoading] = useState(false);
-    const [currentFee, setCurrentFee] = useState(null); 
+    const [currentFee, setCurrentFee] = useState(null);
     
     const [editFormData, setEditFormData] = useState({ fee_name: '', price: 0, description: '' });
     const [newFeeData, setNewFeeData] = useState({
@@ -164,8 +164,8 @@ const FeeManagement = () => {
         <div className="management-page-container fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title">Fee Management</h2>
-                <Button className="btn-residem-primary" onClick={handleShowAddModal}>
-                    <PlusCircleFill className="me-2" /> Add New Fee
+                <Button className="btn-residem-primary d-flex align-items-center gap-2" onClick={handleShowAddModal}>
+                    <PlusCircleFill size={18}/> Add New Fee
                 </Button>
             </div>
             
@@ -173,7 +173,7 @@ const FeeManagement = () => {
             {error && !showEditModal && !showAddModal && !showDeleteModal && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
 
             {loading ? (
-                <div className="text-center"><Spinner animation="border" /></div>
+                <div className="text-center p-5"><Spinner animation="border" variant="secondary" /></div>
             ) : (
                 <Card className="residem-card">
                     <Card.Body>
@@ -185,29 +185,38 @@ const FeeManagement = () => {
                                         <th>Fee Code (Key)</th>
                                         <th>Price</th>
                                         <th>Description</th>
-                                        <th>Actions</th>
+                                        <th className="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {fees.map(fee => (
                                         <tr key={fee.fee_id}>
-                                            <td><strong>{fee.fee_name}</strong></td>
                                             <td>
-                                                <span className="status-badge status-info fee-code-badge">{fee.fee_code}</span>
+                                                <div className="fw-bold text-dark">{fee.fee_name}</div>
                                             </td>
-                                            <td>{formatCurrency(fee.price)} VND</td>
-                                            <td>{fee.description}</td>
                                             <td>
-                                                <Button className="btn-residem-warning btn-sm me-2" onClick={() => handleShowEditModal(fee)}>
+                                                <span className="fee-code-badge">
+                                                    <TagFill size={12} className="me-1 opacity-50"/>
+                                                    {fee.fee_code}
+                                                </span>
+                                            </td>
+                                            <td className="fw-bold text-success" style={{fontSize: '1rem'}}>
+                                                {formatCurrency(fee.price)} <small className="text-muted fw-normal">VND</small>
+                                            </td>
+                                            <td className="text-muted small text-truncate" style={{maxWidth: '250px'}}>
+                                                {fee.description || <span className="fst-italic opacity-50">No description</span>}
+                                            </td>
+                                            <td className="text-end">
+                                                <Button variant="light" className="btn-residem-warning btn-sm me-2" onClick={() => handleShowEditModal(fee)}>
                                                     <PencilSquare className="me-1" /> Edit
                                                 </Button>
-                                                <Button className="btn-residem-danger btn-sm" onClick={() => handleShowDeleteModal(fee)}>
+                                                <Button variant="light" className="btn-residem-danger btn-sm" onClick={() => handleShowDeleteModal(fee)}>
                                                     <Trash className="me-1" /> Delete
                                                 </Button>
                                             </td>
                                         </tr>
                                     ))}
-                                    {fees.length === 0 && <tr><td colSpan="5" className="text-center text-muted">No fee configurations found.</td></tr>}
+                                    {fees.length === 0 && <tr><td colSpan="5" className="text-center text-muted py-5">No fee configurations found.</td></tr>}
                                 </tbody>
                             </Table>
                         </div>
@@ -232,7 +241,7 @@ const FeeManagement = () => {
                                 readOnly 
                                 disabled 
                             />
-                            <Form.Text className="text-muted">System code cannot be changed.</Form.Text>
+                            <Form.Text className="text-muted small">System code cannot be changed.</Form.Text>
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label className="residem-form-label">Fee Name (Display)<span className="required-star">*</span></Form.Label>
@@ -301,10 +310,10 @@ const FeeManagement = () => {
                                 value={newFeeData.fee_code} 
                                 onChange={handleNewFeeChange}
                                 required 
-                                placeholder="e.g., CAR_FEE (UPPERCASE_UNDERSCORE)"
+                                placeholder="e.g., CAR_FEE"
                             />
-                            <Form.Text className="text-muted">
-                                Unique identifier used in system logic. Must be UPPERCASE with UNDERSCORES.
+                            <Form.Text className="text-muted small">
+                                Unique identifier (UPPERCASE_UNDERSCORE).
                             </Form.Text>
                         </Form.Group>
                         <Form.Group className="mb-3">
@@ -363,13 +372,13 @@ const FeeManagement = () => {
             <Modal show={showDeleteModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title text-danger">
-                        <ExclamationTriangle className="me-2 mb-1"/> Confirm Deletion
+                        <ExclamationTriangleFill className="me-2 mb-1"/> Confirm Deletion
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {error && showDeleteModal && <Alert variant="danger">{error}</Alert>}
                     <p>Are you sure you want to delete the fee configuration: <strong>{currentFee?.fee_name}</strong>?</p>
-                    <div className="alert alert-warning small">
+                    <div className="alert alert-warning small border-warning bg-warning bg-opacity-10">
                         <strong>Warning:</strong> This action cannot be undone. If this fee code is used in past bills or active services, deletion may fail to maintain data integrity.
                     </div>
                     <div className="text-muted small">Fee Code: <code>{currentFee?.fee_code}</code></div>

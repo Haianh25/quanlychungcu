@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import EditUserModal from '../../components/admin/EditUserModal';
 import Pagination from '../../components/admin/Pagination';
+import { Card, Form, Table, Alert, InputGroup, Badge } from 'react-bootstrap';
+import { Search, PencilSquare, ShieldLock, ShieldCheck, CheckCircleFill, XCircle, ArrowUp, ArrowDown } from 'react-bootstrap-icons';
 import './UserManagement.css';
-import { Card, Form, Table, Alert } from 'react-bootstrap';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -11,9 +12,13 @@ const UserManagement = () => {
     const [success, setSuccess] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [usersPerPage] = useState(10);
+
+    // [MỚI] State cho sắp xếp
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     
     useEffect(() => {
         fetchUsers();
@@ -30,10 +35,9 @@ const UserManagement = () => {
         }
     };
     
-    // Toggle Status Feature (Replaces Delete)
     const handleToggleStatus = async (user) => {
         const action = user.is_active ? 'DISABLE' : 'ENABLE';
-        if (!window.confirm(`Are you sure you want to ${action} this user account? \n(Disabled users cannot login, but data is preserved).`)) return;
+        if (!window.confirm(`Are you sure you want to ${action} this user account?`)) return;
 
         try {
             const token = localStorage.getItem('adminToken');
@@ -48,7 +52,6 @@ const UserManagement = () => {
             ));
             setSuccess(`User account has been ${action === 'ENABLE' ? 'enabled' : 'disabled'}.`);
             setTimeout(() => setSuccess(''), 3000);
-
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to update user status.');
         }
@@ -60,121 +63,161 @@ const UserManagement = () => {
         setUsers(users.map(user => (user.id === updatedUser.id ? updatedUser : user))); 
     };
     
-    // Search filter (Including Phone)
+    // 1. Filter
     const filteredUsers = users.filter(user => 
         user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.phone && user.phone.includes(searchTerm))
+        (user.phone && user.phone.includes(searchTerm)) ||
+        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
+    // [MỚI] 2. Sort Logic
+    const requestSort = (key) => {
+        let direction = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedUsers = useMemo(() => {
+        let sortableItems = [...filteredUsers];
+        if (sortConfig.key !== null) {
+            sortableItems.sort((a, b) => {
+                let aValue = a[sortConfig.key];
+                let bValue = b[sortConfig.key];
+
+                // Xử lý null/undefined cho an toàn
+                aValue = aValue ? aValue.toString().toLowerCase() : '';
+                bValue = bValue ? bValue.toString().toLowerCase() : '';
+
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [filteredUsers, sortConfig]);
+
+    // 3. Pagination
     const indexOfLastUser = currentPage * usersPerPage;
     const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+    const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Helper icon sort
+    const getSortIcon = (columnName) => {
+        if (sortConfig.key !== columnName) return <span style={{opacity: 0.3, fontSize: '0.7em', marginLeft: '5px'}}>⇅</span>;
+        return sortConfig.direction === 'ascending' ? <ArrowUp size={12} className="ms-1"/> : <ArrowDown size={12} className="ms-1"/>;
+    };
 
     return (
         <div className="management-page-container fadeIn">
-            <h2 className="page-main-title mb-4">User Management</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="page-main-title mb-0">User Management</h2>
+                <div className="text-muted small">Total Users: <strong>{users.length}</strong></div>
+            </div>
+
             {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
             {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
             
             <Card className="residem-card">
                 <Card.Body>
-                    <div className="mb-3">
-                        <Form.Control
-                            type="text"
-                            className="residem-search-bar" 
-                            placeholder="Search by name or phone number..."
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                        />
+                    <div className="mb-4" style={{maxWidth: '400px'}}>
+                        <InputGroup>
+                            <InputGroup.Text className="bg-light border-end-0">
+                                <Search className="text-muted" />
+                            </InputGroup.Text>
+                            <Form.Control
+                                type="text"
+                                className="residem-search-bar border-start-0 ps-0 bg-light"
+                                placeholder="Search by name, email, phone..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                        </InputGroup>
                     </div>
                     
                     <div className="table-wrapper">
-                        <Table hover striped className="residem-table">
+                        <Table hover striped className="residem-table align-middle">
                             <colgroup>
                                 <col style={{ width: '20%' }} />
-                                <col style={{ width: '20%' }} />
-                                <col style={{ width: '15%' }} /> {/* Phone Column */}
-                                <col style={{ width: '10%' }} />
-                                <col style={{ width: '10%' }} />
                                 <col style={{ width: '25%' }} />
+                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '10%' }} />
+                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '15%' }} />
                             </colgroup>
                             <thead>
                                 <tr>
-                                    <th>Full Name</th>
-                                    <th>Email</th>
+                                    <th onClick={() => requestSort('full_name')}>Full Name {getSortIcon('full_name')}</th>
+                                    <th onClick={() => requestSort('email')}>Email {getSortIcon('email')}</th>
                                     <th>Phone</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                                    <th onClick={() => requestSort('role')}>Role {getSortIcon('role')}</th>
+                                    <th onClick={() => requestSort('is_active')}>Status {getSortIcon('is_active')}</th>
+                                    <th className="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {currentUsers.map(user => (
-                                    <tr key={user.id}>
-                                        <td title={user.full_name}>{user.full_name}</td>
-                                        <td title={user.email}>{user.email}</td>
-                                        
-                                        {/* Phone Data */}
-                                        <td>{user.phone || <span className="text-muted small">N/A</span>}</td>
-
-                                        <td>
-                                            <span className={`status-badge ${user.role === 'resident' ? 'status-success' : 'status-secondary'}`}>
-                                                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={user.is_active ? 'status-text-success' : 'status-text-danger'}>
-                                                {user.is_active ? 'Active' : 'Disabled'}
-                                            </span>
-                                            <br/>
-                                            <small className="text-muted">
-                                                {user.is_verified ? 'Verified' : 'Not Verified'}
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <button 
-                                                className="btn btn-residem-warning btn-sm me-2" 
-                                                onClick={() => handleShowModal(user)}
-                                            >
-                                                Edit
-                                            </button>
-                                            
-                                            <button 
-                                                className={`btn btn-sm ${user.is_active ? 'btn-secondary' : 'btn-success'}`} 
-                                                onClick={() => handleToggleStatus(user)}
-                                                title={user.is_active ? "Click to Lock Account" : "Click to Unlock Account"}
-                                            >
-                                                {user.is_active ? 'Disable' : 'Enable'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-
-                                {currentUsers.length < usersPerPage && Array.from({ length: usersPerPage - currentUsers.length }).map((_, idx) => (
-                                    <tr key={`placeholder-${idx}`} className="placeholder-row">
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                        <td>&nbsp;</td>
-                                    </tr>
-                                ))}
+                                {currentUsers.length === 0 ? (
+                                    <tr><td colSpan="6" className="text-center py-5 text-muted">No users found.</td></tr>
+                                ) : (
+                                    currentUsers.map(user => (
+                                        <tr key={user.id}>
+                                            <td className="fw-bold text-dark">{user.full_name}</td>
+                                            <td className="text-muted small">{user.email}</td>
+                                            <td className="text-dark">{user.phone || <span className="text-muted small italic">N/A</span>}</td>
+                                            <td>
+                                                <span className={`role-badge ${user.role === 'resident' ? 'role-resident' : 'role-user'}`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className={user.is_active ? 'status-active' : 'status-disabled'}>
+                                                    {user.is_active ? 'Active' : 'Disabled'}
+                                                </div>
+                                                <div className={user.is_verified ? 'status-verified' : 'status-unverified'}>
+                                                    {user.is_verified ? <><CheckCircleFill size={10}/> Verified</> : <><XCircle size={10}/> Unverified</>}
+                                                </div>
+                                            </td>
+                                            <td className="text-end">
+                                                <button 
+                                                    className="btn btn-residem-warning btn-sm me-2" 
+                                                    onClick={() => handleShowModal(user)}
+                                                    title="Edit User"
+                                                >
+                                                    <PencilSquare />
+                                                </button>
+                                                
+                                                <button 
+                                                    className={`btn-toggle-status ${user.is_active ? 'disable' : 'enable'}`} 
+                                                    onClick={() => handleToggleStatus(user)}
+                                                    title={user.is_active ? "Lock Account" : "Unlock Account"}
+                                                >
+                                                    {user.is_active ? <ShieldLock /> : <ShieldCheck />}
+                                                    <span className="ms-1">{user.is_active ? 'Lock' : 'Unlock'}</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </Table>
                     </div>
                 </Card.Body>
             </Card>
 
-            {filteredUsers.length > usersPerPage && (
+            {sortedUsers.length > usersPerPage && (
                 <div className="residem-pagination mt-4 d-flex justify-content-center">
                     <Pagination
                         itemsPerPage={usersPerPage}
-                        totalItems={filteredUsers.length}
+                        totalItems={sortedUsers.length}
                         paginate={paginate}
                         currentPage={currentPage}
                     />

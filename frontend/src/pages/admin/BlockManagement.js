@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import RoomDetailsModal from '../../components/admin/RoomDetailsModal';
 import './BlockManagement.css'; 
-import { Card, Form, Spinner, Alert, Row, Col } from 'react-bootstrap';
+import { Card, Form, Spinner, Alert, Row, Col, Badge } from 'react-bootstrap';
+import { Building, Layers, HouseDoorFill, PersonCheckFill, LayoutThreeColumns } from 'react-bootstrap-icons'; // Import icons
 
 const BlockManagement = () => {
     const [blocks, setBlocks] = useState([]);
@@ -10,7 +11,7 @@ const BlockManagement = () => {
     const [selectedBlockName, setSelectedBlockName] = useState('');
     const [rooms, setRooms] = useState([]);
     
-    // [MỚI] State cho phân trang
+    // State cho phân trang
     const [currentPage, setCurrentPage] = useState(1);
     const floorsPerPage = 5; // Mỗi trang hiện 5 tầng
     
@@ -45,7 +46,7 @@ const BlockManagement = () => {
         setSelectedBlockName(blockName);
         setLoadingRooms(true);
         setError('');
-        setCurrentPage(1); // Reset về trang 1 khi chọn Block mới
+        setCurrentPage(1); 
         try {
             const token = localStorage.getItem('adminToken');
             const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -80,21 +81,21 @@ const BlockManagement = () => {
         }, {});
     }, [rooms]);
 
-    // Lấy danh sách tất cả các tầng và sắp xếp tăng dần
+    // Sort floors
     const sortedFloors = useMemo(() => {
         return Object.keys(roomsByFloor)
             .map(f => parseInt(f))
             .sort((a, b) => a - b);
     }, [roomsByFloor]);
 
-    // [MỚI] Logic Phân trang
+    // Logic Phân trang
     const indexOfLastFloor = currentPage * floorsPerPage;
     const indexOfFirstFloor = indexOfLastFloor - floorsPerPage;
     const currentFloors = sortedFloors.slice(indexOfFirstFloor, indexOfLastFloor);
     
-    // Tạo danh sách số trang
+    const totalPages = Math.ceil(sortedFloors.length / floorsPerPage);
     const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(sortedFloors.length / floorsPerPage); i++) {
+    for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
     }
 
@@ -109,73 +110,85 @@ const BlockManagement = () => {
 
     return (
         <div className="management-page-container fadeIn">
-            <h2 className="page-main-title mb-4">Block Management</h2>
+            <h2 className="page-main-title">Block & Room Management</h2>
             {error && <Alert variant="danger">{error}</Alert>}
 
             {/* Select Block Card */}
-            <Card className="residem-card mb-4">
-                <Card.Body>
-                    <Form.Group>
-                        <Form.Label htmlFor="blockSelect" className="residem-form-label">Select Block:</Form.Label>
-                        <Form.Select
-                            id="blockSelect"
-                            className="residem-form-select"
-                            value={selectedBlockId}
-                            onChange={(e) => {
-                                const selectedId = e.target.value;
-                                const selectedBlock = blocks.find(b => b.id.toString() === selectedId); 
-                                handleBlockSelect(selectedId, selectedBlock ? selectedBlock.name : '');
-                            }}
-                        >
-                            <option value="">-- Choose Block --</option>
-                            {blocks.map(block => (
-                                <option key={block.id} value={block.id}>{block.name}</option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
+            <Card className="residem-card mb-4 border-0">
+                <Card.Body className="d-flex align-items-center gap-3 p-4">
+                    <div className="flex-shrink-0 text-muted">
+                        <Building size={32} style={{color: '#b99a7b'}}/>
+                    </div>
+                    <div className="flex-grow-1">
+                        <Form.Group>
+                            <Form.Label htmlFor="blockSelect" className="residem-form-label">Select Building Block</Form.Label>
+                            <Form.Select
+                                id="blockSelect"
+                                className="residem-form-select form-select-lg"
+                                value={selectedBlockId}
+                                onChange={(e) => {
+                                    const selectedId = e.target.value;
+                                    const selectedBlock = blocks.find(b => b.id.toString() === selectedId); 
+                                    handleBlockSelect(selectedId, selectedBlock ? selectedBlock.name : '');
+                                }}
+                            >
+                                <option value="">-- Choose Block to View --</option>
+                                {blocks.map(block => (
+                                    <option key={block.id} value={block.id}>Block {block.name}</option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
+                    </div>
                 </Card.Body>
             </Card>
 
             {loadingRooms && (
                 <div className="text-center p-5">
-                    <Spinner animation="border" />
-                    <p className="mt-2">Loading room list...</p>
+                    <Spinner animation="border" variant="secondary" />
+                    <p className="mt-2 text-muted">Loading floor plans...</p>
                 </div>
             )}
 
-            {/* Stats Bar */}
+            {/* Stats Bar (Giao diện mới) */}
             {!loadingRooms && selectedBlockId && stats && (
-                <div className="stats-bar fadeIn">
-                    <div className="d-flex gap-4">
-                        <span className="stat-item"><strong>Total Rooms:</strong> {stats.total}</span>
-                        <span className="stat-item text-success"><strong>Available:</strong> {stats.available}</span>
-                        <span className="stat-item text-secondary"><strong>Occupied:</strong> {stats.occupied}</span>
-                    </div>
-                    
-                    <div className="d-flex align-items-center">
-                        <span className="text-muted small me-2">Legend:</span>
-                        <div className="legend-item">
-                            <div className="legend-box available"></div>
-                            <span>Available</span>
+                <div className="stats-container fadeIn">
+                    <div className="stat-card-mini">
+                        <div className="stat-icon-box bg-gold-soft"><LayoutThreeColumns /></div>
+                        <div className="stat-info">
+                            <h6>Total Rooms</h6>
+                            <h4>{stats.total}</h4>
                         </div>
-                        <div className="legend-item">
-                            <div className="legend-box occupied"></div>
-                            <span>Occupied</span>
+                    </div>
+                    <div className="stat-card-mini">
+                        <div className="stat-icon-box bg-green-soft"><HouseDoorFill /></div>
+                        <div className="stat-info">
+                            <h6>Available</h6>
+                            <h4 className="text-success">{stats.available}</h4>
+                        </div>
+                    </div>
+                    <div className="stat-card-mini">
+                        <div className="stat-icon-box bg-gray-soft"><PersonCheckFill /></div>
+                        <div className="stat-info">
+                            <h6>Occupied</h6>
+                            <h4 className="text-secondary">{stats.occupied}</h4>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* [MỚI] Room List (Hiển thị 5 tầng của trang hiện tại) */}
+            {/* Room List */}
             {!loadingRooms && selectedBlockId && currentFloors.length > 0 && (
                 <div className="floor-container fadeIn">
                     {currentFloors.map(floor => (
-                        <Card key={floor} className="mb-3 residem-card floor-card">
-                            <Card.Header className="residem-card-header floor-header d-flex justify-content-between align-items-center">
-                                <strong>Floor {floor}</strong>
-                                <span className="badge bg-light text-dark border">
+                        <Card key={floor} className="residem-card floor-card">
+                            <Card.Header className="residem-card-header">
+                                <div className="d-flex align-items-center gap-2">
+                                    <Layers className="text-muted"/> 
+                                    <span>Floor {floor}</span>
+                                </div>
+                                <Badge bg="light" text="dark" className="border fw-normal">
                                     {roomsByFloor[floor]?.length || 0} Rooms
-                                </span>
+                                </Badge>
                             </Card.Header>
                             <Card.Body className="room-grid">
                                 {roomsByFloor[floor] && roomsByFloor[floor].map(room => (
@@ -186,6 +199,7 @@ const BlockManagement = () => {
                                         onClick={() => handleShowDetailsModal(room)}
                                     >
                                         {room.room_number}
+                                        <small>{room.resident_name ? 'Occupied' : 'Empty'}</small>
                                     </div>
                                 ))}
                             </Card.Body>
@@ -194,10 +208,10 @@ const BlockManagement = () => {
                 </div>
             )}
 
-            {/* [MỚI] Pagination Bar (Số Trang) */}
+            {/* Pagination Bar */}
             {!loadingRooms && selectedBlockId && pageNumbers.length > 1 && (
                 <div className="floor-pagination-container fadeIn">
-                    <div className="floor-pagination-label">Select Page</div>
+                    <div className="floor-pagination-label">Select Page (View 5 Floors)</div>
                     <div className="floor-pagination-list">
                         {pageNumbers.map(number => (
                             <button
@@ -205,17 +219,16 @@ const BlockManagement = () => {
                                 className={`floor-btn ${currentPage === number ? 'active' : ''}`}
                                 onClick={() => {
                                     setCurrentPage(number);
-                                    // Cuộn nhẹ lên đầu danh sách tầng để dễ nhìn
                                     const listElement = document.querySelector('.floor-container');
-                                    if(listElement) listElement.scrollIntoView({ behavior: 'smooth' });
+                                    if(listElement) listElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                 }}
                             >
                                 {number}
                             </button>
                         ))}
                     </div>
-                    <div className="text-muted small mt-2">
-                        Showing floors {currentFloors[0]} - {currentFloors[currentFloors.length - 1]}
+                    <div className="text-muted small mt-3">
+                        Displaying floors {currentFloors[0]} - {currentFloors[currentFloors.length - 1]}
                     </div>
                 </div>
             )}

@@ -1,81 +1,57 @@
 // frontend/src/components/layout/AdminSidebar.js
 import React from 'react';
-import { NavLink } from 'react-router-dom'; // Bạn đang dùng NavLink, chính xác rồi
+import { NavLink } from 'react-router-dom';
+import { Speedometer2, People, HouseDoor, Grid, Newspaper, Truck, Receipt, Wallet2, CalendarEvent } from 'react-bootstrap-icons'; // Thêm icons
 
 const AdminSidebar = () => {
-    return (
-        <div className="list-group"> {/* Dùng list-group */}
-            <NavLink
-                to="/admin/dashboard"
-                className={({ isActive }) => // Sử dụng function để thêm class 'active'
-                    `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
-                }
-            >
-                General Dashboard
-            </NavLink>
-            <NavLink
-                to="/admin/user-management"
-                className={({ isActive }) =>
-                    `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
-                }
-            >
-                User Management
-            </NavLink>
-            <NavLink
-                to="/admin/resident-management"
-                className={({ isActive }) =>
-                    `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
-                }
-            >
-                Resident Management
-            </NavLink>
-            <NavLink
-                to="/admin/block-management"
-                className={({ isActive }) =>
-                    `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
-                }
-            >
-                Block Management
-            </NavLink>
-            <NavLink
-                to="/admin/news-management"
-                className={({ isActive }) =>
-                    `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
-                }
-            >
-                News Management
-            </NavLink>
+    // Helper để tạo class cho Link
+    const getLinkClass = ({ isActive }) => {
+        const baseClass = "d-flex align-items-center py-3 px-4 text-decoration-none fw-medium transition-all";
+        // Active: Nền vàng nhạt, Chữ vàng đậm, Viền trái
+        // Inactive: Chữ xám
+        return isActive 
+            ? `${baseClass} bg-opacity-10 text-dark border-start border-4` 
+            : `${baseClass} text-secondary hover-bg-light`;
+    };
 
+    // Inline style cho active state để đảm bảo màu chính xác
+    const activeStyle = {
+        borderColor: '#b99a7b',
+        color: '#b99a7b',
+        backgroundColor: 'rgba(185, 154, 123, 0.1)'
+    };
+
+    return (
+        <div className="d-flex flex-column pt-3 h-100 bg-white">
+            <div className="px-4 mb-3 text-uppercase text-muted fw-bold" style={{fontSize: '0.75rem', letterSpacing: '1px'}}>Management</div>
             
-            <NavLink
-                to="/admin/vehicle-management"
-                className={({ isActive }) =>
-                    `list-group-item list-group-item-action ${isActive ? 'active' : ''}`
-                }
-            >
-                Vehicle Management
+            <NavLink to="/admin/dashboard" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Speedometer2 className="me-3 fs-5" /> General Dashboard
             </NavLink>
-            <NavLink
-                to="/admin/bill-management"
-                className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
-            >
-                Bill Management
+            <NavLink to="/admin/user-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <People className="me-3 fs-5" /> User Management
             </NavLink>
-            
-            {/* --- (BỔ SUNG) --- */}
-            <NavLink
-                to="/admin/fee-management"
-                className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
-            >
-                Fee Management
+            <NavLink to="/admin/resident-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <HouseDoor className="me-3 fs-5" /> Resident Management
             </NavLink>
-            {/* --- (KẾT THÚC BỔ SUNG) --- */}
-                <NavLink 
-    to="/admin/amenity-management"
-    className={({ isActive }) => `list-group-item list-group-item-action ${isActive ? 'active' : ''}`}
->
-    Amenity Management
-</NavLink>
+            <NavLink to="/admin/block-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Grid className="me-3 fs-5" /> Block Management
+            </NavLink>
+            <NavLink to="/admin/news-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Newspaper className="me-3 fs-5" /> News Management
+            </NavLink>
+            <NavLink to="/admin/vehicle-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Truck className="me-3 fs-5" /> Vehicle Management
+            </NavLink>
+            <NavLink to="/admin/bill-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Receipt className="me-3 fs-5" /> Bill Management
+            </NavLink>
+            <NavLink to="/admin/fee-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Wallet2 className="me-3 fs-5" /> Fee Management
+            </NavLink>
+            <NavLink to="/admin/amenity-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <CalendarEvent className="me-3 fs-5" /> Amenity Management
+            </NavLink>
         </div>
     );
 };

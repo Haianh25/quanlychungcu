@@ -1,11 +1,11 @@
 // frontend/src/components/layout/AdminHeader.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import axios from 'axios'; // Import axios
-import { Dropdown, ListGroup, Badge } from 'react-bootstrap'; // Import components
-import { BellFill } from 'react-bootstrap-icons'; // Import icon
+import axios from 'axios'; 
+import { Dropdown, ListGroup, Badge } from 'react-bootstrap'; 
+import { BellFill, PersonCircle } from 'react-bootstrap-icons'; // Thêm icon Person
 
-// --- (THÊM MỚI) Hàm tính thời gian tương đối ---
+// Hàm tính thời gian tương đối (Giữ nguyên)
 function timeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     let interval = seconds / 31536000;
@@ -22,59 +22,41 @@ function timeAgo(date) {
 }
 
 const AdminHeader = () => {
+    // ... (GIỮ NGUYÊN TOÀN BỘ LOGIC STATE & EFFECT CỦA BẠN) ...
     const navigate = useNavigate();
-    const location = useLocation(); // Thêm location
-
-    // --- (THÊM MỚI) State cho thông báo ---
+    const location = useLocation();
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
 
-    const getAuthToken = () => {
-        return localStorage.getItem('adminToken');
-    }
+    const getAuthToken = () => { return localStorage.getItem('adminToken'); }
 
-    // --- (THÊM MỚI) Hàm lấy thông báo (dùng useCallback) ---
     const fetchNotifications = useCallback(async () => {
         const token = getAuthToken();
         if (!token) return;
-
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const res = await axios.get('http://localhost:5000/api/notifications', config);
             setNotifications(res.data);
         } catch (err) {
             console.error("Failed to fetch notifications:", err);
-            // Nếu token hết hạn (401) thì tự động logout
-            if (err.response && err.response.status === 401) {
-                handleLogout();
-            }
+            if (err.response && err.response.status === 401) { handleLogout(); }
         }
-    }, []); // Thêm mảng rỗng
+    }, []); 
     
-    // --- (THÊM MỚI) useEffect để lấy thông báo khi tải trang/chuyển trang admin ---
     useEffect(() => {
         fetchNotifications();
-        
-        // Thêm bộ đếm thời gian để fetch lại thông báo sau mỗi 1 phút
-        const intervalId = setInterval(fetchNotifications, 60000); // 60000ms = 1 phút
-
-        // Dọn dẹp interval khi component unmount
+        const intervalId = setInterval(fetchNotifications, 60000); 
         return () => clearInterval(intervalId);
-
-    }, [location.pathname, fetchNotifications]); // Chạy lại khi chuyển trang admin
+    }, [location.pathname, fetchNotifications]); 
 
     const handleLogout = () => {
         localStorage.removeItem('adminToken');
         navigate('/admin/login');
     };
 
-    // --- (THÊM MỚI) Logic xử lý thông báo ---
     const handleBellClick = () => {
         setShowNotifications(!showNotifications); 
-        // Khi mở, nếu có thông báo chưa đọc, đánh dấu đã đọc
-        if (!showNotifications && unreadCount > 0) {
-            markAllAsRead();
-        }
+        if (!showNotifications && unreadCount > 0) { markAllAsRead(); }
     };
 
     const markAllAsRead = async () => {
@@ -83,63 +65,64 @@ const AdminHeader = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post('http://localhost:5000/api/notifications/mark-read', {}, config);
             setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-        } catch (err) {
-            console.error("Failed to mark notifications as read:", err);
-        }
+        } catch (err) { console.error("Failed to mark notifications as read:", err); }
     };
 
-    // Hàm xử lý khi click vào 1 thông báo
     const handleNotificationClick = (notification) => {
-        setShowNotifications(false); // Đóng dropdown
-        navigate(notification.link_to || '/admin/dashboard'); // Chuyển trang
+        setShowNotifications(false); 
+        navigate(notification.link_to || '/admin/dashboard'); 
     };
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
-    // --- (KẾT THÚC THÊM MỚI) ---
 
-
+    // --- JSX ĐÃ ĐƯỢC SỬA GIAO DIỆN ---
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm"> 
+        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top" style={{borderBottom: '1px solid #e0e0e0'}}> 
             <div className="container-fluid px-4">
-                <Link className="navbar-brand" to="/admin/dashboard">
-                    Admin Dashboard
+                {/* Logo & Brand */}
+                <Link className="navbar-brand d-flex align-items-center" to="/admin/dashboard" style={{color: '#333', fontWeight: '600', fontSize: '1.4rem'}}>
+                    <img src="/images/logoo.png" alt="Logo" style={{height: '35px', marginRight: '10px'}} />
+                    PTIT Apartment <span className="badge bg-light text-secondary ms-2 border" style={{fontSize: '0.7rem', fontWeight: '500'}}>Admin</span>
                 </Link>
+
                 <div className="collapse navbar-collapse" id="navbarNav">
-                    {/* SỬA: Thêm d-flex và align-items-center */}
-                    <ul className="navbar-nav ms-auto d-flex align-items-center">
+                    <ul className="navbar-nav ms-auto d-flex align-items-center gap-3">
                         
-                        {/* --- (THÊM MỚI) Chuông thông báo --- */}
-                        <li className="nav-item admin-header-bell">
-                            <Dropdown show={showNotifications} onToggle={handleBellClick}>
-                                <Dropdown.Toggle as="button" className="admin-notification-btn" title="Notifications">
-                                    <BellFill />
+                        {/* Notification Bell */}
+                        <li className="nav-item position-relative">
+                            <Dropdown show={showNotifications} onToggle={handleBellClick} align="end">
+                                <Dropdown.Toggle as="div" className="position-relative cursor-pointer text-secondary p-2" style={{cursor: 'pointer'}}>
+                                    <BellFill size={20} />
                                     {unreadCount > 0 && (
-                                        <Badge pill bg="danger" className="admin-notification-badge">{unreadCount}</Badge>
+                                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{fontSize: '0.6rem'}}>
+                                            {unreadCount}
+                                        </span>
                                     )}
                                 </Dropdown.Toggle>
 
-                                <Dropdown.Menu as="div" className="admin-notification-dropdown" align="end">
-                                    <div className="admin-notification-header">
-                                        <h6>Thông báo</h6>
+                                <Dropdown.Menu className="shadow border-0 mt-2" style={{width: '320px', borderRadius: '10px'}}>
+                                    <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top">
+                                        <h6 className="mb-0 fw-bold text-dark">Notifications</h6>
                                         {unreadCount > 0 && (
-                                            <button className="mark-all-read" onClick={markAllAsRead}>
-                                                Đánh dấu tất cả đã đọc
+                                            <button className="btn btn-link text-decoration-none p-0 small" style={{color: '#b99a7b', fontSize: '0.8rem'}} onClick={markAllAsRead}>
+                                                Mark all read
                                             </button>
                                         )}
                                     </div>
-                                    <ListGroup variant="flush">
+                                    <ListGroup variant="flush" style={{maxHeight: '350px', overflowY: 'auto'}}>
                                         {notifications.length === 0 ? (
-                                            <div className="admin-notification-empty">Không có thông báo mới.</div>
+                                            <div className="p-4 text-center text-muted small">No new notifications.</div>
                                         ) : (
                                             notifications.map(noti => (
                                                 <ListGroup.Item 
                                                     key={noti.id} 
-                                                    action // Thêm 'action' để có hiệu ứng hover
+                                                    action 
                                                     onClick={() => handleNotificationClick(noti)} 
-                                                    className="admin-notification-item"
+                                                    className={`border-bottom py-3 ${!noti.is_read ? 'bg-light' : ''}`}
+                                                    style={{borderLeft: !noti.is_read ? '3px solid #b99a7b' : 'none'}}
                                                 >
-                                                    <p className="mb-1">{noti.message}</p>
-                                                    <small>{timeAgo(noti.created_at)}</small>
+                                                    <p className="mb-1 text-dark small">{noti.message}</p>
+                                                    <small className="text-muted" style={{fontSize: '0.75rem'}}>{timeAgo(noti.created_at)}</small>
                                                 </ListGroup.Item>
                                             ))
                                         )}
@@ -147,13 +130,28 @@ const AdminHeader = () => {
                                 </Dropdown.Menu>
                             </Dropdown>
                         </li>
-                        {/* --- (KẾT THÚC THÊM MỚI) --- */}
                         
-                        <li className="nav-item">
-                            <button className="btn btn-outline-danger" onClick={handleLogout}>
-                                Logout
-                            </button>
+                        {/* User Profile & Logout */}
+                        <li className="nav-item d-flex align-items-center border-start ps-3">
+                            <div className="d-flex align-items-center gap-2">
+                                <div className="d-none d-md-block text-end me-2">
+                                    <span className="d-block fw-bold text-dark" style={{fontSize: '0.9rem'}}>Administrator</span>
+                                </div>
+                                <Dropdown align="end">
+                                    <Dropdown.Toggle as="div" style={{cursor: 'pointer'}}>
+                                        <div className="bg-light rounded-circle d-flex align-items-center justify-content-center border" style={{width: '40px', height: '40px'}}>
+                                            <PersonCircle size={24} className="text-secondary"/>
+                                        </div>
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu className="shadow border-0 mt-2">
+                                        <Dropdown.Item onClick={handleLogout} className="text-danger fw-medium">
+                                            Logout
+                                        </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            </div>
                         </li>
+
                     </ul>
                 </div>
             </div>

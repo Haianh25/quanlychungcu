@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Form, Button, ListGroup, Row, Col, Modal, Badge, Spinner, Alert, Card } from 'react-bootstrap';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { PlusCircleFill, PencilSquare, Trash, Image as ImageIcon, Funnel } from 'react-bootstrap-icons'; // Thêm icons
 import './NewsManagement.css'; 
 
 // Define API URL constant to reuse
@@ -189,8 +190,8 @@ const NewsManagement = () => {
         <div className="management-page-container fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title">News Management</h2>
-                <Button className="btn-residem-primary" onClick={handleShowCreate}>
-                    <i className="bi bi-plus-lg me-2"></i>Create New Post
+                <Button className="btn-residem-primary d-flex align-items-center gap-2" onClick={handleShowCreate}>
+                    <PlusCircleFill size={18}/> Create New Post
                 </Button>
             </div>
 
@@ -198,9 +199,9 @@ const NewsManagement = () => {
 
             <Card className="residem-card">
                 <Card.Body>
-                    <Form.Group as={Row} className="mb-3 align-items-center" controlId="sortNewsBy">
-                        <Form.Label column sm="auto" className="residem-form-label mb-0">
-                            Sort by:
+                    <Form.Group as={Row} className="mb-4 align-items-center" controlId="sortNewsBy">
+                        <Form.Label column sm="auto" className="residem-form-label mb-0 d-flex align-items-center">
+                            <Funnel className="me-2"/> Sort by:
                         </Form.Label>
                         <Col sm="4" md="3" lg="2">
                             <Form.Select
@@ -208,47 +209,52 @@ const NewsManagement = () => {
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
                             >
-                                <option value="newest">Newest</option>
-                                <option value="oldest">Oldest</option>
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
                             </Form.Select>
                         </Col>
                     </Form.Group>
 
-                    <ListGroup className="news-list-container mt-3">
+                    <div className="news-list-container">
                         {loading ? (
-                            <div className="text-center p-5"><Spinner animation="border" /></div>
+                            <div className="text-center p-5"><Spinner animation="border" variant="secondary" /></div>
                         ) : newsList.length === 0 ? (
-                            <Alert variant="residem-info" className="no-news-alert">No news posts found.</Alert>
+                            <Alert variant="light" className="text-center text-muted m-3">No news posts found.</Alert>
                         ) : (
-                            newsList.map(item => (
-                                <ListGroup.Item key={item.id} className="news-list-item">
-                                    <div className="d-flex align-items-center">
-                                        {item.image_url ? (
-                                            // SỬA: Dùng getImageUrl cho list
-                                            <img src={getImageUrl(item.image_url)} alt={item.title} className="news-thumbnail-list" />
-                                        ) : (
-                                            <div className="news-thumbnail-list d-flex align-items-center justify-content-center">
-                                                <i className="bi bi-image-alt"></i>
+                            <ListGroup variant="flush">
+                                {newsList.map(item => (
+                                    <ListGroup.Item key={item.id} className="news-list-item">
+                                        <div className="d-flex align-items-center w-100">
+                                            {item.image_url ? (
+                                                <img src={getImageUrl(item.image_url)} alt={item.title} className="news-thumbnail-list" />
+                                            ) : (
+                                                <div className="news-thumbnail-list">
+                                                    <ImageIcon />
+                                                </div>
+                                            )}
+                                            <div className="flex-grow-1 ms-2">
+                                                <h5 className="news-item-title">{item.title}</h5>
+                                                <p className="news-item-meta">
+                                                    By: {item.author_name || 'Admin'} • On: {new Date(item.created_at).toLocaleDateString('en-GB')}
+                                                </p>
+                                                <Badge bg={item.status === 'active' ? 'success' : 'secondary'} className="status-badge">
+                                                    {item.status === 'active' ? 'Published' : 'Draft'}
+                                                </Badge>
                                             </div>
-                                        )}
-                                        <div className="ms-3 flex-grow-1">
-                                            <h5 className="news-item-title">{item.title}</h5>
-                                            <p className="news-item-meta">
-                                                By: {item.author_name || 'Admin'} | On: {new Date(item.created_at).toLocaleDateString()}
-                                            </p>
-                                            <span className={`status-badge ${item.status === 'active' ? 'status-success' : 'status-secondary'}`}>
-                                                {item.status}
-                                            </span>
+                                            <div className="d-flex gap-2 ms-3">
+                                                <Button variant="light" className="btn-residem-warning btn-sm" onClick={() => handleShowEdit(item)}>
+                                                    <PencilSquare /> Edit
+                                                </Button>
+                                                <Button variant="light" className="btn-residem-danger btn-sm" onClick={() => handleDelete(item.id)}>
+                                                    <Trash /> Delete
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="d-flex gap-2">
-                                        <Button className="btn-residem-warning btn-sm" onClick={() => handleShowEdit(item)}>Edit</Button>
-                                        <Button className="btn-residem-danger btn-sm" onClick={() => handleDelete(item.id)}>Delete</Button>
-                                    </div>
-                                </ListGroup.Item>
-                            ))
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
                         )}
-                    </ListGroup>
+                    </div>
                 </Card.Body>
             </Card>
 
@@ -258,11 +264,11 @@ const NewsManagement = () => {
                         {editingNews ? 'Edit News Post' : 'Create New News Post'}
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
-                    <Form onSubmit={handleSubmit}>
+                <Form onSubmit={handleSubmit}>
+                    <Modal.Body>
                         <Form.Group className="mb-3">
                             <Form.Label className="residem-form-label">Title<span className="required-star">*</span></Form.Label>
-                            <Form.Control className="residem-form-control" type="text" name="title" value={formData.title} onChange={handleFormChange} required />
+                            <Form.Control className="residem-form-control" type="text" name="title" value={formData.title} onChange={handleFormChange} required placeholder="Enter post title..." />
                         </Form.Group>
 
                         <Form.Group className="mb-3">
@@ -273,6 +279,7 @@ const NewsManagement = () => {
                                     value={content} 
                                     onChange={setContent}
                                     modules={quillModules}
+                                    placeholder="Write something amazing..."
                                 />
                             </div>
                         </Form.Group>
@@ -303,21 +310,19 @@ const NewsManagement = () => {
                         </Row>
 
                         {imageUrlPreview && (
-                            <div className="text-center mb-3 image-preview-box">
+                            <div className="image-preview-box">
                                 <p>Image Preview:</p>
-                                {/* SỬA: Dùng getImageUrl cho preview */}
                                 <img src={getImageUrl(imageUrlPreview)} alt="Preview" />
                             </div>
                         )}
-                        
-                        <div className="text-end mt-4">
-                            <Button variant="residem-secondary" onClick={handleClose} className="me-2">Cancel</Button>
-                            <Button className="btn-residem-primary" type="submit" disabled={uploading}>
-                                {uploading ? 'Uploading...' : 'Save Post'}
-                            </Button>
-                        </div>
-                    </Form>
-                </Modal.Body>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="residem-secondary" onClick={handleClose}>Cancel</Button>
+                        <Button className="btn-residem-primary" type="submit" disabled={uploading}>
+                            {uploading ? <Spinner as="span" size="sm" /> : 'Save Post'}
+                        </Button>
+                    </Modal.Footer>
+                </Form>
             </Modal>
         </div>
     );
