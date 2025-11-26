@@ -89,7 +89,8 @@ const ResidentHeader = () => {
                     
                     fetchNotifications(); 
                     
-                    const intervalId = setInterval(fetchNotifications, 60000);
+                    // [UPDATED] Giảm thời gian polling xuống 5 giây (5000ms) để demo mượt hơn
+                    const intervalId = setInterval(fetchNotifications, 5000); 
                     return () => clearInterval(intervalId);
                 }
             } catch (error) {

@@ -35,7 +35,7 @@ router.post('/create-order', protect, async (req, res) => {
         
         // (IMPORTANT) PayPal does not support VND, convert to USD
         // Assume exchange rate 1 USD = 25000 VND
-        const exchangeRate = 25000; 
+        const exchangeRate = 25000;
         const totalUSD = (totalVND / exchangeRate).toFixed(2);
 
         if (totalUSD < 0.01) {
@@ -104,7 +104,6 @@ router.post('/capture-order', protect, async (req, res) => {
         const request = new paypal.orders.OrdersCaptureRequest(orderID);
         request.requestBody({});
         const capture = await client.execute(request);
-        
         const captureStatus = capture.result.status;
 
         if (captureStatus === 'COMPLETED') {
@@ -113,11 +112,21 @@ router.post('/capture-order', protect, async (req, res) => {
                 "UPDATE transactions SET status = 'success', message = 'PayPal payment successful' WHERE transaction_id = $1",
                 [transaction.transaction_id]
             );
+            
             // 3b. Update bill
             await dbClient.query(
                 "UPDATE bills SET status = 'paid', updated_at = NOW() WHERE bill_id = $1",
                 [bill_id]
             );
+
+            // --- [MỚI] 3c. Gửi thông báo cho User ---
+            const message = `Payment Successful! Invoice #${bill_id} has been paid via PayPal.`;
+            await dbClient.query(
+                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                [userId, message, '/bill']
+            );
+            // ----------------------------------------
+
             await dbClient.query('COMMIT');
             res.json({ success: true, message: 'Payment successful!' });
         } else {
@@ -127,11 +136,13 @@ router.post('/capture-order', protect, async (req, res) => {
     } catch (err) {
         // 5. Error
         await dbClient.query('ROLLBACK');
+        
         // Update transaction to 'failed'
         await dbClient.query(
             "UPDATE transactions SET status = 'failed', message = $1 WHERE paypal_transaction_id = $2 AND status = 'pending'",
             [err.message, orderID]
         );
+
         console.error('Error capturing PayPal order:', err);
         res.status(500).json({ message: err.message || 'Server error verifying payment.' });
     } finally {

@@ -61,10 +61,11 @@ async function applyLateFees() {
             );
 
             // 3b. Add late fee item to bill_items
+            // [FIXED] Thêm cột unit_price vào đây để tránh lỗi NOT NULL
             await client.query(
-                `INSERT INTO bill_items (bill_id, item_name, total_item_amount, quantity) 
-                 VALUES ($1, $2, $3, 1)`,
-                [bill.bill_id, 'Late Payment Fee', lateFeeAmount]
+                `INSERT INTO bill_items (bill_id, item_name, unit_price, total_item_amount, quantity) 
+                 VALUES ($1, $2, $3, $4, 1)`,
+                [bill.bill_id, 'Late Payment Fee', lateFeeAmount, lateFeeAmount]
             );
 
             // 3c. (Optional) Send notification to resident
@@ -72,7 +73,7 @@ async function applyLateFees() {
             await client.query(
                 `INSERT INTO notifications (user_id, message, link_to) 
                  VALUES ($1, $2, $3)`,
-                [bill.user_id, message, '/bills']
+                [bill.user_id, message, '/bill']
             );
         }
 

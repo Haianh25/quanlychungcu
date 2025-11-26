@@ -45,7 +45,8 @@ const AdminHeader = () => {
     
     useEffect(() => {
         fetchNotifications();
-        const intervalId = setInterval(fetchNotifications, 60000); 
+        // [UPDATED] Giảm thời gian polling xuống 5 giây (5000ms) để Admin nhận thông báo nhanh hơn
+        const intervalId = setInterval(fetchNotifications, 5000); 
         return () => clearInterval(intervalId);
     }, [location.pathname, fetchNotifications]); 
 

@@ -155,8 +155,12 @@ const VehicleService = () => {
 
         try {
             await axios.post(`${API_BASE_URL}/api/services/register-card`, formData, { ...config, headers: { ...config.headers, 'Content-Type': 'multipart/form-data' } });
-            setRegSuccess('Request submitted successfully! Waiting for approval.'); setRegVehicleType(null); fetchExistingCards(); 
-        } catch (err) { setRegError(err.response?.data?.message || 'Registration failed.'); } 
+            setRegSuccess('Request submitted successfully! Waiting for approval.'); 
+            setRegVehicleType(null); // Reset về màn hình chọn xe để ẩn form
+            fetchExistingCards(); 
+        } catch (err) { 
+            setRegError(err.response?.data?.message || 'Registration failed.');
+        } 
         finally { setRegLoading(false); }
     };
 
@@ -231,10 +235,10 @@ const VehicleService = () => {
                      
                      {/* PHẦN 1: THÔNG TIN CHỦ XE */}
                      <div className="form-section">
-                         <h6 className="form-section-header"><PersonBadge className="me-2"/>Owner Information</h6>
+                          <h6 className="form-section-header"><PersonBadge className="me-2"/>Owner Information</h6>
                          <Row className="g-3">
                              <Col md={6}>
-                                 <Form.Group>
+                                  <Form.Group>
                                      <Form.Label>Full Name <span className="text-danger">*</span></Form.Label>
                                      <Form.Control placeholder="e.g. Nguyen Van A" type="text" name="fullName" value={regFormData.fullName} onChange={handleRegFormChange} required />
                                  </Form.Group>
@@ -242,51 +246,51 @@ const VehicleService = () => {
                              <Col md={6}>
                                  <Form.Group>
                                      <Form.Label>Date of Birth <span className="text-danger">*</span></Form.Label>
-                                     <Form.Control type="date" name="dob" value={regFormData.dob} onChange={handleRegFormChange} required />
+                                      <Form.Control type="date" name="dob" value={regFormData.dob} onChange={handleRegFormChange} required />
                                  </Form.Group>
                              </Col>
                              <Col md={6}>
                                  <Form.Group>
                                      <Form.Label>Phone Number <span className="text-danger">*</span></Form.Label>
-                                     <Form.Control placeholder="09xxxxxxxx" type="tel" name="phone" value={regFormData.phone} onChange={handleRegFormChange} required />
+                                      <Form.Control placeholder="09xxxxxxxx" type="tel" name="phone" value={regFormData.phone} onChange={handleRegFormChange} required />
                                  </Form.Group>
                              </Col>
-                             <Col md={6}>
+                              <Col md={6}>
                                  <Form.Group>
                                      <Form.Label>Relationship <span className="text-danger">*</span></Form.Label>
-                                     <Form.Select name="relationship" value={regFormData.relationship} onChange={handleRegFormChange} required>
+                                      <Form.Select name="relationship" value={regFormData.relationship} onChange={handleRegFormChange} required>
                                          <option value="">-- Select --</option>
                                          <option value="Owner">Owner</option>
                                          <option value="Tenant">Tenant</option>
                                          <option value="Family">Family Member</option>
                                      </Form.Select>
                                  </Form.Group>
-                             </Col>
+                              </Col>
                          </Row>
                      </div>
 
                      {/* PHẦN 2: THÔNG TIN XE */}
                      <div className="form-section mt-4">
-                         <h6 className="form-section-header"><CardChecklist className="me-2"/>Vehicle Details</h6>
+                          <h6 className="form-section-header"><CardChecklist className="me-2"/>Vehicle Details</h6>
                          <Row className="g-3">
                              <Col md={4}>
-                                 <Form.Group>
+                                  <Form.Group>
                                      <Form.Label>Brand <span className="text-danger">*</span></Form.Label>
                                      <Form.Control placeholder="e.g. Honda" type="text" name="brand" value={regFormData.brand} onChange={handleRegFormChange} required />
                                  </Form.Group>
                              </Col>
                              <Col md={4}>
-                                 <Form.Group>
+                                  <Form.Group>
                                      <Form.Label>Color <span className="text-danger">*</span></Form.Label>
-                                     <Form.Control placeholder="e.g. Black" type="text" name="color" value={regFormData.color} onChange={handleRegFormChange} required />
+                                      <Form.Control placeholder="e.g. Black" type="text" name="color" value={regFormData.color} onChange={handleRegFormChange} required />
                                  </Form.Group>
                              </Col>
                              {regVehicleType !== 'bicycle' && (
                                  <Col md={4}>
                                      <Form.Group>
-                                         <Form.Label>License Plate <span className="text-danger">*</span></Form.Label>
+                                          <Form.Label>License Plate <span className="text-danger">*</span></Form.Label>
                                          <Form.Control placeholder="e.g. 29A-123.45" type="text" name="licensePlate" value={regFormData.licensePlate} onChange={handleRegFormChange} required />
-                                     </Form.Group>
+                                      </Form.Group>
                                  </Col>
                              )}
                          </Row>
@@ -295,19 +299,19 @@ const VehicleService = () => {
                      {/* PHẦN 3: HỒ SƠ MINH CHỨNG */}
                      <div className="form-section mt-4">
                          <h6 className="form-section-header"><FileEarmarkImage className="me-2"/>Documents</h6>
-                         <Form.Group className="file-upload-box p-3 rounded border-dashed">
+                          <Form.Group className="file-upload-box p-3 rounded border-dashed">
                              <Form.Label>Proof Photo <span className="text-danger">*</span></Form.Label>
                              <Form.Control type="file" name="proofImage" onChange={handleFileChange} accept="image/*" required />
-                             <Form.Text className="text-muted mt-2 d-block">
+                              <Form.Text className="text-muted mt-2 d-block">
                                  <InfoCircle className="me-1"/> Please upload a clear photo of your <strong>Vehicle Registration Certificate (Cà vẹt xe)</strong> or ID Card matching the vehicle owner.
                              </Form.Text>
                          </Form.Group>
                      </div>
                      
-                     {/* NÚT BẤM VÀ THÔNG BÁO */}
-                     <div className="mt-4 pt-3 border-top">
+                     {/* NÚT BẤM VÀ THÔNG BÁO (CHỈ CÒN NÚT BẤM) */}
+                      <div className="mt-4 pt-3 border-top">
+                        {/* [FIX] Bỏ Alert regSuccess ở đây vì nó sẽ bị mất khi form đóng */}
                         {regError && <Alert variant="danger" className="mb-3 py-2 small"><i className="bi bi-exclamation-circle me-2"></i>{regError}</Alert>}
-                        {regSuccess && <Alert variant="success" className="mb-3 py-2 small"><i className="bi bi-check-circle me-2"></i>{regSuccess}</Alert>}
                         
                         <div className="d-flex justify-content-end gap-3">
                             <Button variant="residem-secondary" className="px-4" onClick={() => setRegVehicleType(null)}>Cancel</Button>
@@ -333,33 +337,38 @@ const VehicleService = () => {
                 {/* CỘT TRÁI: NỘI DUNG CHÍNH */}
                 <Col lg={8}>
                     <h2 className="mb-4 page-main-title">Vehicle Parking</h2>
-                    
+              
                     <VehiclePriceTable />
                     
+                    {/* [FIX] THÔNG BÁO ĐƯỢC ĐƯA RA NGOÀI ĐỂ LUÔN HIỂN THỊ */}
                     {fetchError && <Alert variant="danger">{fetchError}</Alert>}
                     {manageSuccess && <Alert variant="success" dismissible onClose={() => setManageSuccess('')}>{manageSuccess}</Alert>}
+                    {regSuccess && <Alert variant="success" dismissible onClose={() => setRegSuccess('')} className="mb-3 fade show">
+                        <i className="bi bi-check-circle-fill me-2"></i>{regSuccess}
+                    </Alert>}
 
                     <Tabs id="vehicle-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-4 residem-tabs">
                         <Tab eventKey="register" title="New Registration">
                             {!regVehicleType ? (
                                 <Row className="g-3 mt-2">
                                     {['car', 'motorbike', 'bicycle'].map(type => {
-                                        const disabled = (type === 'car' && !canRegisterCar) || (type === 'motorbike' && !canRegisterMotorbike);
+                                         const disabled = (type === 'car' && !canRegisterCar) || (type === 'motorbike' && !canRegisterMotorbike);
                                         return (
                                             <Col md={4} key={type}>
                                                 <Card className={`text-center h-100 ${disabled ? 'vehicle-selection-card-disabled' : 'vehicle-selection-card'}`} onClick={() => !disabled && handleVehicleSelect(type)}>
-                                                    <Card.Body className="d-flex flex-column justify-content-center align-items-center p-4">
+                                                     <Card.Body className="d-flex flex-column justify-content-center align-items-center p-4">
                                                         <i className={`bi bi-${type === 'car' ? 'car-front-fill' : type === 'motorbike' ? 'scooter' : 'bicycle'} mb-3`}></i>
                                                         <Card.Title className="mb-2">{getVehicleTypeText(type)}</Card.Title>
                                                         {disabled ? <Card.Text className="small text-danger fw-bold">Limit Reached</Card.Text> : <Card.Text className="small text-success fw-bold">Available</Card.Text>}
                                                     </Card.Body>
-                                                </Card>
+                                                 </Card>
                                             </Col>
                                         );
                                     })}
                                 </Row>
                             ) : ( renderRegisterForm() )}
                         </Tab>
+            
                         <Tab eventKey="manage" title="Manage Cards">
                             <div className="tab-pane-content">
                                 {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> : existingCards.length === 0 ? <Alert variant="light" className="text-center text-muted border">No active cards.</Alert> : existingCards.map(card => renderCardItem(card))}
@@ -372,24 +381,24 @@ const VehicleService = () => {
                         </Tab>
                     </Tabs>
                 </Col>
-                
+   
                 <Col lg={4}>
                     <aside className="service-sidebar">
                         <Card className="sidebar-widget border-0 shadow-sm mb-4 policy-card">
                             <Card.Body className="p-4">
                                 <h5 className="widget-title mb-3"><InfoCircle className="me-2 text-brown"/> Registration Policy</h5>
                                 <ListGroup variant="flush" className="policy-list">
-                                    <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                     <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                         <span><CarFrontFill className="me-2 text-muted"/> Car</span>
                                         <Badge bg="warning" text="dark" className="rounded-pill">Max 2</Badge>
                                     </ListGroup.Item>
                                     <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
-                                        <span><Scooter className="me-2 text-muted"/> Motorbike</span>
+                                         <span><Scooter className="me-2 text-muted"/> Motorbike</span>
                                         <Badge bg="warning" text="dark" className="rounded-pill">Max 2</Badge>
-                                    </ListGroup.Item>
+                                     </ListGroup.Item>
                                     <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                         <span><Bicycle className="me-2 text-muted"/> Bicycle</span>
-                                        <Badge bg="success" className="rounded-pill">Unlimited</Badge>
+                                         <Badge bg="success" className="rounded-pill">Unlimited</Badge>
                                     </ListGroup.Item>
                                 </ListGroup>
                                 <div className="mt-3 small text-muted fst-italic">
@@ -399,23 +408,23 @@ const VehicleService = () => {
                         </Card>
 
                         <div className="sidebar-widget mb-4">
-                            <h5 className="widget-title">Steps</h5>
+                             <h5 className="widget-title">Steps</h5>
                             <ListGroup variant="flush" className="steps-list">
                                 <ListGroup.Item><span className="step-number">1</span>Select vehicle type.</ListGroup.Item>
                                 <ListGroup.Item><span className="step-number">2</span>Fill in info & Upload proof.</ListGroup.Item>
                                 <ListGroup.Item><span className="step-number">3</span>Wait for admin approval.</ListGroup.Item>
                                 <ListGroup.Item><span className="step-number">4</span>Get your card.</ListGroup.Item>
-                            </ListGroup>
+                             </ListGroup>
                         </div>
 
                         <div className="sidebar-widget">
                             <h5 className="widget-title">Support</h5>
-                            <div className="p-2">
+                             <div className="p-2">
                                 <p className="mb-2 font-weight-bold text-dark">Lost Card?</p>
                                 <p className="text-muted small mb-3">Go to "Manage Cards" tab and select "Reissue". Fee may apply.</p>
                                 <p className="mb-2 font-weight-bold text-dark">Cancel Service?</p>
                                 <p className="text-muted small mb-0">Go to "Manage Cards" tab and select "Cancel".</p>
-                            </div>
+                             </div>
                         </div>
                     </aside>
                 </Col>
@@ -430,7 +439,7 @@ const VehicleService = () => {
                     </Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="residem-secondary" onClick={closeModal}>Close</Button>
+                     <Button variant="residem-secondary" onClick={closeModal}>Close</Button>
                     <Button className="btn-residem-primary" onClick={handleManageSubmit} disabled={manageLoading}>{manageLoading ? <Spinner size="sm"/> : 'Submit'}</Button>
                 </Modal.Footer>
             </Modal>

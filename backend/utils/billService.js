@@ -210,6 +210,14 @@ async function generateBillsForMonth(month, year) {
                 await client.query('UPDATE vehicle_card_requests SET billed_in_bill_id = $1 WHERE id = ANY($2::int[])', [billId, requestIdsToUpdate]);
             }
 
+            // --- [MỚI] GỬI THÔNG BÁO CHO RESIDENT ---
+            const notiMessage = `New Bill Alert: Your service bill for ${month}/${year} (Invoice #${billId}) has been issued. Total: ${totalAmount.toLocaleString('vi-VN')} VND.`;
+            await client.query(
+                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                [user_id, notiMessage, '/bill']
+            );
+            // -----------------------------------------
+
             // Gửi Email thông báo
             if (email && full_name) {
                 const billDetails = {
@@ -326,6 +334,14 @@ async function generateMoveInBill(userId, roomId, client) {
                 [billId, item.name, item.price, item.price]
             );
         }
+
+        // --- [MỚI] GỬI THÔNG BÁO CHO RESIDENT ---
+        const notiMessage = `New Bill Alert: Move-in bill generated (Invoice #${billId}). Total: ${totalAmount.toLocaleString('vi-VN')} VND.`;
+        await client.query(
+            "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+            [userId, notiMessage, '/bill']
+        );
+        // -----------------------------------------
 
         console.log(`[MoveInBill] Generated bill #${billId} amount ${totalAmount}`);
     }

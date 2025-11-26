@@ -80,13 +80,14 @@ router.post('/book', protect, async (req, res) => {
         }
 
         const priceQuery = `
-            SELECT f.price 
+            SELECT f.price, r.name AS room_name
             FROM community_rooms r 
             JOIN fees f ON r.fee_code = f.fee_code 
             WHERE r.id = $1
         `;
         const priceRes = await db.query(priceQuery, [roomId]);
         const pricePerHour = parseFloat(priceRes.rows[0]?.price || 0);
+        const roomName = priceRes.rows[0]?.room_name || 'Amenity Room';
 
         const start = parseInt(startTime.split(':')[0]);
         const end = parseInt(endTime.split(':')[0]);
@@ -100,6 +101,17 @@ router.post('/book', protect, async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [residentId, roomId, date, startTime, endTime, totalPrice]
         );
+
+        // --- [MỚI] GỬI THÔNG BÁO CHO RESIDENT ---
+        const dateStr = new Date(date).toLocaleDateString('en-GB');
+        const timeStr = `${startTime.slice(0,5)} - ${endTime.slice(0,5)}`;
+        const successMessage = `Booking Confirmed: You have successfully booked ${roomName} on ${dateStr} (${timeStr}).`;
+        
+        await db.query(
+            "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+            [residentId, successMessage, '/services/amenity']
+        );
+        // -----------------------------------------
 
         res.json({ message: 'Booking successful!' });
 
