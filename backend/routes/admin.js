@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
-const { generateMoveInBill } = require('../utils/billService'); // [MỚI] Import
+const { generateMoveInBill } = require('../utils/billService'); 
 
 const pool = require('../db').getPool();
 const { query } = require('../db');
@@ -19,7 +19,6 @@ const isStrongPassword = (password) => {
 
 router.get('/users', protect, isAdmin, async (req, res) => {
     try {
-        // [UPDATED] Added 'phone' and 'is_active'
         const users = await query(
             'SELECT id, full_name, email, phone, role, is_verified, is_active, created_at FROM users WHERE id != $1 ORDER BY created_at DESC',
             [req.user.id]
@@ -72,27 +71,36 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
             await client.query('ROLLBACK');
             return res.status(404).json({ message: 'User not found.' });
         }
-        
-        const oldRole = userResult.rows[0].role;
+        const currentUser = userResult.rows[0];
+        const oldRole = currentUser.role;
 
         // --- LOGIC: DEMOTION (Resident -> User) ---
+        // [MỚI] Lưu lại phòng cũ trước khi xóa
         if (oldRole === 'resident' && role === 'user') {
             console.log(`[Admin] Demoting user ${id}. Cleaning up services...`);
             
-            // 1. Remove from Room
+            // 1. Tìm phòng hiện tại của user này (nếu có) và lưu vào last_room_id
+            const currentRoomRes = await client.query('SELECT id FROM rooms WHERE resident_id = $1', [id]);
+            if (currentRoomRes.rows.length > 0) {
+                const currentRoomId = currentRoomRes.rows[0].id;
+                await client.query('UPDATE users SET last_room_id = $1 WHERE id = $2', [currentRoomId, id]);
+                console.log(`[Admin] Saved room ${currentRoomId} as last_room_id for user ${id}`);
+            }
+
+            // 2. Remove from Room
             await client.query('UPDATE rooms SET resident_id = NULL WHERE resident_id = $1', [id]);
             await client.query('UPDATE users SET apartment_number = NULL WHERE id = $1', [id]);
             
-            // 2. Deactivate Vehicle Cards
+            // 3. Deactivate Vehicle Cards
             await client.query("UPDATE vehicle_cards SET status = 'inactive' WHERE resident_id = $1 AND status = 'active'", [id]);
             
-            // 3. Reject Pending Requests
+            // 4. Reject Pending Requests
             await client.query(
                 "UPDATE vehicle_card_requests SET status = 'rejected', admin_notes = 'User demoted to regular user' WHERE resident_id = $1 AND status = 'pending'", 
                 [id]
             );
 
-            // 4. Cancel Future Bookings
+            // 5. Cancel Future Bookings
             await client.query(
                 "UPDATE room_bookings SET status = 'cancelled' WHERE resident_id = $1 AND booking_date >= CURRENT_DATE AND status = 'confirmed'",
                 [id]
@@ -135,19 +143,73 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         }
 
         // --- Logic: PROMOTION (User -> Resident) ---
+        // [MỚI] Tự động gán lại phòng cũ và phục hồi dịch vụ nếu có last_room_id
         const newRole = setClauses.length > 0 ? updatedUser.rows[0].role : role;
+        
         if (newRole === 'resident' && oldRole !== 'resident') {
-            try {
-                const residentName = updatedUser.rows[0].full_name;
-                const residentId = updatedUser.rows[0].id;
-                const message = `Welcome ${residentName}! You have officially become a resident of PTIT Apartment.`;
+            // Kiểm tra xem có last_room_id không
+            if (currentUser.last_room_id) {
+                console.log(`[Admin] Promoting user ${id}. Found last_room_id: ${currentUser.last_room_id}`);
                 
-                await client.query(
-                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
-                    [residentId, message, '/profile']
+                // Kiểm tra phòng cũ có trống không
+                const roomCheck = await client.query(
+                    "SELECT id, room_number, block_id FROM rooms WHERE id = $1 AND resident_id IS NULL FOR UPDATE",
+                    [currentUser.last_room_id]
                 );
-            } catch (notifyError) {
-                console.error('Error sending welcome notification:', notifyError);
+
+                if (roomCheck.rows.length > 0) {
+                    // Phòng TRỐNG -> Tự động gán lại
+                    const room = roomCheck.rows[0];
+                    
+                    // 1. Lấy tên Block để cập nhật apartment_number
+                    const blockRes = await client.query("SELECT name FROM blocks WHERE id = $1", [room.block_id]);
+                    const blockName = blockRes.rows[0]?.name || '?';
+                    const apartmentFullName = `${blockName} - ${room.room_number}`;
+
+                    // 2. Gán phòng
+                    await client.query("UPDATE rooms SET resident_id = $1 WHERE id = $2", [id, room.id]);
+                    await client.query("UPDATE users SET apartment_number = $1, last_room_id = NULL WHERE id = $2", [apartmentFullName, id]);
+                    
+                    console.log(`[Admin] Auto-assigned user ${id} back to room ${apartmentFullName}`);
+
+                    // 3. Phục hồi thẻ xe (chuyển từ inactive -> active)
+                    await client.query("UPDATE vehicle_cards SET status = 'active' WHERE resident_id = $1 AND status = 'inactive'", [id]);
+
+                    // 4. Gọi hàm sinh bill (Hàm này đã được sửa để check trùng bill, nên an toàn)
+                    try {
+                        await generateMoveInBill(id, room.id, client);
+                    } catch (billErr) {
+                        console.error('Error ensuring bill existence during promotion:', billErr);
+                    }
+
+                    // 5. Notification
+                    const welcomeMsg = `Welcome back ${updatedUser.rows[0].full_name}! Your room ${apartmentFullName} and services have been restored.`;
+                    await client.query(
+                        "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                        [id, welcomeMsg, '/profile']
+                    );
+
+                } else {
+                    console.log(`[Admin] Last room ${currentUser.last_room_id} is occupied. Cannot auto-assign.`);
+                    // Vẫn gửi thông báo Welcome nhưng báo là chưa có phòng
+                    const message = `Welcome ${updatedUser.rows[0].full_name}! You are now a resident. Please contact admin for room assignment.`;
+                    await client.query(
+                        "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                        [id, message, '/profile']
+                    );
+                }
+            } else {
+                // Không có phòng cũ -> Xử lý như cư dân mới bình thường
+                try {
+                    const residentName = updatedUser.rows[0].full_name;
+                    const message = `Welcome ${residentName}! You have officially become a resident of PTIT Apartment.`;
+                    await client.query(
+                        "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                        [id, message, '/profile']
+                    );
+                } catch (notifyError) {
+                    console.error('Error sending welcome notification:', notifyError);
+                }
             }
         }
         
@@ -251,7 +313,7 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
 
         // [MỚI] Tự động tạo hóa đơn Move-in (Prorated) cho những ngày còn lại trong tháng
         try {
-            await generateMoveInBill(residentId, roomId, client); 
+            await generateMoveInBill(residentId, roomId, client);
         } catch (billError) {
             console.error('Error generating move-in bill:', billError);
             // Không throw lỗi để giao dịch Assign Room vẫn thành công

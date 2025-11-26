@@ -243,19 +243,30 @@ async function generateBillsForMonth(month, year) {
 }
 
 /**
- * [MỚI] Hàm tạo hóa đơn chuyển đến (Move-in Bill) cho tháng hiện tại
- * Tính phí quản lý Prorated dựa trên số ngày còn lại của tháng.
- * @param {string} userId - ID cư dân
- * @param {string} roomId - ID phòng
- * @param {object} client - DB client (đang trong transaction)
+ * [MỚI - UPDATED] Hàm tạo hóa đơn chuyển đến (Move-in Bill)
+ * Đã thêm logic kiểm tra: Nếu tháng này đã có bill rồi thì KHÔNG tạo thêm bill mới.
  */
 async function generateMoveInBill(userId, roomId, client) {
-    console.log(`[MoveInBill] Generating prorated bill for user ${userId} room ${roomId}...`);
+    console.log(`[MoveInBill] Checking bills for user ${userId} room ${roomId}...`);
     
     const now = new Date();
     const currentDay = now.getDate();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
+
+    // [CHECK KIM CƯƠNG] Kiểm tra xem tháng này user đã có hóa đơn nào chưa (bất kể trạng thái)
+    const existingBillCheck = await client.query(
+        `SELECT 1 FROM bills 
+         WHERE user_id = $1 AND EXTRACT(MONTH FROM issue_date) = $2 AND EXTRACT(YEAR FROM issue_date) = $3`,
+        [userId, currentMonth, currentYear]
+    );
+
+    if (existingBillCheck.rows.length > 0) {
+        console.log(`[MoveInBill] Existing bill found for ${currentMonth}/${currentYear}. SKIPPING new bill generation.`);
+        return; // Dừng hàm, không tạo hóa đơn mới
+    }
+
+    console.log(`[MoveInBill] No bill found. Generating prorated move-in bill...`);
     
     // Lấy ngày cuối cùng của tháng hiện tại
     const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
@@ -264,7 +275,6 @@ async function generateMoveInBill(userId, roomId, client) {
     const daysToCharge = (lastDayOfMonth - currentDay) + 1;
 
     // Nếu còn ít hơn 3 ngày thì thôi, để tháng sau tính luôn (tùy chính sách)
-    // Nhưng ở đây cứ tính luôn cho chính xác
     if (daysToCharge <= 0) return; 
 
     // Lấy bảng giá
@@ -286,7 +296,7 @@ async function generateMoveInBill(userId, roomId, client) {
         });
     }
 
-    // Tính phí Admin theo tỷ lệ (hoặc thu full, ở đây tính theo tỷ lệ cho công bằng)
+    // Tính phí Admin theo tỷ lệ
     if (fees['ADMIN_FEE']) {
         const dailyRate = fees['ADMIN_FEE'] / lastDayOfMonth;
         const proratedAmount = Math.round(dailyRate * daysToCharge);
@@ -323,5 +333,5 @@ async function generateMoveInBill(userId, roomId, client) {
 
 module.exports = {
     generateBillsForMonth,
-    generateMoveInBill // [MỚI] Export hàm này
+    generateMoveInBill 
 };
