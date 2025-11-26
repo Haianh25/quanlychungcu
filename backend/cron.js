@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const { generateBillsForMonth } = require('./utils/billService');
 // THÊM: Import dịch vụ phí phạt
-const { applyLateFees } = require('./utils/penaltyService');
+const { applyLateFees, notifyAdminOverdueBills } = require('./utils/penaltyService');
 
 console.log('[Cron] Scheduler initialized. Waiting for tasks...');
 
@@ -24,13 +24,18 @@ cron.schedule('0 0 1 * *', async () => {
     }
 });
 
-// THÊM: Tác vụ kiểm tra phí phạt
+// THÊM: Tác vụ kiểm tra phí phạt & Báo cáo Admin
 // Chạy vào 1:00 sáng mỗi ngày
 cron.schedule('0 1 * * *', async () => {
-    console.log('[Cron] Running daily late fee check...');
+    console.log('[Cron] Running daily scheduled tasks...');
     try {
+        // 1. Tính phí phạt cho các hóa đơn vừa quá hạn
         await applyLateFees();
+        
+        // 2. [MỚI] Kiểm tra các hóa đơn đã quá hạn 3 ngày và báo Admin
+        await notifyAdminOverdueBills();
+        
     } catch (err) {
-        console.error('[Cron] Error during daily late fee check:', err);
+        console.error('[Cron] Error during daily scheduled tasks:', err);
     }
 });
