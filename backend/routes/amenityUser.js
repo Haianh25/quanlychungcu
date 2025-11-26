@@ -46,6 +46,12 @@ router.post('/book', protect, async (req, res) => {
     const { roomId, date, startTime, endTime } = req.body;
 
     try {
+        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
+        const userCheck = await db.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
+        if (!userCheck.rows[0]?.apartment_number) {
+            return res.status(403).json({ message: 'You have not been assigned an apartment yet. Please contact Admin.' });
+        }
+
         const bookingDate = new Date(date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);

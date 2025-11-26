@@ -119,6 +119,12 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     try {
         await client.query('BEGIN');
 
+        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
+        const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
+        if (!userCheck.rows[0]?.apartment_number) {
+            throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
+        }
+
         // Logic kiểm tra giới hạn
         const activeCardRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status IN ($2, $3) GROUP BY vehicle_type',
@@ -159,7 +165,6 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
         
-        // --- SỬA TIẾNG ANH: Thông báo cho Admin ---
         const notificationMessage = `Resident ${residentFullName} has submitted a new vehicle card registration request.`;
         const linkTo = '/admin/vehicle-management';
 
@@ -176,12 +181,18 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error registering vehicle card:', err);
+        // Xóa ảnh nếu lỗi logic (để không tốn dung lượng)
         if (req.file) {
             fs.unlink(req.file.path, (unlinkErr) => {
                 if (unlinkErr) console.error("Error deleting uploaded file after DB error:", unlinkErr);
             });
         }
-        res.status(500).json({ message: err.message || 'Server error.' });
+        // Trả về lỗi 403 nếu là lỗi chưa có phòng, ngược lại 500
+        if (err.message.includes('assigned an apartment')) {
+            res.status(403).json({ message: err.message });
+        } else {
+            res.status(500).json({ message: err.message || 'Server error.' });
+        }
     } finally {
         client.release();
     }
@@ -208,6 +219,12 @@ router.post('/reissue-card', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
+        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
+        const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
+        if (!userCheck.rows[0]?.apartment_number) {
+            throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
+        }
+
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
             throw new Error('Valid card not found.');
@@ -232,7 +249,6 @@ router.post('/reissue-card', protect, async (req, res) => {
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
         
-        // --- SỬA TIẾNG ANH: Thông báo cho Admin ---
         const notificationMessage = `Resident ${residentFullName} has requested to reissue vehicle card (Plate: ${card.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management'; 
 
@@ -249,7 +265,11 @@ router.post('/reissue-card', protect, async (req, res) => {
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error requesting card reissue:', err);
-        res.status(500).json({ message: err.message || 'Server error.' });
+        if (err.message.includes('assigned an apartment')) {
+            res.status(403).json({ message: err.message });
+        } else {
+            res.status(500).json({ message: err.message || 'Server error.' });
+        }
     } finally {
         client.release();
     }
@@ -276,6 +296,12 @@ router.post('/cancel-card', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
+        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
+        const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
+        if (!userCheck.rows[0]?.apartment_number) {
+            throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
+        }
+
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
             throw new Error('Valid card not found.');
@@ -300,7 +326,6 @@ router.post('/cancel-card', protect, async (req, res) => {
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
         
-        // --- SỬA TIẾNG ANH: Thông báo cho Admin ---
         const notificationMessage = `Resident ${residentFullName} has requested to cancel vehicle card (Plate: ${card.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management'; 
 
@@ -316,7 +341,11 @@ router.post('/cancel-card', protect, async (req, res) => {
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error requesting card cancellation:', err);
-        res.status(500).json({ message: err.message || 'Server error.' });
+        if (err.message.includes('assigned an apartment')) {
+            res.status(403).json({ message: err.message });
+        } else {
+            res.status(500).json({ message: err.message || 'Server error.' });
+        }
     } finally {
         client.release();
     }

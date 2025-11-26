@@ -145,16 +145,16 @@ const BillPage = () => {
                 <Table striped hover responsive size="sm" className="residem-table">
                     <thead>
                         <tr>
-                            <th>Invoice ID</th>
+                            <th>No.</th>
                             <th>Billing Period</th>
                             <th>Total Amount</th>
                             <th>Payment Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {paidBills.map(bill => (
+                        {paidBills.map((bill, index) => (
                             <tr key={bill.bill_id}>
-                                <td>#{bill.bill_id}</td>
+                                <td>#{index + 1}</td>
                                 <td>{formatMonthHeader(bill.issue_date)}</td>
                                 <td>{formatCurrency(bill.total_amount)}</td>
                                 <td>{formatDate(bill.updated_at)}</td>
@@ -175,8 +175,9 @@ const BillPage = () => {
                 <Table striped hover responsive size="sm" className="residem-table history-table">
                     <thead>
                         <tr>
+                            {/* [UPDATED] Thêm cột No. và xóa cột Bill ID */}
+                            <th>No.</th>
                             <th>Trans ID</th>
-                            <th>Bill ID</th>
                             <th>Amount</th>
                             <th>Method</th>
                             <th>Status</th>
@@ -184,13 +185,13 @@ const BillPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {transactions.map(t => (
+                        {/* [UPDATED] Dùng index + 1 để hiển thị số thứ tự tự tăng */}
+                        {transactions.map((t, index) => (
                             <tr key={t.transaction_id}>
+                                <td>#{index + 1}</td> 
                                 <td className="transaction-id">{t.paypal_transaction_id || t.transaction_id}</td>
-                                <td>#{t.bill_id}</td>
                                 <td>{formatCurrency(t.amount)}</td>
                                 <td>{t.payment_method}</td>
-                                {/* [ĐÃ SỬA] ClassName mới */}
                                 <td className={t.status === 'success' ? 'bill-text-success' : (t.status === 'failed' ? 'bill-text-failed' : '')}>
                                     {t.status}
                                 </td>
@@ -254,7 +255,6 @@ const BillPage = () => {
                                                 <span>{t.payment_method} Payment</span>
                                                 <small className="text-muted">{formatDate(t.created_at)}</small>
                                             </div>
-                                            {/* [ĐÃ SỬA] ClassName mới */}
                                             <span className={`activity-amount ${t.status === 'success' ? 'bill-text-success' : 'bill-text-failed'}`}>
                                                 {formatCurrency(t.amount)}
                                             </span>

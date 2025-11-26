@@ -19,22 +19,29 @@ const protect = async (req, res, next) => {
             );
 
             if (result.rows.length > 0) {
-                req.user = result.rows[0];
+                const dbUser = result.rows[0];
 
-                // --- [NEW] CHECK IF ACCOUNT IS DISABLED ---
+                // --- [CHECK 1] CHECK IF ACCOUNT IS DISABLED ---
                 // This prevents locked users from accessing any protected API
-                if (req.user.is_active === false) {
+                if (dbUser.is_active === false) {
                     return res.status(403).json({ message: 'Your account has been disabled. Please contact support.' });
                 }
-                // ------------------------------------------
 
+                // --- [CHECK 2 - NEW] FORCE LOGOUT ON ROLE CHANGE ---
+                // Nếu role trong token (lúc đăng nhập) KHÁC với role hiện tại trong DB (do Admin sửa)
+                // -> Token không còn hợp lệ -> Trả về 401 để Frontend logout
+                if (decoded.role !== dbUser.role) {
+                    return res.status(401).json({ message: 'Session expired. Role updated. Please login again.' });
+                }
+
+                req.user = dbUser;
                 next();
             } else {
                 res.status(401).json({ message: 'User not found.' });
             }
 
         } catch (error) {
-            console.error(error);
+            console.error('Auth Middleware Error:', error.message);
             res.status(401).json({ message: 'Not authorized, token failed.' });
         }
     }
