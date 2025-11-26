@@ -1,23 +1,23 @@
-// File mới: backend/utils/penaltyService.js
+// File: backend/utils/penaltyService.js
 const db = require('../db');
 
 /**
- * Tự động kiểm tra và áp dụng phí phạt cho các hóa đơn quá hạn.
- * Chỉ áp dụng 1 LẦN cho các hóa đơn 'unpaid' đã qua 'due_date'.
+ * Automatically checks and applies late fees to overdue bills.
+ * Applies only ONCE for 'unpaid' bills that are past 'due_date'.
  */
 async function applyLateFees() {
-    console.log('[PENALTY_CRON] Đang chạy tác vụ kiểm tra phí phạt...');
+    console.log('[PENALTY_CRON] Running late fee check task...');
     const pool = db.getPool ? db.getPool() : db;
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
-        // 1. Lấy thông tin phí phạt từ bảng fees
+        // 1. Get late fee info from fees table
         const feeRes = await client.query("SELECT price FROM fees WHERE fee_code = 'LATE_PAYMENT_FEE'");
         
         if (feeRes.rows.length === 0) {
-            console.warn('[PENALTY_CRON] Không tìm thấy LATE_PAYMENT_FEE trong bảng fees. Bỏ qua.');
+            console.warn('[PENALTY_CRON] LATE_PAYMENT_FEE not found in fees table. Skipping.');
             await client.query('ROLLBACK');
             client.release();
             return;
@@ -25,14 +25,14 @@ async function applyLateFees() {
         
         const lateFeeAmount = parseFloat(feeRes.rows[0].price);
         if (lateFeeAmount <= 0) {
-            console.log('[PENALTY_CRON] Phí phạt được đặt là 0. Không áp dụng.');
+            console.log('[PENALTY_CRON] Late fee is set to 0. Not applying.');
             await client.query('COMMIT');
             client.release();
             return;
         }
 
-        // 2. Tìm tất cả hóa đơn 'unpaid' VÀ 'due_date' đã qua
-        // Chúng ta chỉ tìm 'unpaid' để tránh phạt nhiều lần (sau khi phạt, status sẽ đổi thành 'overdue')
+        // 2. Find all 'unpaid' AND past 'due_date' bills
+        // We only look for 'unpaid' to avoid applying penalty multiple times (status changes to 'overdue' after applying)
         const overdueBillsRes = await client.query(
             `SELECT bill_id, total_amount, user_id, room_id 
              FROM bills 
@@ -40,19 +40,19 @@ async function applyLateFees() {
         );
 
         if (overdueBillsRes.rows.length === 0) {
-            console.log('[PENALTY_CRON] Không tìm thấy hóa đơn nào quá hạn.');
+            console.log('[PENALTY_CRON] No overdue bills found.');
             await client.query('COMMIT');
             client.release();
             return;
         }
 
-        console.log(`[PENALTY_CRON] Tìm thấy ${overdueBillsRes.rows.length} hóa đơn quá hạn. Đang áp dụng phí...`);
+        console.log(`[PENALTY_CRON] Found ${overdueBillsRes.rows.length} overdue bills. Applying fees...`);
 
-        // 3. Cập nhật từng hóa đơn
+        // 3. Update each bill
         for (const bill of overdueBillsRes.rows) {
             const newTotalAmount = parseFloat(bill.total_amount) + lateFeeAmount;
 
-            // 3a. Cập nhật bảng bills: đổi status -> 'overdue' và tăng tổng tiền
+            // 3a. Update bills table: change status -> 'overdue' and increase total amount
             await client.query(
                 `UPDATE bills 
                  SET total_amount = $1, status = 'overdue', updated_at = NOW() 
@@ -60,15 +60,15 @@ async function applyLateFees() {
                 [newTotalAmount, bill.bill_id]
             );
 
-            // 3b. Thêm dòng phí phạt vào bill_items
+            // 3b. Add late fee item to bill_items
             await client.query(
                 `INSERT INTO bill_items (bill_id, item_name, total_item_amount, quantity) 
                  VALUES ($1, $2, $3, 1)`,
-                [bill.bill_id, 'Phí thanh toán muộn', lateFeeAmount]
+                [bill.bill_id, 'Late Payment Fee', lateFeeAmount]
             );
 
-            // 3c. (Tùy chọn) Gửi thông báo cho cư dân
-            const message = `Hóa đơn #${bill.bill_id} của bạn đã quá hạn và bị áp dụng phí phạt ${lateFeeAmount.toLocaleString('vi-VN')} VND.`;
+            // 3c. (Optional) Send notification to resident
+            const message = `Your invoice #${bill.bill_id} is overdue and a late fee of ${lateFeeAmount.toLocaleString('vi-VN')} VND has been applied.`;
             await client.query(
                 `INSERT INTO notifications (user_id, message, link_to) 
                  VALUES ($1, $2, $3)`,
@@ -77,11 +77,11 @@ async function applyLateFees() {
         }
 
         await client.query('COMMIT');
-        console.log(`[PENALTY_CRON] Đã áp dụng phí phạt cho ${overdueBillsRes.rows.length} hóa đơn.`);
+        console.log(`[PENALTY_CRON] Applied late fees to ${overdueBillsRes.rows.length} bills.`);
 
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error('[PENALTY_CRON] Lỗi khi đang áp dụng phí phạt:', err);
+        console.error('[PENALTY_CRON] Error applying late fees:', err);
     } finally {
         client.release();
     }

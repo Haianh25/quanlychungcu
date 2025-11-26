@@ -1,8 +1,64 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import '../../pages/Homepage.css'; // Import CSS
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import '../../pages/Homepage.css';
 
 const ResidentFooter = () => {
+    const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userRole, setUserRole] = useState(null);
+
+    // --- [LOGIC TỪ HEADER] Kiểm tra token và role ---
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                // Kiểm tra hết hạn
+                if (decoded.exp < Date.now() / 1000) {
+                    localStorage.removeItem('token');
+                    setIsLoggedIn(false);
+                    setUserRole(null);
+                } else {
+                    setIsLoggedIn(true);
+                    // Lấy role (xử lý các trường hợp role khác nhau từ backend)
+                    const rawRole = decoded.role || decoded.roles || decoded.user?.role;
+                    let normalizedRole = null;
+                    if (Array.isArray(rawRole)) {
+                         const lowerRoles = rawRole.map(r => String(r).toLowerCase());
+                         if (lowerRoles.includes('resident')) normalizedRole = 'resident';
+                         else normalizedRole = lowerRoles[0] || null;
+                    } else if (rawRole) {
+                        normalizedRole = String(rawRole).toLowerCase();
+                    }
+                    setUserRole(normalizedRole);
+                }
+            } catch (e) {
+                localStorage.removeItem('token');
+                setIsLoggedIn(false);
+                setUserRole(null);
+            }
+        } else {
+            setIsLoggedIn(false);
+            setUserRole(null);
+        }
+    }, []);
+
+    const isResident = isLoggedIn && userRole === 'resident';
+
+    // Hàm xử lý click cho các link bị khóa
+    const handleRestrictedLinkClick = (e, path) => {
+        e.preventDefault(); // Ngăn chuyển trang mặc định
+        if (isResident) {
+            navigate(path);
+        } else if (isLoggedIn) {
+            alert("Access Denied: You must be a verified Resident to access this feature.");
+        } else {
+            const confirmLogin = window.confirm("Please login to access this feature. Go to login page?");
+            if (confirmLogin) navigate('/login');
+        }
+    };
+
     return (
         <footer className="resident-footer new-footer-compact mt-5">
             <div className="container">
@@ -21,14 +77,33 @@ const ResidentFooter = () => {
                         </p>
                     </div>
 
-                    {/* COLUMN 2: QUICK LINKS */}
+                    {/* COLUMN 2: QUICK LINKS (ĐÃ SỬA LOGIC) */}
                     <div className="col-lg-3 col-md-6 mb-4 mb-lg-0">
                         <h5 className="footer-heading-compact">Quick Links</h5>
                         <ul className="footer-links-list">
                             <li><Link to="/">Home</Link></li>
-                            <li><Link to="/services">Services</Link></li>
-                            <li><Link to="/bill">Bill</Link></li> 
-                            <li><Link to="/news">News</Link></li>
+                            
+                            {/* Services */}
+                            <li>
+                                <a href="/services" onClick={(e) => handleRestrictedLinkClick(e, '/services')} className={!isResident ? 'text-muted' : ''}>
+                                    Services {!isResident && <i className="bi bi-lock-fill ms-1" style={{fontSize: '0.8em'}}></i>}
+                                </a>
+                            </li>
+
+                            {/* Bill */}
+                            <li>
+                                <a href="/bill" onClick={(e) => handleRestrictedLinkClick(e, '/bill')} className={!isResident ? 'text-muted' : ''}>
+                                    Bill {!isResident && <i className="bi bi-lock-fill ms-1" style={{fontSize: '0.8em'}}></i>}
+                                </a>
+                            </li>
+                            
+                            {/* News */}
+                            <li>
+                                <a href="/news" onClick={(e) => handleRestrictedLinkClick(e, '/news')} className={!isResident ? 'text-muted' : ''}>
+                                    News {!isResident && <i className="bi bi-lock-fill ms-1" style={{fontSize: '0.8em'}}></i>}
+                                </a>
+                            </li>
+
                             <li><Link to="/about">About Us</Link></li>
                         </ul>
                     </div>
