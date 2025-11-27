@@ -46,7 +46,6 @@ router.post('/book', protect, async (req, res) => {
     const { roomId, date, startTime, endTime } = req.body;
 
     try {
-        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
         const userCheck = await db.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
         if (!userCheck.rows[0]?.apartment_number) {
             return res.status(403).json({ message: 'You have not been assigned an apartment yet. Please contact Admin.' });
@@ -102,7 +101,6 @@ router.post('/book', protect, async (req, res) => {
             [residentId, roomId, date, startTime, endTime, totalPrice]
         );
 
-        // --- [MỚI] GỬI THÔNG BÁO CHO RESIDENT ---
         const dateStr = new Date(date).toLocaleDateString('en-GB');
         const timeStr = `${startTime.slice(0,5)} - ${endTime.slice(0,5)}`;
         const successMessage = `Booking Confirmed: You have successfully booked ${roomName} on ${dateStr} (${timeStr}).`;
@@ -111,7 +109,6 @@ router.post('/book', protect, async (req, res) => {
             "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
             [residentId, successMessage, '/services/amenity']
         );
-        // -----------------------------------------
 
         res.json({ message: 'Booking successful!' });
 
@@ -121,32 +118,51 @@ router.post('/book', protect, async (req, res) => {
     }
 });
 
-// 4. Hủy lịch (User hủy -> Báo cho Admin)
+// 4. Hủy lịch (User hủy) - [ĐÃ FIX LỖI LOGIC]
 router.post('/cancel/:id', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
     try {
-        // Update trạng thái và trả về thông tin để thông báo
+        // [FIX] Kiểm tra xem booking có phải trong tương lai không?
+        // Nếu ngày đặt < ngày hiện tại -> Không cho hủy
+        const checkRes = await db.query(
+            `SELECT * FROM room_bookings 
+             WHERE id = $1 AND resident_id = $2`,
+            [req.params.id, residentId]
+        );
+
+        if (checkRes.rows.length === 0) {
+            return res.status(404).json({ message: 'Booking not found.' });
+        }
+
+        const bookingData = checkRes.rows[0];
+        const bookingDate = new Date(bookingData.booking_date);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Reset giờ về 0 để so sánh ngày
+
+        // Logic chặn hủy quá khứ
+        if (bookingDate < now) {
+            return res.status(400).json({ message: 'Cannot cancel past bookings.' });
+        }
+
+        // Nếu là ngày hôm nay, kiểm tra giờ (Optional: Chặn hủy trước 1 tiếng)
+        // Ở đây ta tạm cho phép hủy trong ngày nếu chưa đến giờ, hoặc chặn luôn trong ngày tùy bạn.
+        // Code hiện tại: Chặn nếu ngày đặt < ngày hôm nay. (Hôm nay vẫn cho hủy).
+
+        // Update trạng thái
         const result = await db.query(
             `UPDATE room_bookings 
              SET status = 'cancelled' 
-             WHERE id = $1 AND resident_id = $2 
-             RETURNING id, room_id, booking_date, start_time, end_time`,
-            [req.params.id, residentId]
+             WHERE id = $1 
+             RETURNING id, room_id, booking_date`,
+            [req.params.id]
         );
         
-        if (result.rows.length === 0) {
-            return res.status(400).json({ message: 'Booking not found or unauthorized.' });
-        }
-
         const booking = result.rows[0];
-        
-        // Lấy tên phòng để thông báo rõ ràng
         const roomRes = await db.query("SELECT name FROM community_rooms WHERE id = $1", [booking.room_id]);
         const roomName = roomRes.rows[0]?.name || 'Amenity Room';
 
-        // --- GỬI THÔNG BÁO CHO ADMIN ---
         try {
             const admins = await db.query("SELECT id FROM users WHERE role = 'admin'");
             const dateStr = new Date(booking.booking_date).toLocaleDateString('en-GB');
@@ -162,7 +178,6 @@ router.post('/cancel/:id', protect, async (req, res) => {
         } catch (notifyError) {
             console.error('Error notifying admin:', notifyError);
         }
-        // -------------------------------
 
         res.json({ message: 'Booking cancelled successfully.' });
     } catch (err) {

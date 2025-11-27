@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ClockHistory, CalendarCheck, InfoCircle, XCircle, PeopleFill, GeoAltFill } from 'react-bootstrap-icons';
+import { ClockHistory, CalendarCheck, InfoCircle, XCircle, PeopleFill, GeoAltFill, CheckCircleFill } from 'react-bootstrap-icons';
 import './ServicePage.css'; 
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -62,7 +62,8 @@ const AmenityService = () => {
     const handleBookSubmit = async (e) => {
         e.preventDefault();
         const config = getAuthConfig();
-        setBookLoading(true); setBookMsg({ type: '', text: '' });
+        setBookLoading(true);
+        setBookMsg({ type: '', text: '' });
         
         try {
             await axios.post(`${API_BASE_URL}/api/amenities/book`, {
@@ -90,6 +91,35 @@ const AmenityService = () => {
 
     const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
+    // --- [ĐÃ FIX LỖI MÚI GIỜ] HÀM KIỂM TRA TRẠNG THÁI ---
+    const getBookingStatus = (booking) => {
+        if (booking.status === 'cancelled') return { label: 'Cancelled', variant: 'secondary', isCompleted: false };
+        
+        // 1. Lấy ngày từ booking_date (Hệ thống sẽ tự convert UTC sang giờ máy tính người dùng)
+        // Ví dụ: DB trả về "2025-11-26T17:00:00Z" -> Máy tính VN hiểu là ngày 27
+        const bookingDateObj = new Date(booking.booking_date);
+
+        // 2. Lấy giờ phút kết thúc từ chuỗi "HH:MM:SS"
+        const [hours, minutes] = booking.end_time.split(':').map(Number);
+
+        // 3. Tạo đối tượng Date hoàn chỉnh cho thời điểm kết thúc theo giờ địa phương
+        const bookingEnd = new Date(
+            bookingDateObj.getFullYear(),
+            bookingDateObj.getMonth(),
+            bookingDateObj.getDate(), 
+            hours,
+            minutes
+        );
+
+        const now = new Date();
+
+        // So sánh
+        if (now > bookingEnd) {
+            return { label: 'Completed', variant: 'primary', isCompleted: true }; 
+        }
+        return { label: 'Confirmed', variant: 'success', isCompleted: false }; 
+    };
+
     return (
         <Container className="service-page my-5 fadeIn">
             <div className="mb-4">
@@ -115,7 +145,6 @@ const AmenityService = () => {
                                             ) : (
                                                 <div className="amenity-img-placeholder">No Image</div>
                                             )}
-                                            {/* Tag giá overlay */}
                                             <span className="price-badge-overlay">
                                                 {formatCurrency(room.current_price)} / Hour
                                             </span>
@@ -135,7 +164,7 @@ const AmenityService = () => {
 
                                             {room.status === 'active' ? (
                                                 <Button 
-                                                    className="btn-custom-brown mt-auto" // Đã XÓA w-100
+                                                    className="btn-custom-brown mt-auto"
                                                     onClick={() => {
                                                         setSelectedRoom(room);
                                                         setBookingData({ date: '', startTime: '', endTime: '' });
@@ -176,29 +205,46 @@ const AmenityService = () => {
                                 <ClockHistory className="me-2"/> My Bookings
                             </h5>
                             <div className="booking-list-scroll">
-                                {myBookings.length === 0 ? <p className="p-3 text-muted text-center small">No booking history found.</p> : 
-                                    myBookings.map(b => (
-                                        <div key={b.id} className={`booking-item status-${b.status} mb-2 pb-2 border-bottom`}>
-                                            <div className="d-flex justify-content-between align-items-start mb-1">
-                                                <strong>{b.room_name}</strong>
-                                                <Badge bg={b.status === 'confirmed' ? 'success' : 'secondary'} className="status-badge-mini">
-                                                    {b.status}
-                                                </Badge>
-                                            </div>
-                                            <div className="small text-muted">
-                                                <CalendarCheck className="me-1"/> {new Date(b.booking_date).toLocaleDateString('en-GB')}
-                                                <span className="mx-2">|</span> 
-                                                {b.start_time.slice(0,5)} - {b.end_time.slice(0,5)}
-                                            </div>
-                                            {b.status === 'confirmed' && (
-                                                <div className="text-end mt-1">
-                                                    <Button variant="link" size="sm" className="text-danger p-0 small text-decoration-none" onClick={() => handleCancelBooking(b.id)}>
-                                                        <XCircle className="me-1"/> Cancel
-                                                    </Button>
+                                {myBookings.length === 0 ?
+                                    <p className="p-3 text-muted text-center small">No booking history found.</p> : 
+                                    myBookings.map(b => {
+                                        // Tính toán trạng thái hiển thị (đã fix múi giờ)
+                                        const statusInfo = getBookingStatus(b);
+                                        
+                                        return (
+                                            <div key={b.id} className={`booking-item status-${statusInfo.label.toLowerCase()} mb-2 pb-2 border-bottom`}>
+                                                <div className="d-flex justify-content-between align-items-start mb-1">
+                                                    <strong>{b.room_name}</strong>
+                                                    <Badge bg={statusInfo.variant} className="status-badge-mini">
+                                                        {statusInfo.label}
+                                                    </Badge>
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))
+                                                <div className="small text-muted">
+                                                    <CalendarCheck className="me-1"/> {new Date(b.booking_date).toLocaleDateString('en-GB')}
+                                                    <span className="mx-2">|</span> 
+                                                    {b.start_time.slice(0,5)} - {b.end_time.slice(0,5)}
+                                                </div>
+                                                
+                                                {/* Chỉ hiện nút Cancel nếu Confirmed VÀ Chưa hoàn thành */}
+                                                {b.status === 'confirmed' && !statusInfo.isCompleted && (
+                                                    <div className="text-end mt-1">
+                                                        <Button variant="link" size="sm" className="text-danger p-0 small text-decoration-none" onClick={() => handleCancelBooking(b.id)}>
+                                                            <XCircle className="me-1"/> Cancel
+                                                        </Button>
+                                                    </div>
+                                                )}
+
+                                                {/* Hiện icon check nếu đã hoàn thành */}
+                                                {statusInfo.isCompleted && (
+                                                    <div className="text-end mt-1">
+                                                        <small className="text-primary fst-italic">
+                                                            <CheckCircleFill className="me-1"/> Service used
+                                                        </small>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })
                                 }
                             </div>
                         </div>
@@ -206,7 +252,7 @@ const AmenityService = () => {
                 </Col>
             </Row>
 
-             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title">Book: {selectedRoom?.name}</Modal.Title>
                 </Modal.Header>

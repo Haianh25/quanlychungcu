@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Badge, Form, Row, Col, Card } from 'react-bootstrap';
 import axios from 'axios';
 import * as XLSX from 'xlsx'; 
-import { FileEarmarkExcelFill, LightningChargeFill, EyeFill, CheckCircleFill } from 'react-bootstrap-icons'; // Thêm icons
+import { FileEarmarkExcelFill, LightningChargeFill, EyeFill, CheckCircleFill } from 'react-bootstrap-icons'; 
+import Pagination from '../../components/admin/Pagination'; // [MỚI] Import Pagination
 import './BillManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -21,6 +22,10 @@ const BillManagement = () => {
     
     const [filterStatus, setFilterStatus] = useState('');
     const [filterRoom, setFilterRoom] = useState('');
+
+    // [MỚI] State cho phân trang
+    const [currentPage, setCurrentPage] = useState(1);
+    const [billsPerPage] = useState(10);
 
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('adminToken');
@@ -53,6 +58,14 @@ const BillManagement = () => {
             return matchStatus && matchRoom;
         });
     }, [bills, filterStatus, filterRoom]);
+
+    // [MỚI] Logic cắt trang
+    const indexOfLastBill = currentPage * billsPerPage;
+    const indexOfFirstBill = indexOfLastBill - billsPerPage;
+    const currentBills = filteredBills.slice(indexOfFirstBill, indexOfLastBill);
+
+    // [MỚI] Hàm chuyển trang
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const formatMonth = (dateStr) => {
         const date = new Date(dateStr);
@@ -131,6 +144,7 @@ const BillManagement = () => {
         } else if (e.target.name === 'filterStatus') {
             setFilterStatus(e.target.value);
         }
+        setCurrentPage(1); // [MỚI] Reset về trang 1 khi lọc
     };
 
     const handleExportExcel = () => {
@@ -222,12 +236,13 @@ const BillManagement = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredBills.length === 0 ? (
+                                    {/* [UPDATED] Sử dụng currentBills thay vì filteredBills */}
+                                    {currentBills.length === 0 ? (
                                         <tr><td colSpan="8" className="text-center text-muted py-4">No bills found matching your criteria.</td></tr>
                                     ) : (
-                                        filteredBills.map((bill, index) => (
+                                        currentBills.map((bill, index) => (
                                             <tr key={bill.bill_id}>
-                                                <td>{index + 1}</td>
+                                                <td>{indexOfFirstBill + index + 1}</td>
                                                 <td>
                                                     <div className="fw-bold text-dark">{bill.resident_name}</div>
                                                 </td>
@@ -249,10 +264,27 @@ const BillManagement = () => {
                                             </tr>
                                         ))
                                     )}
+                                    {/* Placeholder để giữ chiều cao bảng ổn định nếu ít row */}
+                                    {currentBills.length > 0 && currentBills.length < billsPerPage && Array.from({ length: billsPerPage - currentBills.length }).map((_, idx) => (
+                                        <tr key={`placeholder-${idx}`}><td colSpan="8" style={{height: '65px'}}></td></tr>
+                                    ))}
                                 </tbody>
                             </Table>
                         )}
                     </div>
+
+                    {/* [MỚI] Thanh Phân Trang */}
+                    {filteredBills.length > billsPerPage && (
+                        <div className="residem-pagination mt-4 d-flex justify-content-center">
+                            <Pagination
+                                itemsPerPage={billsPerPage}
+                                totalItems={filteredBills.length}
+                                paginate={paginate}
+                                currentPage={currentPage}
+                            />
+                        </div>
+                    )}
+
                 </Card.Body>
             </Card>
 
