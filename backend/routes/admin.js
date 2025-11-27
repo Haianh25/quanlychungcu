@@ -330,23 +330,44 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
     }
 });
 
+// [UPDATED] Get rooms in a block (WITH VEHICLE COUNTS)
 router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
     const { blockId } = req.params;
     try {
+        // [MỚI] Sử dụng Subquery để đếm số lượng xe theo loại
+        // Lưu ý: Dùng CAST(COUNT(...) AS INT) để đảm bảo trả về số (Postgres count trả về string/bigint)
         const rooms = await query(
             `SELECT 
                 r.id, 
                 r.room_number, 
                 r.floor, 
                 r.status, 
-                u.full_name as resident_name 
+                r.room_type,
+                r.area,
+                r.bedrooms,
+                u.full_name as resident_name,
+                
+                -- Đếm số lượng xe (chỉ đếm thẻ 'active' của resident đang ở)
+                (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'car') as car_count,
+                (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'motorbike') as motorbike_count,
+                (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'bicycle') as bicycle_count
+
              FROM rooms r 
              LEFT JOIN users u ON r.resident_id = u.id 
              WHERE r.block_id = $1 
              ORDER BY r.floor ASC, r.room_number ASC`,
             [blockId]
         );
-        res.status(200).json(rooms.rows);
+        
+        // Convert counts from string to number (nếu driver pg chưa tự convert)
+        const formattedRooms = rooms.rows.map(room => ({
+            ...room,
+            car_count: parseInt(room.car_count || 0),
+            motorbike_count: parseInt(room.motorbike_count || 0),
+            bicycle_count: parseInt(room.bicycle_count || 0)
+        }));
+
+        res.status(200).json(formattedRooms);
     } catch (error) {
         console.error("Error fetching room list:", error);
         res.status(500).json({ message: 'Server error fetching room list.' });

@@ -6,12 +6,17 @@ const bcrypt = require('bcryptjs');
 const { protect } = require('../middleware/authMiddleware');
 
 // === GET /api/profile/me ===
-// Lấy thông tin hồ sơ
+// Lấy thông tin hồ sơ (Kèm chi tiết căn hộ)
 router.get('/me', protect, async (req, res) => {
     const residentId = req.user.id;
     try {
+        // [UPDATED] Join với bảng rooms để lấy thông tin chi tiết căn hộ
         const result = await db.query(
-            'SELECT id, full_name, email, phone FROM users WHERE id = $1',
+            `SELECT u.id, u.full_name, u.email, u.phone, u.apartment_number, 
+                    r.area, r.bedrooms, r.room_type 
+             FROM users u
+             LEFT JOIN rooms r ON u.id = r.resident_id
+             WHERE u.id = $1`,
             [residentId]
         );
         if (result.rows.length === 0) {
@@ -57,7 +62,6 @@ router.put('/update-details', protect, async (req, res) => {
 });
 
 // === PUT /api/profile/change-password ===
-// (Giữ nguyên code cũ của bạn)
 router.put('/change-password', protect, async (req, res) => {
     const residentId = req.user.id;
     const { currentPassword, newPassword, confirmPassword } = req.body;

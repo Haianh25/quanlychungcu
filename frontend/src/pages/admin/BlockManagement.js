@@ -3,7 +3,7 @@ import axios from 'axios';
 import RoomDetailsModal from '../../components/admin/RoomDetailsModal';
 import './BlockManagement.css'; 
 import { Card, Form, Spinner, Alert, Row, Col, Badge } from 'react-bootstrap';
-import { Building, Layers, HouseDoorFill, PersonCheckFill, LayoutThreeColumns } from 'react-bootstrap-icons'; // Import icons
+import { Building, Layers, HouseDoorFill, PersonCheckFill, LayoutThreeColumns } from 'react-bootstrap-icons'; 
 
 const BlockManagement = () => {
     const [blocks, setBlocks] = useState([]);
@@ -149,7 +149,7 @@ const BlockManagement = () => {
                 </div>
             )}
 
-            {/* Stats Bar (Giao diện mới) */}
+            {/* Stats Bar */}
             {!loadingRooms && selectedBlockId && stats && (
                 <div className="stats-container fadeIn">
                     <div className="stat-card-mini">
@@ -195,9 +195,21 @@ const BlockManagement = () => {
                                     <div
                                         key={room.id}
                                         className={`room-box ${room.resident_name ? 'occupied' : 'available'}`}
-                                        title={room.resident_name ? `Occupied by: ${room.resident_name}` : 'Available'}
+                                        title={
+                                            `Type: ${room.room_type || 'N/A'}\nArea: ${room.area}m²\n${room.resident_name ? `Occupied by: ${room.resident_name}` : 'Available'}`
+                                        }
                                         onClick={() => handleShowDetailsModal(room)}
                                     >
+                                        {/* [UPDATED] Hiển thị Badge Type ở góc trái */}
+                                        {room.room_type && (
+                                            <span 
+                                                className="position-absolute top-0 start-0 badge rounded-0 rounded-bottom-end" 
+                                                style={{fontSize: '0.55rem', backgroundColor: room.room_type === 'A' ? '#17a2b8' : '#6610f2', color: 'white'}}
+                                            >
+                                                {room.room_type}
+                                            </span>
+                                        )}
+
                                         {room.room_number}
                                         <small>{room.resident_name ? 'Occupied' : 'Empty'}</small>
                                     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Tabs, Tab, Card, Form, Button, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
+import { HouseDoorFill, Grid3x3GapFill, MoonStarsFill } from 'react-bootstrap-icons'; // Thêm icon
 import './ProfilePage.css'; 
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -9,6 +10,9 @@ const ProfilePage = () => {
     const [key, setKey] = useState('details');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    
+    // [UPDATED] Thêm state lưu thông tin căn hộ
+    const [apartmentInfo, setApartmentInfo] = useState(null);
 
     const [detailsFormData, setDetailsFormData] = useState({ fullName: '', email: '', phone: '' });
     const [detailsLoading, setDetailsLoading] = useState(false);
@@ -41,6 +45,16 @@ const ProfilePage = () => {
                     email: res.data.email || '',
                     phone: res.data.phone || ''
                 });
+
+                // [UPDATED] Lưu thông tin căn hộ
+                if (res.data.apartment_number) {
+                    setApartmentInfo({
+                        name: res.data.apartment_number,
+                        area: res.data.area,
+                        bedrooms: res.data.bedrooms,
+                        type: res.data.room_type
+                    });
+                }
             } catch (err) {
                 console.error("Error loading profile:", err);
                 setError(err.response?.data?.message || "Failed to load profile.");
@@ -116,6 +130,39 @@ const ProfilePage = () => {
             <h2 className="mb-4 profile-page-title">Your Profile</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             
+            {/* [MỚI] Card Thông tin căn hộ (Chỉ hiện khi đã có phòng) */}
+            {apartmentInfo && (
+                <Card className="mb-4 border-0 shadow-sm" style={{ backgroundColor: '#fdfbf7', borderLeft: '5px solid #b99a7b' }}>
+                    <Card.Body className="d-flex align-items-center justify-content-around flex-wrap p-4">
+                        <div className="text-center mb-3 mb-md-0">
+                            <h6 className="text-muted text-uppercase small fw-bold mb-2">Apartment</h6>
+                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                <HouseDoorFill className="text-brown fs-4" />
+                                <span className="fs-4 fw-bold text-dark">{apartmentInfo.name}</span>
+                            </div>
+                        </div>
+                        <div className="vr d-none d-md-block mx-3 opacity-25"></div>
+                        <div className="text-center mb-3 mb-md-0">
+                            <h6 className="text-muted text-uppercase small fw-bold mb-2">Area (m²)</h6>
+                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                <Grid3x3GapFill className="text-brown fs-5" />
+                                <span className="fs-5 fw-bold">{apartmentInfo.area} m²</span>
+                            </div>
+                        </div>
+                        <div className="vr d-none d-md-block mx-3 opacity-25"></div>
+                        <div className="text-center">
+                            <h6 className="text-muted text-uppercase small fw-bold mb-2">Type</h6>
+                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                <MoonStarsFill className="text-brown fs-5" />
+                                <span className="fs-5 fw-bold">
+                                    {apartmentInfo.bedrooms} Bed (Type {apartmentInfo.type})
+                                </span>
+                            </div>
+                        </div>
+                    </Card.Body>
+                </Card>
+            )}
+
             <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
                 
                 {/* === TAB 1: THÔNG TIN CHI TIẾT === */}
