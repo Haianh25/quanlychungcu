@@ -75,7 +75,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         const oldRole = currentUser.role;
 
         // --- LOGIC: DEMOTION (Resident -> User) ---
-        // [MỚI] Lưu lại phòng cũ trước khi xóa
         if (oldRole === 'resident' && role === 'user') {
             console.log(`[Admin] Demoting user ${id}. Cleaning up services...`);
             
@@ -143,7 +142,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         }
 
         // --- Logic: PROMOTION (User -> Resident) ---
-        // [MỚI] Tự động gán lại phòng cũ và phục hồi dịch vụ nếu có last_room_id
         const newRole = setClauses.length > 0 ? updatedUser.rows[0].role : role;
         
         if (newRole === 'resident' && oldRole !== 'resident') {
@@ -335,7 +333,6 @@ router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
     const { blockId } = req.params;
     try {
         // [MỚI] Sử dụng Subquery để đếm số lượng xe theo loại
-        // Lưu ý: Dùng CAST(COUNT(...) AS INT) để đảm bảo trả về số (Postgres count trả về string/bigint)
         const rooms = await query(
             `SELECT 
                 r.id, 
@@ -478,6 +475,53 @@ router.delete('/news/:id', protect, isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error deleting news:', error);
         res.status(500).json({ message: 'Server error deleting news.' });
+    }
+});
+
+// ==========================================
+// 4. POLICY MANAGEMENT (MỚI - BỔ SUNG)
+// ==========================================
+
+// GET /api/admin/policies
+router.get('/policies', protect, isAdmin, async (req, res) => {
+    try {
+        // [UPDATED] Lấy cả cột max_bicycles
+        const result = await query("SELECT * FROM room_type_policies ORDER BY type_code ASC");
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching policies:', err);
+        res.status(500).json({ message: 'Server error fetching policies.' });
+    }
+});
+
+// PUT /api/admin/policies/:type_code
+router.put('/policies/:type_code', protect, isAdmin, async (req, res) => {
+    const { type_code } = req.params;
+    // [UPDATED] Nhận thêm max_bicycles từ Body
+    const { max_cars, max_motorbikes, max_bicycles, description } = req.body;
+
+    if (max_cars < 0 || max_motorbikes < 0 || max_bicycles < 0) {
+        return res.status(400).json({ message: 'Quotas cannot be negative.' });
+    }
+
+    try {
+        // [UPDATED] Cập nhật max_bicycles vào Database
+        const result = await query(
+            `UPDATE room_type_policies 
+             SET max_cars = $1, max_motorbikes = $2, max_bicycles = $3, description = $4, updated_at = NOW() 
+             WHERE type_code = $5 
+             RETURNING *`,
+            [max_cars, max_motorbikes, max_bicycles, description, type_code]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Policy not found.' });
+        }
+
+        res.json({ message: 'Policy updated successfully.', policy: result.rows[0] });
+    } catch (err) {
+        console.error('Error updating policy:', err);
+        res.status(500).json({ message: 'Server error updating policy.' });
     }
 });
 

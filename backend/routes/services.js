@@ -30,6 +30,40 @@ router.get('/fees-table', async (req, res) => {
     }
 });
 
+// [MỚI] GET /api/services/my-policy (Lấy chính sách giới hạn xe của User)
+router.get('/my-policy', protect, async (req, res) => {
+    const residentId = req.user.user ? req.user.user.id : req.user.id;
+    try {
+        // 1. Tìm loại phòng của user
+        const userCheck = await db.query(
+            `SELECT r.room_type 
+             FROM users u 
+             LEFT JOIN rooms r ON r.resident_id = u.id 
+             WHERE u.id = $1`, 
+            [residentId]
+        );
+        
+        const roomType = userCheck.rows[0]?.room_type || 'A'; // Mặc định A nếu chưa có phòng
+
+        // 2. Lấy chính sách từ DB
+        const policyRes = await db.query(
+            "SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", 
+            [roomType]
+        );
+        
+        let policy = { max_cars: 1, max_motorbikes: 2, max_bicycles: 2 }; // Default
+
+        if (policyRes.rows.length > 0) {
+            policy = policyRes.rows[0];
+        }
+
+        res.json({ roomType, ...policy });
+    } catch (err) {
+        console.error('Error fetching policy:', err);
+        res.status(500).json({ message: 'Server error fetching policy.' });
+    }
+});
+
 // GET /api/services/my-cards
 router.get('/my-cards', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
@@ -121,7 +155,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
 
         // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa + LẤY THÔNG TIN PHÒNG
         const userCheck = await client.query(
-            `SELECT u.apartment_number, r.room_type, r.bedrooms 
+            `SELECT u.apartment_number, r.room_type 
              FROM users u 
              LEFT JOIN rooms r ON r.resident_id = u.id 
              WHERE u.id = $1`, 
@@ -133,19 +167,28 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
-        // [UPDATED] Logic giới hạn xe dựa trên loại phòng (Dynamic Quota)
-        // Mặc định (nếu chưa có data): Type A
+        // [UPDATED] Logic giới hạn xe DYNAMIC (Đọc từ DB)
         const roomType = userInfo.room_type || 'A'; 
+
+        // [UPDATED] Lấy cả max_bicycles
+        const policyRes = await client.query(
+            "SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", 
+            [roomType]
+        );
         
         let maxCars = 1;
         let maxMotorbikes = 2;
+        let maxBicycles = 2; // Default fallback cho xe đạp
 
-        if (roomType === 'B') { // Phòng loại B (2 ngủ) được nhiều xe hơn
-            maxCars = 2;
-            maxMotorbikes = 3;
+        if (policyRes.rows.length > 0) {
+            maxCars = policyRes.rows[0].max_cars;
+            maxMotorbikes = policyRes.rows[0].max_motorbikes;
+            maxBicycles = policyRes.rows[0].max_bicycles; // Lấy từ DB
+        } else {
+            console.warn(`Warning: No policy found for Room Type ${roomType}. Using default limits.`);
         }
-        // Có thể thêm logic cho Type C, D...
 
+        // Đếm số xe hiện tại (bao gồm cả xe đạp)
         const activeCardRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status IN ($2, $3) GROUP BY vehicle_type',
             [residentId, 'active', 'inactive']
@@ -153,7 +196,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         const activeCounts = activeCardRes.rows.reduce((acc, row) => {
             acc[row.vehicle_type] = parseInt(row.count, 10);
             return acc;
-        }, { car: 0, motorbike: 0 });
+        }, { car: 0, motorbike: 0, bicycle: 0 }); // Init đủ loại
         
         const pendingReqRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_card_requests WHERE resident_id = $1 AND status = $2 AND request_type = $3 GROUP BY vehicle_type',
@@ -162,16 +205,22 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         const pendingCounts = pendingReqRes.rows.reduce((acc, row) => {
             acc[row.vehicle_type] = parseInt(row.count, 10);
             return acc;
-        }, { car: 0, motorbike: 0 });
+        }, { car: 0, motorbike: 0, bicycle: 0 }); // Init đủ loại
         
         const totalCarCount = (activeCounts.car || 0) + (pendingCounts.car || 0);
         const totalMotorbikeCount = (activeCounts.motorbike || 0) + (pendingCounts.motorbike || 0);
+        const totalBicycleCount = (activeCounts.bicycle || 0) + (pendingCounts.bicycle || 0);
         
+        // Kiểm tra giới hạn (Quota Check)
         if (vehicleType === 'car' && totalCarCount >= maxCars) {
             throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxCars} car(s) allowed.`);
         }
         if (vehicleType === 'motorbike' && totalMotorbikeCount >= maxMotorbikes) {
             throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxMotorbikes} motorbike(s) allowed.`);
+        }
+        // [UPDATED] Check giới hạn xe đạp
+        if (vehicleType === 'bicycle' && totalBicycleCount >= maxBicycles) {
+            throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxBicycles} bicycle(s) allowed.`);
         }
 
         await client.query(
@@ -203,7 +252,6 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error registering vehicle card:', err);
-        // Xóa ảnh nếu lỗi logic (để không tốn dung lượng)
         if (req.file) {
             fs.unlink(req.file.path, (unlinkErr) => {
                 if (unlinkErr) console.error("Error deleting uploaded file after DB error:", unlinkErr);

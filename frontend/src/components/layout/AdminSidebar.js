@@ -1,7 +1,7 @@
 // frontend/src/components/layout/AdminSidebar.js
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Speedometer2, People, HouseDoor, Grid, Newspaper, Truck, Receipt, Wallet2, CalendarEvent } from 'react-bootstrap-icons'; // Thêm icons
+import { Speedometer2, People, HouseDoor, Grid, Newspaper, Truck, Receipt, Wallet2, CalendarEvent, GearFill } from 'react-bootstrap-icons'; // [MỚI] Thêm GearFill
 
 const AdminSidebar = () => {
     // Helper để tạo class cho Link
@@ -51,6 +51,11 @@ const AdminSidebar = () => {
             </NavLink>
             <NavLink to="/admin/amenity-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
                 <CalendarEvent className="me-3 fs-5" /> Amenity Management
+            </NavLink>
+            
+            {/* [MỚI] Nút Policy Management */}
+            <NavLink to="/admin/policy-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <GearFill className="me-3 fs-5" /> Policy Management
             </NavLink>
         </div>
     );

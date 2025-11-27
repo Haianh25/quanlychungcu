@@ -11,7 +11,7 @@ const initialRegFormData = {
     fullName: '', dob: '', phone: '', relationship: '', licensePlate: '', brand: '', color: ''
 };
 
-// Component Bảng giá (Giữ nguyên như cũ)
+// Component Bảng giá (Giữ nguyên)
 const VehiclePriceTable = () => {
     const [prices, setPrices] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -97,6 +97,9 @@ const VehicleService = () => {
     const [manageLoading, setManageLoading] = useState(false);
     const [manageError, setManageError] = useState('');
     const [manageSuccess, setManageSuccess] = useState('');
+    
+    // [UPDATED] State cho Policy
+    const [policy, setPolicy] = useState({ max_cars: 0, max_motorbikes: 0, max_bicycles: 0, roomType: 'A' });
 
     const getUserAuthConfig = useCallback(() => {
          const token = localStorage.getItem('token');
@@ -116,22 +119,40 @@ const VehicleService = () => {
         finally { setLoading(false); }
     }, [getUserAuthConfig]);
 
+    // [UPDATED] Fetch Policy
+    useEffect(() => {
+        const fetchPolicy = async () => {
+            const config = getUserAuthConfig();
+            if (!config) return;
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/services/my-policy`, config);
+                setPolicy(res.data);
+            } catch (err) {
+                console.error("Failed to load policy", err);
+            }
+        };
+        fetchPolicy();
+    }, [getUserAuthConfig]);
+
     useEffect(() => { fetchExistingCards(); }, [fetchExistingCards]);
 
     const vehicleCounts = useMemo(() => {
-        const counts = { car: 0, motorbike: 0 };
+        const counts = { car: 0, motorbike: 0, bicycle: 0 };
         existingCards.forEach(card => {
             const type = card.vehicle_type || card.type;
             if (['active', 'inactive', 'pending_register'].includes(card.status)) {
                 if (type === 'car') counts.car++;
                 if (type === 'motorbike') counts.motorbike++;
+                if (type === 'bicycle') counts.bicycle++;
             }
         });
         return counts;
     }, [existingCards]);
 
-    const canRegisterCar = vehicleCounts.car < 2;
-    const canRegisterMotorbike = vehicleCounts.motorbike < 2;
+    // [UPDATED] Check limit using dynamic policy
+    const canRegisterCar = vehicleCounts.car < policy.max_cars;
+    const canRegisterMotorbike = vehicleCounts.motorbike < policy.max_motorbikes;
+    const canRegisterBicycle = vehicleCounts.bicycle < policy.max_bicycles; // Check for bike
     
     const handleVehicleSelect = (type) => { setRegVehicleType(type); setRegFormData(initialRegFormData); setRegFile(null); setRegError(''); setRegSuccess(''); };
     const handleRegFormChange = (e) => { setRegFormData({ ...regFormData, [e.target.name]: e.target.value }); };
@@ -143,8 +164,10 @@ const VehicleService = () => {
         if (!config) return;
         setRegLoading(true); setRegError(''); setRegSuccess('');
         
-        if (regVehicleType === 'car' && !canRegisterCar) { setRegError('Car limit reached (Max 2).'); setRegLoading(false); return; }
-        if (regVehicleType === 'motorbike' && !canRegisterMotorbike) { setRegError('Motorbike limit reached (Max 2).'); setRegLoading(false); return; }
+        if (regVehicleType === 'car' && !canRegisterCar) { setRegError(`Car limit reached (Max ${policy.max_cars}).`); setRegLoading(false); return; }
+        if (regVehicleType === 'motorbike' && !canRegisterMotorbike) { setRegError(`Motorbike limit reached (Max ${policy.max_motorbikes}).`); setRegLoading(false); return; }
+        if (regVehicleType === 'bicycle' && !canRegisterBicycle) { setRegError(`Bicycle limit reached (Max ${policy.max_bicycles}).`); setRegLoading(false); return; }
+        
         if (!regFile) { setRegError('Please upload proof photo.'); setRegLoading(false); return; }
 
         const formData = new FormData();
@@ -156,7 +179,7 @@ const VehicleService = () => {
         try {
             await axios.post(`${API_BASE_URL}/api/services/register-card`, formData, { ...config, headers: { ...config.headers, 'Content-Type': 'multipart/form-data' } });
             setRegSuccess('Request submitted successfully! Waiting for approval.'); 
-            setRegVehicleType(null); // Reset về màn hình chọn xe để ẩn form
+            setRegVehicleType(null); 
             fetchExistingCards(); 
         } catch (err) { 
             setRegError(err.response?.data?.message || 'Registration failed.');
@@ -352,7 +375,10 @@ const VehicleService = () => {
                             {!regVehicleType ? (
                                 <Row className="g-3 mt-2">
                                     {['car', 'motorbike', 'bicycle'].map(type => {
-                                         const disabled = (type === 'car' && !canRegisterCar) || (type === 'motorbike' && !canRegisterMotorbike);
+                                        // [UPDATED] Check disabled status using dynamic policy
+                                         const disabled = (type === 'car' && !canRegisterCar) || 
+                                                          (type === 'motorbike' && !canRegisterMotorbike) ||
+                                                          (type === 'bicycle' && !canRegisterBicycle);
                                         return (
                                             <Col md={4} key={type}>
                                                 <Card className={`text-center h-100 ${disabled ? 'vehicle-selection-card-disabled' : 'vehicle-selection-card'}`} onClick={() => !disabled && handleVehicleSelect(type)}>
@@ -390,19 +416,22 @@ const VehicleService = () => {
                                 <ListGroup variant="flush" className="policy-list">
                                      <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                         <span><CarFrontFill className="me-2 text-muted"/> Car</span>
-                                        <Badge bg="warning" text="dark" className="rounded-pill">Max 2</Badge>
+                                        {/* [UPDATED] Display dynamic limit */}
+                                        <Badge bg="warning" text="dark" className="rounded-pill">Max {policy.max_cars}</Badge>
                                     </ListGroup.Item>
                                     <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                          <span><Scooter className="me-2 text-muted"/> Motorbike</span>
-                                        <Badge bg="warning" text="dark" className="rounded-pill">Max 2</Badge>
+                                        {/* [UPDATED] Display dynamic limit */}
+                                        <Badge bg="warning" text="dark" className="rounded-pill">Max {policy.max_motorbikes}</Badge>
                                      </ListGroup.Item>
                                     <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                         <span><Bicycle className="me-2 text-muted"/> Bicycle</span>
-                                         <Badge bg="success" className="rounded-pill">Unlimited</Badge>
+                                        {/* [UPDATED] Display dynamic limit */}
+                                        <Badge bg="success" className="rounded-pill">Max {policy.max_bicycles}</Badge>
                                     </ListGroup.Item>
                                 </ListGroup>
                                 <div className="mt-3 small text-muted fst-italic">
-                                    * Limit applies per apartment unit.
+                                    * Policy for your Room Type: <strong>{policy.roomType}</strong>
                                 </div>
                             </Card.Body>
                         </Card>

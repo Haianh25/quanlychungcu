@@ -35,8 +35,9 @@ import VehicleManagement from './pages/admin/VehicleManagement';
 import BillManagement from './pages/admin/BillManagement';
 import FeeManagement from './pages/admin/FeeManagement';
 import AmenityManagement from './pages/admin/AmenityManagement';
+import PolicyManagement from './pages/admin/PolicyManagement'; // [MỚI] Import trang Policy
 
-// [MỚI] Component xử lý logic chặn tài khoản
+// Component xử lý logic chặn tài khoản
 const AppContent = () => {
     const navigate = useNavigate();
     const [showBlockModal, setShowBlockModal] = useState(false);
@@ -126,6 +127,7 @@ const AppContent = () => {
                             <Route path="bill-management" element={<BillManagement />} />
                             <Route path="fee-management" element={<FeeManagement />} />
                             <Route path="amenity-management" element={<AmenityManagement />} />
+                            <Route path="policy-management" element={<PolicyManagement />} /> {/* [MỚI] Route Policy */}
                         </Route>
                     </Route>
                 </Routes>
