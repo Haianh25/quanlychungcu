@@ -119,13 +119,33 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     try {
         await client.query('BEGIN');
 
-        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
-        const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
-        if (!userCheck.rows[0]?.apartment_number) {
+        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa + LẤY THÔNG TIN PHÒNG
+        const userCheck = await client.query(
+            `SELECT u.apartment_number, r.room_type, r.bedrooms 
+             FROM users u 
+             LEFT JOIN rooms r ON r.resident_id = u.id 
+             WHERE u.id = $1`, 
+            [residentId]
+        );
+        
+        const userInfo = userCheck.rows[0];
+        if (!userInfo || !userInfo.apartment_number) {
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
-        // Logic kiểm tra giới hạn
+        // [UPDATED] Logic giới hạn xe dựa trên loại phòng (Dynamic Quota)
+        // Mặc định (nếu chưa có data): Type A
+        const roomType = userInfo.room_type || 'A'; 
+        
+        let maxCars = 1;
+        let maxMotorbikes = 2;
+
+        if (roomType === 'B') { // Phòng loại B (2 ngủ) được nhiều xe hơn
+            maxCars = 2;
+            maxMotorbikes = 3;
+        }
+        // Có thể thêm logic cho Type C, D...
+
         const activeCardRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status IN ($2, $3) GROUP BY vehicle_type',
             [residentId, 'active', 'inactive']
@@ -134,6 +154,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
             acc[row.vehicle_type] = parseInt(row.count, 10);
             return acc;
         }, { car: 0, motorbike: 0 });
+        
         const pendingReqRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_card_requests WHERE resident_id = $1 AND status = $2 AND request_type = $3 GROUP BY vehicle_type',
             [residentId, 'pending', 'register']
@@ -142,14 +163,15 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
             acc[row.vehicle_type] = parseInt(row.count, 10);
             return acc;
         }, { car: 0, motorbike: 0 });
+        
         const totalCarCount = (activeCounts.car || 0) + (pendingCounts.car || 0);
         const totalMotorbikeCount = (activeCounts.motorbike || 0) + (pendingCounts.motorbike || 0);
         
-        if (vehicleType === 'car' && totalCarCount >= 2) {
-            throw new Error('Limit reached: 2 car cards allowed.');
+        if (vehicleType === 'car' && totalCarCount >= maxCars) {
+            throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxCars} car(s) allowed.`);
         }
-        if (vehicleType === 'motorbike' && totalMotorbikeCount >= 2) {
-            throw new Error('Limit reached: 2 motorbike cards allowed.');
+        if (vehicleType === 'motorbike' && totalMotorbikeCount >= maxMotorbikes) {
+            throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxMotorbikes} motorbike(s) allowed.`);
         }
 
         await client.query(
@@ -187,8 +209,8 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
                 if (unlinkErr) console.error("Error deleting uploaded file after DB error:", unlinkErr);
             });
         }
-        // Trả về lỗi 403 nếu là lỗi chưa có phòng, ngược lại 500
-        if (err.message.includes('assigned an apartment')) {
+        // Trả về lỗi 403 nếu là lỗi chưa có phòng hoặc quá giới hạn, ngược lại 500
+        if (err.message.includes('assigned an apartment') || err.message.includes('Limit reached')) {
             res.status(403).json({ message: err.message });
         } else {
             res.status(500).json({ message: err.message || 'Server error.' });

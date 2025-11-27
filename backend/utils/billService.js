@@ -23,11 +23,12 @@ async function generateBillsForMonth(month, year) {
         const prevMonthStartDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
         const currentMonthStartDate = `${year}-${String(month).padStart(2, '0')}-01`;
 
-        // Lấy thông tin phòng và user
+        // [UPDATED] Lấy thêm thông tin area (diện tích) của phòng
         const resRooms = await client.query(
             `SELECT 
                 r.id AS room_id, 
                 r.resident_id AS user_id, 
+                r.area, 
                 u.email, 
                 u.full_name 
              FROM rooms r
@@ -51,7 +52,7 @@ async function generateBillsForMonth(month, year) {
         let generatedCount = 0;
 
         for (const room of resRooms.rows) {
-            const { room_id, user_id, email, full_name } = room;
+            const { room_id, user_id, email, full_name, area } = room;
 
             const resCheck = await client.query(
                 `SELECT 1 FROM bills 
@@ -67,13 +68,28 @@ async function generateBillsForMonth(month, year) {
             let totalAmount = 0;
             const billItems = [];
 
-            // --- 3a. Phí cố định ---
+            // --- 3a. Phí cố định (Đã cập nhật logic tính theo m2) ---
             if (fees['MANAGEMENT_FEE']) {
+                // [UPDATED] Tính phí quản lý dựa trên diện tích (Area x Price per m2)
+                // Nếu area chưa có (null/0), mặc định tính là 1 unit (hoặc bỏ qua tùy logic, ở đây fallback là 1)
+                const roomArea = parseFloat(area) || 0;
+                let managementFee = 0;
+                let itemName = '';
+
+                if (roomArea > 0) {
+                    managementFee = fees['MANAGEMENT_FEE'] * roomArea;
+                    itemName = `Apartment Management Fee (${roomArea}m² x ${fees['MANAGEMENT_FEE'].toLocaleString('vi-VN')} VND)`;
+                } else {
+                    // Fallback cho phòng cũ chưa có diện tích: Tính giá gốc (coi như trọn gói)
+                    managementFee = fees['MANAGEMENT_FEE'];
+                    itemName = `Apartment Management Fee (${month}/${year})`;
+                }
+
                 billItems.push({
-                    name: `Apartment Management Fee (${month}/${year})`,
-                    price: fees['MANAGEMENT_FEE'],
+                    name: itemName,
+                    price: managementFee,
                 });
-                totalAmount += fees['MANAGEMENT_FEE'];
+                totalAmount += managementFee;
             }
             if (fees['ADMIN_FEE']) {
                 billItems.push({
@@ -285,6 +301,10 @@ async function generateMoveInBill(userId, roomId, client) {
     // Nếu còn ít hơn 3 ngày thì thôi, để tháng sau tính luôn (tùy chính sách)
     if (daysToCharge <= 0) return; 
 
+    // [UPDATED] Lấy thông tin diện tích phòng
+    const roomRes = await client.query("SELECT area FROM rooms WHERE id = $1", [roomId]);
+    const roomArea = parseFloat(roomRes.rows[0]?.area) || 0;
+
     // Lấy bảng giá
     const resFees = await client.query("SELECT fee_code, price FROM fees WHERE fee_code IN ('MANAGEMENT_FEE', 'ADMIN_FEE')");
     const fees = {};
@@ -293,13 +313,25 @@ async function generateMoveInBill(userId, roomId, client) {
     let totalAmount = 0;
     const billItems = [];
 
-    // Tính phí quản lý theo tỷ lệ
+    // Tính phí quản lý theo tỷ lệ (VÀ THEO DIỆN TÍCH)
     if (fees['MANAGEMENT_FEE']) {
-        const dailyRate = fees['MANAGEMENT_FEE'] / lastDayOfMonth;
+        let monthlyFee = 0;
+        let desc = '';
+
+        if (roomArea > 0) {
+            monthlyFee = fees['MANAGEMENT_FEE'] * roomArea;
+            desc = `Management Fee (Prorated ${daysToCharge} days for ${roomArea}m²)`;
+        } else {
+             monthlyFee = fees['MANAGEMENT_FEE'];
+             desc = `Management Fee (Prorated ${daysToCharge} days)`;
+        }
+
+        const dailyRate = monthlyFee / lastDayOfMonth;
         const proratedAmount = Math.round(dailyRate * daysToCharge);
+        
         totalAmount += proratedAmount;
         billItems.push({
-            name: `Management Fee (Move-in Prorated: ${daysToCharge}/${lastDayOfMonth} days)`,
+            name: desc,
             price: proratedAmount
         });
     }
