@@ -1,27 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios'; // [MỚI]
 import '../../pages/Homepage.css';
 
 const ResidentFooter = () => {
     const navigate = useNavigate();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [apartmentNumber, setApartmentNumber] = useState(null);
 
-    // --- [LOGIC TỪ HEADER] Kiểm tra token và role ---
+    // [MỚI] Polling check status phòng (Logic y hệt Header)
     useEffect(() => {
+        let intervalId;
         const token = localStorage.getItem('token');
+
+        const fetchStatus = async () => {
+            try {
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                const res = await axios.get('http://localhost:5000/api/profile/status', config);
+                if (res.data.apartment_number !== apartmentNumber) {
+                    setApartmentNumber(res.data.apartment_number);
+                }
+            } catch (e) { /* Ignore */ }
+        };
+
         if (token) {
             try {
                 const decoded = jwtDecode(token);
-                // Kiểm tra hết hạn
                 if (decoded.exp < Date.now() / 1000) {
                     localStorage.removeItem('token');
                     setIsLoggedIn(false);
-                    setUserRole(null);
                 } else {
                     setIsLoggedIn(true);
-                    // Lấy role (xử lý các trường hợp role khác nhau từ backend)
+                    
+                    // Get Role
                     const rawRole = decoded.role || decoded.roles || decoded.user?.role;
                     let normalizedRole = null;
                     if (Array.isArray(rawRole)) {
@@ -32,25 +45,38 @@ const ResidentFooter = () => {
                         normalizedRole = String(rawRole).toLowerCase();
                     }
                     setUserRole(normalizedRole);
+
+                    // Set initial apartment
+                    if (decoded.apartment_number) setApartmentNumber(decoded.apartment_number);
+
+                    // Start polling
+                    intervalId = setInterval(fetchStatus, 5000);
                 }
             } catch (e) {
                 localStorage.removeItem('token');
                 setIsLoggedIn(false);
-                setUserRole(null);
             }
         } else {
             setIsLoggedIn(false);
-            setUserRole(null);
         }
+
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
     }, []);
 
     const isResident = isLoggedIn && userRole === 'resident';
+    const hasRoom = isResident && apartmentNumber;
 
-    // Hàm xử lý click cho các link bị khóa
     const handleRestrictedLinkClick = (e, path) => {
-        e.preventDefault(); // Ngăn chuyển trang mặc định
+        e.preventDefault(); 
+        
         if (isResident) {
-            navigate(path);
+            if (hasRoom) {
+                navigate(path);
+            } else {
+                alert("Access Denied: You have not been assigned an apartment yet. Please contact Admin to use this service.");
+            }
         } else if (isLoggedIn) {
             alert("Access Denied: You must be a verified Resident to access this feature.");
         } else {
@@ -77,7 +103,7 @@ const ResidentFooter = () => {
                         </p>
                     </div>
 
-                    {/* COLUMN 2: QUICK LINKS (ĐÃ SỬA LOGIC) */}
+                    {/* COLUMN 2: QUICK LINKS */}
                     <div className="col-lg-3 col-md-6 mb-4 mb-lg-0">
                         <h5 className="footer-heading-compact">Quick Links</h5>
                         <ul className="footer-links-list">
@@ -99,7 +125,14 @@ const ResidentFooter = () => {
                             
                             {/* News */}
                             <li>
-                                <a href="/news" onClick={(e) => handleRestrictedLinkClick(e, '/news')} className={!isResident ? 'text-muted' : ''}>
+                                <a href="/news" onClick={(e) => {
+                                    e.preventDefault();
+                                    if(isResident) navigate('/news');
+                                    else if(isLoggedIn) alert("Access Denied.");
+                                    else {
+                                        if(window.confirm("Please login.")) navigate('/login');
+                                    }
+                                }} className={!isResident ? 'text-muted' : ''}>
                                     News {!isResident && <i className="bi bi-lock-fill ms-1" style={{fontSize: '0.8em'}}></i>}
                                 </a>
                             </li>

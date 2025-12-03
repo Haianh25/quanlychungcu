@@ -62,6 +62,41 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
         }
         const request = requestRes.rows[0];
 
+        // [NEW - QUOTA CHECK FOR APPROVE] ---
+        // Chỉ kiểm tra khi là đăng ký mới (register) hoặc cấp lại (reissue)
+        if (request.request_type === 'register') {
+            // 1. Lấy thông tin phòng
+            const roomRes = await client.query('SELECT r.room_type FROM rooms r WHERE r.resident_id = $1', [request.resident_id]);
+            // Nếu chưa có phòng thì lấy mặc định A (hoặc chặn luôn tùy logic, ở đây tạm cho qua hoặc dùng A)
+            const roomType = roomRes.rows[0]?.room_type || 'A';
+
+            // 2. Lấy policy
+            const policyRes = await client.query("SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", [roomType]);
+            let maxCount = 99; // Default fallback
+            if (policyRes.rows.length > 0) {
+                const p = policyRes.rows[0];
+                if (request.vehicle_type === 'car') maxCount = p.max_cars;
+                else if (request.vehicle_type === 'motorbike') maxCount = p.max_motorbikes;
+                else if (request.vehicle_type === 'bicycle') maxCount = p.max_bicycles;
+            }
+
+            // 3. Đếm xe đang active
+            const countRes = await client.query(
+                "SELECT COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = 'active' AND vehicle_type = $2",
+                [request.resident_id, request.vehicle_type]
+            );
+            const currentActive = parseInt(countRes.rows[0].count);
+
+            // 4. Check
+            if (currentActive >= maxCount) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ 
+                    message: `Cannot approve. Limit reached for Room Type ${roomType}: Max ${maxCount} ${request.vehicle_type}(s).` 
+                });
+            }
+        }
+        // --- END QUOTA CHECK ---
+
         let oneTimeFeeAmount = 0;
         if (request.request_type === 'register' || request.request_type === 'reissue') {
             let feeCode = '';
@@ -241,22 +276,53 @@ router.patch('/vehicle-cards/:id/status', protect, isAdmin, async (req, res) => 
     }
 
     try {
-        const currentCard = await db.query('SELECT status FROM vehicle_cards WHERE id = $1', [cardId]);
+        const currentCard = await db.query('SELECT status, resident_id, vehicle_type FROM vehicle_cards WHERE id = $1', [cardId]);
         if (currentCard.rows.length === 0) {
             return res.status(404).json({ message: 'Card not found.' });
         }
-        if (currentCard.rows[0].status === 'canceled' || currentCard.rows[0].status === 'lost') {
-            return res.status(400).json({ message: `Cannot change status of a ${currentCard.rows[0].status} card.` });
+        const cardData = currentCard.rows[0];
+        
+        if (cardData.status === 'canceled' || cardData.status === 'lost') {
+            return res.status(400).json({ message: `Cannot change status of a ${cardData.status} card.` });
         }
+
+        // [MỚI - QUOTA CHECK] Nếu kích hoạt (inactive -> active), phải kiểm tra giới hạn
+        if (status === 'active' && cardData.status !== 'active') {
+            // 1. Lấy thông tin phòng
+            const roomRes = await db.query('SELECT r.room_type FROM rooms r WHERE r.resident_id = $1', [cardData.resident_id]);
+            const roomType = roomRes.rows[0]?.room_type || 'A';
+
+            // 2. Lấy policy
+            const policyRes = await db.query("SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", [roomType]);
+            let maxCount = 99; // Default fallback
+            if (policyRes.rows.length > 0) {
+                const p = policyRes.rows[0];
+                if (cardData.vehicle_type === 'car') maxCount = p.max_cars;
+                else if (cardData.vehicle_type === 'motorbike') maxCount = p.max_motorbikes;
+                else if (cardData.vehicle_type === 'bicycle') maxCount = p.max_bicycles;
+            }
+
+            // 3. Đếm số xe đang active (KHÔNG tính xe hiện tại vì nó đang inactive)
+            const countRes = await db.query(
+                "SELECT COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = 'active' AND vehicle_type = $2",
+                [cardData.resident_id, cardData.vehicle_type]
+            );
+            const currentActive = parseInt(countRes.rows[0].count);
+
+            // 4. So sánh
+            if (currentActive >= maxCount) {
+                return res.status(400).json({ 
+                    message: `Limit reached for Room Type ${roomType}: Max ${maxCount} ${cardData.vehicle_type}(s). Cannot activate this card.` 
+                });
+            }
+        }
+        // --- END QUOTA CHECK ---
 
         const result = await db.query(
             'UPDATE vehicle_cards SET status = $1 WHERE id = $2 RETURNING id',
             [status, cardId]
         );
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Card not found.' });
-        }
         res.json({ message: `Card #${cardId} status updated to "${status}".` });
     } catch (err) {
         console.error(`Error updating status for vehicle card ${cardId}:`, err);

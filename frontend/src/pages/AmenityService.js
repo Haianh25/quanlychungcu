@@ -89,7 +89,13 @@ const AmenityService = () => {
         } catch (err) { alert('Failed to cancel booking.'); }
     };
 
-    const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+    // [UPDATED] Đổi format từ mặc định (có thể là đ) sang 'VND' thủ công hoặc locale chuẩn
+    // Cách đơn giản nhất để hiện đúng "100.000 VND" như yêu cầu:
+    const formatCurrency = (val) => {
+        // Format số trước: 100000 -> 100.000
+        const numberPart = new Intl.NumberFormat('vi-VN').format(val);
+        return `${numberPart} VND`; 
+    };
 
     // --- [ĐÃ FIX LỖI MÚI GIỜ] HÀM KIỂM TRA TRẠNG THÁI ---
     const getBookingStatus = (booking) => {
@@ -146,6 +152,7 @@ const AmenityService = () => {
                                                 <div className="amenity-img-placeholder">No Image</div>
                                             )}
                                             <span className="price-badge-overlay">
+                                                {/* [UPDATED] Sử dụng hàm format mới */}
                                                 {formatCurrency(room.current_price)} / Hour
                                             </span>
                                         </div>
@@ -286,6 +293,7 @@ const AmenityService = () => {
                         </Row>
                         <div className="alert alert-warning d-flex justify-content-between align-items-center mt-3 mb-0">
                             <span>Estimated Cost:</span>
+                            {/* [UPDATED] Hiển thị giá ước tính với định dạng VND */}
                             <strong style={{ fontSize: '1.2rem', color: '#856404' }}>{formatCurrency(totalPrice)}</strong>
                         </div>
                     </Modal.Body>

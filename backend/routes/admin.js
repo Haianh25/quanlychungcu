@@ -328,11 +328,70 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
     }
 });
 
-// [UPDATED] Get rooms in a block (WITH VEHICLE COUNTS)
+// [NEW API] Unassign Room (Trả phòng/Rời đi)
+router.post('/unassign-room', protect, isAdmin, async (req, res) => {
+    const { residentId } = req.body;
+    
+    if (!residentId) {
+        return res.status(400).json({ message: 'Missing residentId.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Kiểm tra resident có phòng không
+        const userRes = await client.query('SELECT apartment_number, id FROM users WHERE id = $1', [residentId]);
+        if (userRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Resident not found.' });
+        }
+        
+        const currentApartment = userRes.rows[0].apartment_number;
+        if (!currentApartment) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Resident does not have an assigned room.' });
+        }
+
+        console.log(`[Admin] Unassigning resident ${residentId} from room ${currentApartment}`);
+
+        // 2. Xóa liên kết trong bảng rooms
+        await client.query('UPDATE rooms SET resident_id = NULL WHERE resident_id = $1', [residentId]);
+
+        // 3. Xóa apartment_number trong bảng users
+        await client.query('UPDATE users SET apartment_number = NULL WHERE id = $1', [residentId]);
+
+        // 4. Vô hiệu hóa thẻ xe (chuyển sang inactive)
+        await client.query("UPDATE vehicle_cards SET status = 'inactive' WHERE resident_id = $1 AND status = 'active'", [residentId]);
+
+        // 5. Gửi thông báo
+        try {
+            const message = `You have been unassigned from apartment ${currentApartment}. Your vehicle cards have been deactivated. Please contact admin if this is a mistake.`;
+            await client.query(
+                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                [residentId, message, '/profile']
+            );
+        } catch (notifyError) {
+            console.error('Error sending unassign notification:', notifyError);
+        }
+
+        await client.query('COMMIT');
+        res.status(200).json({ message: `Successfully unassigned resident from ${currentApartment}.` });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Error unassigning room:", error);
+        res.status(500).json({ message: 'Server error unassigning room.' });
+    } finally {
+        client.release();
+    }
+});
+
+// [UPDATED] Get rooms in a block (WITH VEHICLE COUNTS & UNPAID BILLS)
 router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
     const { blockId } = req.params;
     try {
-        // [MỚI] Sử dụng Subquery để đếm số lượng xe theo loại
+        // [MỚI] Thêm subquery đếm unpaid_bills
         const rooms = await query(
             `SELECT 
                 r.id, 
@@ -342,12 +401,15 @@ router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
                 r.room_type,
                 r.area,
                 r.bedrooms,
+                r.resident_id,
                 u.full_name as resident_name,
                 
-                -- Đếm số lượng xe (chỉ đếm thẻ 'active' của resident đang ở)
                 (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'car') as car_count,
                 (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'motorbike') as motorbike_count,
-                (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'bicycle') as bicycle_count
+                (SELECT COUNT(*) FROM vehicle_cards v WHERE v.resident_id = r.resident_id AND v.status = 'active' AND v.vehicle_type = 'bicycle') as bicycle_count,
+
+                -- [NEW] Đếm số hóa đơn chưa thanh toán của resident tại phòng này
+                (SELECT COUNT(*) FROM bills b WHERE b.room_id = r.id AND b.user_id = r.resident_id AND b.status IN ('unpaid', 'overdue')) as unpaid_bills_count
 
              FROM rooms r 
              LEFT JOIN users u ON r.resident_id = u.id 
@@ -356,12 +418,12 @@ router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
             [blockId]
         );
         
-        // Convert counts from string to number (nếu driver pg chưa tự convert)
         const formattedRooms = rooms.rows.map(room => ({
             ...room,
             car_count: parseInt(room.car_count || 0),
             motorbike_count: parseInt(room.motorbike_count || 0),
-            bicycle_count: parseInt(room.bicycle_count || 0)
+            bicycle_count: parseInt(room.bicycle_count || 0),
+            unpaid_bills_count: parseInt(room.unpaid_bills_count || 0) // Convert to int
         }));
 
         res.status(200).json(formattedRooms);

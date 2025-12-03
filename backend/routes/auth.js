@@ -118,13 +118,15 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Incorrect email or password.' });
         }
         
+        // [CẬP NHẬT QUAN TRỌNG] Thêm apartment_number vào Token để Frontend check quyền
         const token = jwt.sign(
             {
                 id: foundUser.id,
                 email: foundUser.email,
                 role: foundUser.role,
                 full_name: foundUser.full_name,
-                avatar_url: foundUser.avatar_url || null
+                avatar_url: foundUser.avatar_url || null,
+                apartment_number: foundUser.apartment_number || null // Thêm dòng này
             },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }

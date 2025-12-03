@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import AssignRoomModal from '../../components/admin/AssignRoomModal';
 import Pagination from '../../components/admin/Pagination';
-import { Card, Form, Table, Alert, InputGroup } from 'react-bootstrap';
-import { Search, HouseAdd, HouseCheck, ExclamationCircle, ArrowUp, ArrowDown } from 'react-bootstrap-icons';
+import { Card, Form, Table, Alert, InputGroup, Button, Spinner } from 'react-bootstrap';
+import { Search, HouseAdd, HouseCheck, ExclamationCircle, ArrowUp, ArrowDown, PersonDash } from 'react-bootstrap-icons';
 import './ResidentManagement.css';
 
 const ResidentManagement = () => {
@@ -18,6 +18,9 @@ const ResidentManagement = () => {
 
     // [MỚI] State cho sắp xếp
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+
+    // [MỚI] State loading cho hành động Unassign
+    const [unassignLoading, setUnassignLoading] = useState(null); // null hoặc id của resident đang xử lý
 
     const fetchResidents = async () => {
         try {
@@ -46,6 +49,31 @@ const ResidentManagement = () => {
 
     const handleAssignSuccess = () => {
         fetchResidents();
+    };
+
+    // [MỚI] Hàm xử lý Unassign (Trả phòng)
+    const handleUnassignRoom = async (resident) => {
+        if (!window.confirm(`Are you sure you want to remove resident "${resident.full_name}" from room ${resident.apartment_number}?`)) {
+            return;
+        }
+
+        setUnassignLoading(resident.id);
+        try {
+            const token = localStorage.getItem('adminToken');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            
+            await axios.post('http://localhost:5000/api/admin/unassign-room', {
+                residentId: resident.id
+            }, config);
+
+            // Refresh danh sách sau khi thành công
+            await fetchResidents();
+            alert('Resident unassigned successfully.');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to unassign room.');
+        } finally {
+            setUnassignLoading(null);
+        }
     };
 
     // 1. Lọc theo tìm kiếm
@@ -139,10 +167,10 @@ const ResidentManagement = () => {
                     <div className="table-wrapper">
                         <Table hover striped className="residem-table align-middle">
                             <colgroup>
-                                <col style={{ width: '30%' }} />
-                                <col style={{ width: '30%' }} />
                                 <col style={{ width: '25%' }} />
-                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '25%' }} />
+                                <col style={{ width: '20%' }} />
+                                <col style={{ width: '30%' }} />
                             </colgroup>
                             <thead>
                                 <tr>
@@ -181,12 +209,32 @@ const ResidentManagement = () => {
                                                 )}
                                             </td>
                                             <td className="col-actions">
-                                                <button 
-                                                    className="btn btn-residem-primary btn-sm d-inline-flex align-items-center gap-2" 
-                                                    onClick={() => handleShowModal(resident)}
-                                                >
-                                                    <HouseAdd /> Assign Room
-                                                </button>
+                                                {/* Hiển thị nút Gán Phòng nếu chưa có phòng */}
+                                                {!resident.apartment_number && (
+                                                    <button 
+                                                        className="btn btn-residem-primary btn-sm d-inline-flex align-items-center gap-2" 
+                                                        onClick={() => handleShowModal(resident)}
+                                                    >
+                                                        <HouseAdd /> Assign Room
+                                                    </button>
+                                                )}
+
+                                                {/* [MỚI] Hiển thị nút Trả Phòng nếu ĐÃ có phòng */}
+                                                {resident.apartment_number && (
+                                                    <Button 
+                                                        variant="outline-danger" 
+                                                        size="sm" 
+                                                        className="d-inline-flex align-items-center gap-2 ms-2"
+                                                        onClick={() => handleUnassignRoom(resident)}
+                                                        disabled={unassignLoading === resident.id}
+                                                    >
+                                                        {unassignLoading === resident.id ? (
+                                                            <Spinner size="sm" animation="border" />
+                                                        ) : (
+                                                            <><PersonDash /> Unassign Room</>
+                                                        )}
+                                                    </Button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))

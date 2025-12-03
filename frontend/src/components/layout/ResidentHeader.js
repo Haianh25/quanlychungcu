@@ -23,10 +23,11 @@ function timeAgo(date) {
 }
 
 const ResidentHeader = () => {
-    // --- Toàn bộ logic state và các hàm của bạn (isLoggedIn, fetchNotifications, v.v.) giữ nguyên ---
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
+    // State lưu số phòng
+    const [apartmentNumber, setApartmentNumber] = useState(null);
     
     const navigate = useNavigate();
     const location = useLocation(); 
@@ -37,6 +38,29 @@ const ResidentHeader = () => {
     const getAuthToken = (tokenType = 'token') => { 
         return localStorage.getItem(tokenType);
     }
+
+    // [MỚI] Hàm fetch trạng thái phòng Real-time
+    const fetchProfileStatus = useCallback(async () => {
+        const token = getAuthToken();
+        if (!token) return;
+        try {
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            // Gọi API nhẹ để lấy status mới nhất
+            const res = await axios.get('http://localhost:5000/api/profile/status', config);
+            
+            // Cập nhật state nếu có sự thay đổi
+            if (res.data.apartment_number !== apartmentNumber) {
+                console.log("Apartment status updated:", res.data.apartment_number);
+                setApartmentNumber(res.data.apartment_number);
+            }
+            if (res.data.role !== userRole && userRole !== null) {
+                 // Nếu role bị thay đổi (VD: bị demote), reload trang để áp dụng
+                 window.location.reload();
+            }
+        } catch (err) {
+            // Không làm gì nếu lỗi nhẹ, để tránh spam console
+        }
+    }, [apartmentNumber, userRole]);
 
     const fetchNotifications = useCallback(async () => {
         const token = getAuthToken(); 
@@ -59,6 +83,7 @@ const ResidentHeader = () => {
         setIsLoggedIn(false);
         setUserRole(null);
         setUserName('');
+        setApartmentNumber(null);
         setNotifications([]); 
         navigate('/login'); 
     };
@@ -87,10 +112,18 @@ const ResidentHeader = () => {
                     setUserRole(normalizedRole);
                     setUserName(decodedToken.full_name || decodedToken.email);
                     
+                    // Lấy giá trị ban đầu từ token
+                    if (decodedToken.apartment_number) {
+                        setApartmentNumber(decodedToken.apartment_number);
+                    }
+                    
                     fetchNotifications(); 
                     
-                    // [UPDATED] Giảm thời gian polling xuống 5 giây (5000ms) để demo mượt hơn
-                    const intervalId = setInterval(fetchNotifications, 5000); 
+                    // [UPDATED] Polling cả Notification và Profile Status mỗi 5s
+                    const intervalId = setInterval(() => {
+                        fetchNotifications();
+                        fetchProfileStatus(); // Check phòng mới
+                    }, 5000); 
                     return () => clearInterval(intervalId);
                 }
             } catch (error) {
@@ -99,15 +132,17 @@ const ResidentHeader = () => {
                 setIsLoggedIn(false); 
                 setUserRole(null);
                 setUserName('');
+                setApartmentNumber(null);
             }
         } else {
             setIsLoggedIn(false);
             setUserRole(null);
             setUserName('');
+            setApartmentNumber(null);
             setNotifications([]); 
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.pathname, fetchNotifications]); 
+    }, [location.pathname, fetchNotifications, fetchProfileStatus]); 
 
     const handleBellClick = () => {
         setShowNotifications(!showNotifications); 
@@ -153,19 +188,35 @@ const ResidentHeader = () => {
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const isResident = isLoggedIn && userRole === 'resident';
+    const hasRoom = isResident && apartmentNumber; // Kiểm tra có phòng real-time
+
     const isNavLinkActive = (path) => { 
         return location.pathname === path;
     };
 
-    // --- PHẦN JSX ĐÃ ĐƯỢC CẬP NHẬT ---
+    const handleRestrictedClick = (e, path) => {
+        e.preventDefault();
+        if (!isLoggedIn) {
+            navigate('/login');
+            return;
+        }
+        if (!isResident) {
+            return; 
+        }
+        
+        if (isResident && !hasRoom) {
+            alert("Access Denied: You have not been assigned an apartment yet. Please contact Admin to use this service.");
+            return;
+        }
+
+        navigate(path);
+    };
+
     return (
-        // THAY ĐỔI: Thêm class 'residem-header-light'
         <header className="resident-header residem-header-light sticky-top">
             <nav className="container navbar navbar-expand-lg"> 
                 
-                {/* THAY ĐỔI: Sử dụng logo của bạn từ public/images/logoo.png */}
                 <Link className="navbar-brand-custom" to={isLoggedIn ? "/" : "/login"}>
-                    {/* Đảm bảo bạn có file 'logoo.png' trong folder 'public/images/' */}
                     <img src="/images/logoo.png" alt="PTIT Apartment Logo" className="new-logo" />
                     <span>PTIT Apartment</span>
                 </Link>
@@ -175,29 +226,42 @@ const ResidentHeader = () => {
                 </button>
 
                 <div className="collapse navbar-collapse" id="residentNavbar">
-                    {/* GIỮ NGUYÊN: Các link tính năng của bạn */}
                     <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li className="nav-item">
                             <Link className={`nav-link ${isNavLinkActive('/') ? 'active' : ''}`} aria-current="page" to="/">Home</Link>
                         </li>
+                        
+                        {/* SERVICES LINK */}
                         <li className="nav-item">
                             {isResident ? (
-                                <Link className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`} to="/services">Services</Link>
+                                <a 
+                                    href="/services" 
+                                    className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`} 
+                                    onClick={(e) => handleRestrictedClick(e, '/services')}
+                                >
+                                    Services
+                                </a>
                             ) : (
-                                // CẬP NHẬT LOGIC: Thêm class 'disabled'
                                 <span className="nav-link disabled" title="Login to access">Services</span>
                             )}
                         </li>
+
+                        {/* BILL LINK */}
                         <li className="nav-item">
                             {isResident ? (
-                                <Link className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`} to="/bill">Bill</Link>
+                                <a 
+                                    href="/bill" 
+                                    className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`} 
+                                    onClick={(e) => handleRestrictedClick(e, '/bill')}
+                                >
+                                    Bill
+                                </a>
                             ) : (
-                                // CẬP NHẬT LOGIC: Thêm class 'disabled'
                                 <span className="nav-link disabled" title="Login to access">Bill</span>
                             )}
                         </li>
+
                         <li className="nav-item">
-                            {/* CẬP NHẬT LOGIC: Thêm điều kiện isResident cho 'News' */}
                             {isResident ? (
                                 <Link className={`nav-link ${isNavLinkActive('/news') ? 'active' : ''}`} to="/news">News</Link>
                             ) : (
@@ -210,11 +274,9 @@ const ResidentHeader = () => {
                     </ul>
                 </div>
 
-                {/* GIỮ NGUYÊN: Logic (Bell, Profile, Login/Logout) */}
                 <div className="header-right-items ms-auto d-flex align-items-center">
                     {isLoggedIn ? (
                         <>
-                            {/* THAY ĐỔI: Thêm class 'icon-btn-light' */}
                             <Dropdown show={showNotifications} onToggle={handleBellClick}>
                                 <Dropdown.Toggle as="button" className="icon-btn icon-btn-light notification-bell" title="Notifications">
                                     <i className="bi bi-bell-fill"></i>
@@ -252,16 +314,13 @@ const ResidentHeader = () => {
                                 </Dropdown.Menu>
                             </Dropdown>
 
-                            {/* THAY ĐỔI: Thêm class 'icon-btn-light' */}
                             <button className="icon-btn icon-btn-light ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
                                 <i className="bi bi-person-circle"></i>
                             </button>
                             
-                            {/* THAY ĐỔI: Style nút 'btn-residem-primary' mới */}
                             <button className="btn btn-residem-primary ms-3" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (
-                        // THAY ĐỔI: Style nút 'btn-residem-primary' mới
                         <Link className="btn btn-residem-primary btn-login-visible" to="/login">Login</Link>
                     )}
                 </div>

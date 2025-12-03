@@ -648,3 +648,36 @@
     border-color: var(--color-primary-accent);
     box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15);
 }
+/* ... Các code cũ giữ nguyên ... */
+
+/* --- SỬA LẠI BADGE GIÁ TIỀN CHO ĐẸP --- */
+.amenity-img-wrapper {
+    position: relative; /* Quan trọng để định vị badge con bên trong */
+    overflow: hidden;
+    border-top-left-radius: 0.75rem; /* Bo góc trên theo card */
+    border-top-right-radius: 0.75rem;
+}
+
+.price-badge-overlay {
+    position: absolute;
+    top: 15px;               /* Cách mép trên 15px */
+    right: 15px;             /* Cách mép phải 15px */
+    background-color: rgba(255, 255, 255, 0.95); /* Nền trắng mờ nhẹ */
+    color: #b99a7b;          /* Màu chữ vàng đồng chủ đạo */
+    padding: 6px 16px;       /* Khoảng cách chữ với viền badge */
+    border-radius: 50px;     /* Bo tròn dạng viên thuốc */
+    font-weight: 700;        /* Chữ đậm */
+    font-size: 0.9rem;       /* Cỡ chữ vừa phải */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Đổ bóng giúp nổi trên nền ảnh */
+    z-index: 2;
+    border: 1px solid #b99a7b; /* Viền mỏng cùng màu chữ cho sắc nét */
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+/* Hiệu ứng khi hover vào card thì badge sáng lên chút */
+.amenity-card:hover .price-badge-overlay {
+    background-color: #ffffff;
+    transform: translateY(-2px); /* Nhích nhẹ lên tạo cảm giác động */
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}

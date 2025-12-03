@@ -29,6 +29,21 @@ router.get('/me', protect, async (req, res) => {
     }
 });
 
+// === [MỚI] GET /api/profile/status ===
+// API nhẹ để check trạng thái phòng real-time (dùng cho polling ở Frontend)
+router.get('/status', protect, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const result = await db.query('SELECT role, apartment_number FROM users WHERE id = $1', [userId]);
+        if (result.rows.length === 0) return res.status(404).json({ message: 'User not found' });
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        // Không log lỗi 500 để tránh spam log server khi polling
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // === PUT /api/profile/update-details ===
 // SỬA ĐỔI: Chỉ cho phép cập nhật số điện thoại
 router.put('/update-details', protect, async (req, res) => {
@@ -73,7 +88,7 @@ router.put('/change-password', protect, async (req, res) => {
          return res.status(400).json({ message: 'New passwords do not match.' });
     }
     if (newPassword.length < 6) {
-         return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+        return res.status(400).json({ message: 'Password must be at least 6 characters.' });
     }
 
     try {
@@ -89,10 +104,8 @@ router.put('/change-password', protect, async (req, res) => {
 
         const salt = await bcrypt.genSalt(10);
         const newHashedPassword = await bcrypt.hash(newPassword, salt);
-
         await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHashedPassword, residentId]);
         res.json({ message: 'Password changed successfully!' });
-
     } catch (err) {
         console.error('Error changing password:', err);
         res.status(500).json({ message: 'Server error.' });
