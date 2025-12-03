@@ -105,19 +105,7 @@ const BillManagement = () => {
         }
     };
 
-    const handleMarkAsPaid = async (billId) => {
-        const config = getAuthConfig();
-        if (!config || !window.confirm(`Mark bill #${billId} as PAID?`)) return;
-        
-        setError(''); setSuccess('');
-        try {
-            const res = await axios.post(`${API_BASE_URL}/api/admin/bills/${billId}/mark-paid`, {}, config);
-            setSuccess(res.data.message);
-            setBills(bills.map(b => b.bill_id === billId ? { ...b, status: 'paid', paid_at: new Date().toISOString() } : b));
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to mark as paid.');
-        }
-    };
+    // [REMOVED] handleMarkAsPaid function
 
     const handleShowDetails = async (bill) => {
         const config = getAuthConfig();
@@ -255,11 +243,6 @@ const BillManagement = () => {
                                                     <Button className="btn-residem-secondary btn-sm me-2" onClick={() => handleShowDetails(bill)}>
                                                         <EyeFill className="me-1"/> Details
                                                     </Button>
-                                                    {bill.status === 'unpaid' && (
-                                                        <Button className="btn-residem-success btn-sm" onClick={() => handleMarkAsPaid(bill.bill_id)}>
-                                                            <CheckCircleFill className="me-1"/> Mark Paid
-                                                        </Button>
-                                                    )}
                                                 </td>
                                             </tr>
                                         ))

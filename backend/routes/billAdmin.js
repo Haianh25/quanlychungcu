@@ -64,24 +64,6 @@ router.get('/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// POST /api/admin/bills/:id/mark-paid
-router.post('/:id/mark-paid', protect, isAdmin, async (req, res) => {
-    const billId = parseInt(req.params.id);
-    try {
-        const result = await db.query(
-            "UPDATE bills SET status = 'paid', updated_at = NOW() WHERE bill_id = $1 AND status != 'paid' RETURNING bill_id",
-            [billId]
-        );
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Bill not found or already paid.' });
-        }
-        res.json({ message: `Bill #${billId} has been marked as paid.` });
-    } catch (err) {
-        console.error(`Error marking bill ${billId} as paid:`, err);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
 // --- API DEBUG ONLY: KIỂM TRA VÀ CHẠY PHẠT THỦ CÔNG ---
 router.post('/trigger-late-fees', protect, isAdmin, async (req, res) => {
     const pool = db.getPool ? db.getPool() : db;

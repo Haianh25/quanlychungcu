@@ -16,11 +16,27 @@ const ResidentManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [residentsPerPage] = useState(10);
 
-    // [MỚI] State cho sắp xếp
+    // State cho sắp xếp
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
 
-    // [MỚI] State loading cho hành động Unassign
-    const [unassignLoading, setUnassignLoading] = useState(null); // null hoặc id của resident đang xử lý
+    // State loading cho hành động Unassign
+    const [unassignLoading, setUnassignLoading] = useState(null);
+
+    // [MỚI] Hàm xóa dấu tiếng Việt để tìm kiếm thông minh
+    const removeVietnameseTones = (str) => {
+        if (!str) return '';
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+        str = str.replace(/đ/g, "d");
+        str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); // Huyền sắc hỏi ngã nặng
+        str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // Â, Ă, Ơ
+        return str;
+    };
 
     const fetchResidents = async () => {
         try {
@@ -51,7 +67,7 @@ const ResidentManagement = () => {
         fetchResidents();
     };
 
-    // [MỚI] Hàm xử lý Unassign (Trả phòng)
+    // Hàm xử lý Unassign (Trả phòng)
     const handleUnassignRoom = async (resident) => {
         if (!window.confirm(`Are you sure you want to remove resident "${resident.full_name}" from room ${resident.apartment_number}?`)) {
             return;
@@ -76,13 +92,21 @@ const ResidentManagement = () => {
         }
     };
 
-    // 1. Lọc theo tìm kiếm
-    const filteredResidents = residents.filter(resident =>
-        resident.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (resident.email && resident.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // [UPDATED] 1. Lọc theo tìm kiếm (Hỗ trợ tiếng Việt không dấu)
+    const filteredResidents = useMemo(() => {
+        if (!searchTerm) return residents;
+        const normalizedSearch = removeVietnameseTones(searchTerm);
 
-    // [MỚI] 2. Xử lý Sắp xếp (Sort)
+        return residents.filter(resident => {
+            const normalizedName = removeVietnameseTones(resident.full_name);
+            const normalizedEmail = removeVietnameseTones(resident.email);
+            
+            return normalizedName.includes(normalizedSearch) || 
+                   (normalizedEmail && normalizedEmail.includes(normalizedSearch));
+        });
+    }, [residents, searchTerm]);
+
+    // 2. Xử lý Sắp xếp (Sort)
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -98,14 +122,12 @@ const ResidentManagement = () => {
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
 
-                // Xử lý riêng cho cột 'apartment_number' (để gom nhóm Assigned/Not Assigned)
+                // Xử lý riêng cho cột 'apartment_number'
                 if (sortConfig.key === 'apartment_number') {
-                    // Nếu không có phòng (null/empty), gán giá trị đặc biệt để sort
                     aValue = aValue || ''; 
                     bValue = bValue || '';
                 }
 
-                // Chuyển về chữ thường nếu là chuỗi để so sánh chính xác
                 if (typeof aValue === 'string') {
                     aValue = aValue.toLowerCase();
                     bValue = bValue.toLowerCase();
@@ -123,7 +145,7 @@ const ResidentManagement = () => {
         return sortableItems;
     }, [filteredResidents, sortConfig]);
 
-    // 3. Phân trang (Dựa trên danh sách đã sort)
+    // 3. Phân trang
     const indexOfLastResident = currentPage * residentsPerPage;
     const indexOfFirstResident = indexOfLastResident - residentsPerPage;
     const currentResidents = sortedResidents.slice(indexOfFirstResident, indexOfLastResident);
@@ -131,7 +153,7 @@ const ResidentManagement = () => {
 
     // Helper hiển thị icon sort
     const getSortIcon = (columnName) => {
-        if (sortConfig.key !== columnName) return <span className="sort-icon-placeholder">↕</span>; // Icon mờ khi chưa sort
+        if (sortConfig.key !== columnName) return <span className="sort-icon-placeholder">↕</span>;
         return sortConfig.direction === 'ascending' ? <ArrowUp size={12}/> : <ArrowDown size={12}/>;
     };
 
@@ -174,7 +196,6 @@ const ResidentManagement = () => {
                             </colgroup>
                             <thead>
                                 <tr>
-                                    {/* [MỚI] Thêm onClick để sort */}
                                     <th className="sortable-header" onClick={() => requestSort('full_name')}>
                                         Full Name <span className="ms-1">{getSortIcon('full_name')}</span>
                                     </th>
@@ -219,7 +240,7 @@ const ResidentManagement = () => {
                                                     </button>
                                                 )}
 
-                                                {/* [MỚI] Hiển thị nút Trả Phòng nếu ĐÃ có phòng */}
+                                                {/* Hiển thị nút Trả Phòng nếu ĐÃ có phòng */}
                                                 {resident.apartment_number && (
                                                     <Button 
                                                         variant="outline-danger" 
