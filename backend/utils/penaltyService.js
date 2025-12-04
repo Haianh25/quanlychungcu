@@ -2,145 +2,186 @@
 const db = require('../db');
 
 /**
- * Automatically checks and applies late fees to overdue bills.
- * Applies only ONCE for 'unpaid' bills that are past 'due_date'.
+ * Hàm xử lý phạt theo 3 giai đoạn:
+ * - Giai đoạn 1 (>3 ngày): Phạt tiền lần 1 + Đổi status overdue.
+ * - Giai đoạn 2 (>6 ngày): Phạt tiền lần 2.
+ * - Giai đoạn 3 (>9 ngày): KHÓA TÀI KHOẢN + Báo Admin.
+ * Chạy tự động qua Cron Job hàng ngày.
  */
 async function applyLateFees() {
-    console.log('[PENALTY_CRON] Running late fee check task...');
+    console.log('[PENALTY_CRON] Running Staged Penalty check task...');
     const pool = db.getPool ? db.getPool() : db;
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
-        // 1. Get late fee info from fees table
+        // 1. Lấy giá tiền phạt cấu hình
         const feeRes = await client.query("SELECT price FROM fees WHERE fee_code = 'LATE_PAYMENT_FEE'");
-        
-        if (feeRes.rows.length === 0) {
-            console.warn('[PENALTY_CRON] LATE_PAYMENT_FEE not found in fees table. Skipping.');
-            await client.query('ROLLBACK');
-            client.release();
-            return;
-        }
-        
-        const lateFeeAmount = parseFloat(feeRes.rows[0].price);
-        if (lateFeeAmount <= 0) {
-            console.log('[PENALTY_CRON] Late fee is set to 0. Not applying.');
-            await client.query('COMMIT');
-            client.release();
-            return;
+        let lateFeeAmount = 0;
+        if (feeRes.rows.length > 0) {
+            lateFeeAmount = parseFloat(feeRes.rows[0].price);
+        } else {
+            console.warn('[PENALTY_CRON] LATE_PAYMENT_FEE not found. Using 0 VND.');
         }
 
-        // 2. Find all 'unpaid' AND past 'due_date' bills
-        const overdueBillsRes = await client.query(
+        // =================================================================
+        // STAGE 1: QUÁ HẠN 3 NGÀY -> PHẠT LẦN 1 + CHUYỂN OVERDUE
+        // Điều kiện: (status='unpaid' OR status='overdue') AND penalty_stage = 0 AND due_date < (NOW - 3 days)
+        // =================================================================
+        const stage1Bills = await client.query(
             `SELECT bill_id, total_amount, user_id, room_id 
              FROM bills 
-             WHERE status = 'unpaid' AND due_date < NOW()`
+             WHERE status IN ('unpaid', 'overdue') 
+             AND penalty_stage = 0 
+             AND due_date < (NOW() - INTERVAL '3 days')`
         );
 
-        if (overdueBillsRes.rows.length === 0) {
-            console.log('[PENALTY_CRON] No overdue bills found.');
-            await client.query('COMMIT');
-            client.release();
-            return;
+        if (stage1Bills.rows.length > 0) {
+            console.log(`[PENALTY_STAGE_1] Found ${stage1Bills.rows.length} bills.`);
+            for (const bill of stage1Bills.rows) {
+                // Cộng tiền
+                const newTotal = parseFloat(bill.total_amount) + lateFeeAmount;
+                
+                // Update Bill: stage = 1
+                await client.query(
+                    `UPDATE bills 
+                     SET total_amount = $1, status = 'overdue', penalty_stage = 1, updated_at = NOW() 
+                     WHERE bill_id = $2`,
+                    [newTotal, bill.bill_id]
+                );
+
+                // Add Bill Item
+                if (lateFeeAmount > 0) {
+                    await client.query(
+                        `INSERT INTO bill_items (bill_id, item_name, unit_price, total_item_amount, quantity) 
+                         VALUES ($1, $2, $3, $4, 1)`,
+                        [bill.bill_id, 'Late Fee (Stage 1: >3 Days)', lateFeeAmount, lateFeeAmount]
+                    );
+                }
+
+                // Notification
+                const msg = `Overdue Alert (Level 1): Bill #${bill.bill_id} is 3 days overdue. A late fee has been applied. Please pay immediately.`;
+                await client.query(
+                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                    [bill.user_id, msg, '/bill']
+                );
+            }
         }
 
-        console.log(`[PENALTY_CRON] Found ${overdueBillsRes.rows.length} overdue bills. Applying fees...`);
+        // =================================================================
+        // STAGE 2: QUÁ HẠN 6 NGÀY -> PHẠT LẦN 2 (TĂNG CƯỜNG)
+        // Điều kiện: penalty_stage = 1 AND due_date < (NOW - 6 days)
+        // =================================================================
+        const stage2Bills = await client.query(
+            `SELECT bill_id, total_amount, user_id 
+             FROM bills 
+             WHERE penalty_stage = 1 
+             AND due_date < (NOW() - INTERVAL '6 days')`
+        );
 
-        // 3. Update each bill
-        for (const bill of overdueBillsRes.rows) {
-            const newTotalAmount = parseFloat(bill.total_amount) + lateFeeAmount;
+        if (stage2Bills.rows.length > 0) {
+            console.log(`[PENALTY_STAGE_2] Found ${stage2Bills.rows.length} bills.`);
+            for (const bill of stage2Bills.rows) {
+                // Cộng thêm tiền phạt lần nữa
+                const newTotal = parseFloat(bill.total_amount) + lateFeeAmount;
 
-            // 3a. Update bills table
-            await client.query(
-                `UPDATE bills 
-                 SET total_amount = $1, status = 'overdue', updated_at = NOW() 
-                 WHERE bill_id = $2`,
-                [newTotalAmount, bill.bill_id]
-            );
+                // Update Bill: stage = 2
+                await client.query(
+                    `UPDATE bills 
+                     SET total_amount = $1, penalty_stage = 2, updated_at = NOW() 
+                     WHERE bill_id = $2`,
+                    [newTotal, bill.bill_id]
+                );
 
-            // 3b. Add late fee item
-            // [FIXED] Thêm cột unit_price vào đây để tránh lỗi NOT NULL
-            await client.query(
-                `INSERT INTO bill_items (bill_id, item_name, unit_price, total_item_amount, quantity) 
-                 VALUES ($1, $2, $3, $4, 1)`,
-                [bill.bill_id, 'Late Payment Fee', lateFeeAmount, lateFeeAmount]
-            );
+                // Add Bill Item
+                if (lateFeeAmount > 0) {
+                    await client.query(
+                        `INSERT INTO bill_items (bill_id, item_name, unit_price, total_item_amount, quantity) 
+                         VALUES ($1, $2, $3, $4, 1)`,
+                        [bill.bill_id, 'Late Fee (Stage 2: >6 Days)', lateFeeAmount, lateFeeAmount]
+                    );
+                }
 
-            // 3c. (Optional) Send notification to resident
-            const message = `Your invoice #${bill.bill_id} is overdue and a late fee of ${lateFeeAmount.toLocaleString('vi-VN')} VND has been applied.`;
-            await client.query(
-                `INSERT INTO notifications (user_id, message, link_to) 
-                 VALUES ($1, $2, $3)`,
-                [bill.user_id, message, '/bill']
-            );
+                // Notification (Nghiêm trọng hơn)
+                const msg = `URGENT: Bill #${bill.bill_id} is now 6 days overdue. Additional fees applied. Your account risks suspension in 3 days!`;
+                await client.query(
+                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                    [bill.user_id, msg, '/bill']
+                );
+            }
+        }
+
+        // =================================================================
+        // STAGE 3: QUÁ HẠN 9 NGÀY -> KHÓA TÀI KHOẢN
+        // Điều kiện: penalty_stage = 2 AND due_date < (NOW - 9 days)
+        // =================================================================
+        const stage3Bills = await client.query(
+            `SELECT b.bill_id, b.user_id, u.full_name, u.email, u.apartment_number 
+             FROM bills b
+             JOIN users u ON b.user_id = u.id
+             WHERE b.penalty_stage = 2 
+             AND b.due_date < (NOW() - INTERVAL '9 days')`
+        );
+
+        if (stage3Bills.rows.length > 0) {
+            console.log(`[PENALTY_STAGE_3] Found ${stage3Bills.rows.length} bills. Locking accounts...`);
+            
+            // Lấy danh sách Admin để báo cáo
+            const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
+
+            for (const bill of stage3Bills.rows) {
+                // 1. Update Bill: stage = 3 (Đánh dấu đã xử lý khóa xong)
+                await client.query(
+                    "UPDATE bills SET penalty_stage = 3, updated_at = NOW() WHERE bill_id = $1",
+                    [bill.bill_id]
+                );
+
+                // 2. KHÓA TÀI KHOẢN USER (is_active = false)
+                await client.query(
+                    "UPDATE users SET is_active = false WHERE id = $1",
+                    [bill.user_id]
+                );
+
+                // 3. Gửi thông báo cho User (Dù bị khóa nhưng vẫn lưu vào DB để khi mở lại sẽ thấy lý do)
+                const lockMsg = `ACCOUNT LOCKED: Your account has been suspended due to unpaid bill #${bill.bill_id} (>9 days overdue). Please contact Admin directly.`;
+                await client.query(
+                    "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                    [bill.user_id, lockMsg, '#']
+                );
+
+                // 4. Báo cáo Admin
+                const adminMsg = `ACTION REQUIRED: User ${bill.full_name} (${bill.apartment_number}) has been LOCKED due to unpaid bill #${bill.bill_id}.`;
+                for (const admin of admins.rows) {
+                    await client.query(
+                        "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                        [admin.id, adminMsg, '/admin/user-management']
+                    );
+                }
+            }
         }
 
         await client.query('COMMIT');
-        console.log(`[PENALTY_CRON] Applied late fees to ${overdueBillsRes.rows.length} bills.`);
+        console.log('[PENALTY_CRON] Staged penalty check completed successfully.');
 
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error('[PENALTY_CRON] Error applying late fees:', err);
+        console.error('[PENALTY_CRON] Error applying staged penalties:', err);
     } finally {
         client.release();
     }
 }
 
 /**
- * [MỚI] Hàm kiểm tra và báo cáo Admin các hóa đơn quá hạn nghiêm trọng (3 ngày)
+ * Hàm này giờ không cần thiết nữa vì logic báo cáo Admin đã tích hợp vào Stage 3.
+ * Tuy nhiên, vẫn giữ lại hàm rỗng (hoặc check chung chung) để tránh lỗi import ở cron.js
  */
 async function notifyAdminOverdueBills() {
-    console.log('[ADMIN_NOTIFY_CRON] Checking for seriously overdue bills (3+ days)...');
-    const pool = db.getPool ? db.getPool() : db;
-    const client = await pool.connect();
-
-    try {
-        // Tìm các hóa đơn chưa trả (unpaid hoặc overdue)
-        // và có ngày hết hạn (due_date) nhỏ hơn ngày hiện tại - 3 ngày
-        // (Tức là đã quá hạn ít nhất 3 ngày)
-        const seriousBills = await client.query(
-            `SELECT b.bill_id, u.full_name, u.apartment_number, b.total_amount, b.due_date
-             FROM bills b
-             JOIN users u ON b.user_id = u.id
-             WHERE b.status IN ('unpaid', 'overdue') 
-             AND b.due_date < (NOW() - INTERVAL '3 days')`
-        );
-
-        if (seriousBills.rows.length === 0) {
-            console.log('[ADMIN_NOTIFY_CRON] No seriously overdue bills found.');
-            return;
-        }
-
-        console.log(`[ADMIN_NOTIFY_CRON] Found ${seriousBills.rows.length} seriously overdue bills.`);
-
-        // Lấy danh sách Admin để gửi thông báo
-        const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        
-        // Gửi 1 thông báo tổng hợp cho Admin (để đỡ spam nhiều noti)
-        const count = seriousBills.rows.length;
-        const message = `Alert: There are ${count} bills overdue by more than 3 days. Please review Bill Management for enforcement actions.`;
-        const linkTo = '/admin/bill-management?status=overdue';
-
-        for (const admin of admins.rows) {
-            // Kiểm tra xem đã gửi thông báo này hôm nay chưa để tránh spam (tùy chọn)
-            // Ở đây gửi luôn cho đơn giản
-            await client.query(
-                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
-                [admin.id, message, linkTo]
-            );
-        }
-        
-        console.log('[ADMIN_NOTIFY_CRON] Notifications sent to Admins.');
-
-    } catch (err) {
-        console.error('[ADMIN_NOTIFY_CRON] Error notifying admins:', err);
-    } finally {
-        client.release();
-    }
+    // Logic đã được tích hợp vào Stage 3 của applyLateFees nên để trống hoặc log nhẹ
+    console.log('[ADMIN_NOTIFY] Detailed checks are now handled in Staged Penalty logic.');
 }
 
 module.exports = {
     applyLateFees,
-    notifyAdminOverdueBills // [MỚI] Export thêm hàm này
+    notifyAdminOverdueBills
 };
