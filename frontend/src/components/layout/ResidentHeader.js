@@ -39,7 +39,7 @@ const ResidentHeader = () => {
         return localStorage.getItem(tokenType);
     }
 
-    // [MỚI] Hàm fetch trạng thái phòng Real-time
+    // [MỚI] Hàm fetch trạng thái phòng Real-time & Tự động đá ra nếu mất quyền
     const fetchProfileStatus = useCallback(async () => {
         const token = getAuthToken();
         if (!token) return;
@@ -48,19 +48,36 @@ const ResidentHeader = () => {
             // Gọi API nhẹ để lấy status mới nhất
             const res = await axios.get('http://localhost:5000/api/profile/status', config);
             
+            const newApartmentNumber = res.data.apartment_number;
+            
             // Cập nhật state nếu có sự thay đổi
-            if (res.data.apartment_number !== apartmentNumber) {
-                console.log("Apartment status updated:", res.data.apartment_number);
-                setApartmentNumber(res.data.apartment_number);
+            if (newApartmentNumber !== apartmentNumber) {
+                console.log("Apartment status updated:", newApartmentNumber);
+                setApartmentNumber(newApartmentNumber);
+
+                // [LOGIC BỔ SUNG QUAN TRỌNG]
+                // Nếu bị mất phòng (new = null) VÀ đang đứng ở trang cần quyền hạn (Services/Bill)
+                // -> Đá về trang chủ ngay lập tức
+                if (!newApartmentNumber) {
+                    const restrictedPaths = ['/services', '/bill'];
+                    // Kiểm tra xem đường dẫn hiện tại có bắt đầu bằng các path cấm không
+                    const isOnRestrictedPage = restrictedPaths.some(path => location.pathname.startsWith(path));
+                    
+                    if (isOnRestrictedPage) {
+                        alert("Session Update: You have been unassigned from your apartment. Redirecting to Home.");
+                        navigate('/');
+                    }
+                }
             }
+
+            // Check role change (nếu bị demote role)
             if (res.data.role !== userRole && userRole !== null) {
-                 // Nếu role bị thay đổi (VD: bị demote), reload trang để áp dụng
                  window.location.reload();
             }
         } catch (err) {
             // Không làm gì nếu lỗi nhẹ, để tránh spam console
         }
-    }, [apartmentNumber, userRole]);
+    }, [apartmentNumber, userRole, location.pathname, navigate]);
 
     const fetchNotifications = useCallback(async () => {
         const token = getAuthToken(); 
@@ -188,6 +205,7 @@ const ResidentHeader = () => {
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const isResident = isLoggedIn && userRole === 'resident';
+    
     const hasRoom = isResident && apartmentNumber; // Kiểm tra có phòng real-time
 
     const isNavLinkActive = (path) => { 

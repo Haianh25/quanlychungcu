@@ -1,10 +1,47 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Form, InputGroup, Card, Badge } from 'react-bootstrap';
 import axios from 'axios';
-import { PencilSquare, PlusCircleFill, Trash, ExclamationTriangleFill, TagFill } from 'react-bootstrap-icons';
+import { PencilSquare, PlusCircleFill, Trash, ExclamationTriangleFill, TagFill, ShieldLockFill, Stars, Magic } from 'react-bootstrap-icons';
 import './FeeManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
+
+// Danh sách các phí CỐT LÕI (System) - Có logic tính toán ngầm
+const SYSTEM_FEE_CODES = [
+    'MANAGEMENT_FEE', 'ADMIN_FEE', 'CAR_FEE', 'MOTORBIKE_FEE', 'BICYCLE_FEE',
+    'CAR_CARD_FEE', 'MOTORBIKE_CARD_FEE', 'BICYCLE_CARD_FEE', 'LATE_PAYMENT_FEE'
+];
+
+// [TRICK] Danh sách phí MẪU "Siêu To Khổng Lồ" để demo Scalability
+const SERVICE_TEMPLATES = [
+    { code: 'CUSTOM', name: '✨ Create Custom Fee...', price: '', desc: '' },
+    
+    // --- Nhóm Sức khỏe & Thể thao ---
+    { code: 'GYM_MONTHLY', name: 'Gym Membership (Monthly)', price: 300000, desc: 'Unlimited access to Gym & Fitness center.' },
+    { code: 'POOL_ACCESS', name: 'Swimming Pool Pass', price: 500000, desc: 'Monthly access to Infinity Pool (Level 5).' },
+    { code: 'YOGA_CLASS', name: 'Yoga Class (Per Session)', price: 100000, desc: 'Join daily Yoga sessions with instructor.' },
+    { code: 'TENNIS_COURT', name: 'Tennis Court Rental', price: 150000, desc: 'Hourly rate for tennis court usage.' },
+    { code: 'SAUNA_SPA', name: 'Sauna & Spa Access', price: 200000, desc: 'Weekend access to Sauna facilities.' },
+
+    // --- Nhóm Giải trí & Cộng đồng ---
+    { code: 'BBQ_BOOKING', name: 'BBQ Area Reservation', price: 250000, desc: 'Fee per 4-hour slot booking (Cleaning included).' },
+    { code: 'KARAOKE_VIP', name: 'Karaoke Room (VIP)', price: 300000, desc: 'Hourly rate including equipment rental.' },
+    { code: 'PRIVATE_CINEMA', name: 'Private Cinema Room', price: 400000, desc: 'Rent the mini-theater for private screening (3 hours).' },
+    { code: 'KIDS_CLUB', name: 'Kids Club Monthly', price: 150000, desc: 'Access to indoor playground for children.' },
+    { code: 'LIBRARY_MEMBER', name: 'Library Membership', price: 50000, desc: 'Annual library card issuance fee.' },
+    { code: 'COWORKING_DESK', name: 'Co-working Hot Desk', price: 100000, desc: 'Daily pass for Co-working space usage.' },
+
+    // --- Nhóm Tiện ích & Gia đình ---
+    { code: 'EV_CHARGING', name: 'EV Charging Subscription', price: 500000, desc: 'Monthly subscription for Electric Vehicle charging.' },
+    { code: 'PARKING_GUEST', name: 'Overnight Guest Parking', price: 50000, desc: 'Per night fee for visitor vehicles.' },
+    { code: 'HOUSE_CLEANING', name: 'House Cleaning Service', price: 250000, desc: 'Basic cleaning service (2 hours).' },
+    { code: 'LAUNDRY_SERVICE', name: 'Laundry Pickup', price: 50000, desc: 'Service fee per pickup request (Laundry cost separate).' },
+    { code: 'AC_MAINTENANCE', name: 'AC Maintenance', price: 200000, desc: 'Periodic air conditioner cleaning and checkup.' },
+    { code: 'PEST_CONTROL', name: 'Pest Control Service', price: 450000, desc: 'Professional pest control for apartments.' },
+    { code: 'EXTRA_TRASH', name: 'Heavy Trash Collection', price: 100000, desc: 'Service fee for disposing large furniture/items.' },
+    { code: 'PET_CARE', name: 'Pet Care / Walking', price: 80000, desc: 'Hourly rate for pet walking service.' },
+    { code: 'WATER_DELIVERY', name: 'Premium Water Delivery', price: 60000, desc: 'Price per 19L bottle delivered to door.' }
+];
 
 const FeeManagement = () => {
     const [fees, setFees] = useState([]);
@@ -19,13 +56,9 @@ const FeeManagement = () => {
     const [modalLoading, setModalLoading] = useState(false);
     const [currentFee, setCurrentFee] = useState(null);
     
+    // State form
     const [editFormData, setEditFormData] = useState({ fee_name: '', price: 0, description: '' });
-    const [newFeeData, setNewFeeData] = useState({
-        fee_name: '',
-        fee_code: '',
-        price: '',
-        description: ''
-    });
+    const [newFeeData, setNewFeeData] = useState({ fee_name: '', fee_code: '', price: '', description: '' });
 
     const getAuthConfig = useCallback(() => {
         const token = localStorage.getItem('adminToken');
@@ -64,6 +97,7 @@ const FeeManagement = () => {
         setError(''); 
     };
 
+    // --- EDIT LOGIC ---
     const handleShowEditModal = (fee) => {
         setCurrentFee(fee);
         setEditFormData({
@@ -75,9 +109,11 @@ const FeeManagement = () => {
         setSuccess(''); 
         setShowEditModal(true);
     };
+
     const handleEditFormChange = (e) => {
         setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
     };
+
     const handleEditSave = async (e) => {
         e.preventDefault();
         const config = getAuthConfig();
@@ -99,15 +135,36 @@ const FeeManagement = () => {
         }
     };
 
+    // --- ADD NEW LOGIC (CÓ TRICK) ---
     const handleShowAddModal = () => {
         setNewFeeData({ fee_name: '', fee_code: '', price: '', description: '' });
         setError('');
         setSuccess('');
         setShowAddModal(true);
     };
+
+    // [TRICK] Hàm xử lý khi chọn Template
+    const handleTemplateChange = (e) => {
+        const code = e.target.value;
+        if (code === 'CUSTOM') {
+            setNewFeeData({ fee_name: '', fee_code: '', price: '', description: '' });
+        } else {
+            const template = SERVICE_TEMPLATES.find(t => t.code === code);
+            if (template) {
+                setNewFeeData({
+                    fee_name: template.name,
+                    fee_code: template.code,
+                    price: template.price,
+                    description: template.desc
+                });
+            }
+        }
+    };
+
     const handleNewFeeChange = (e) => {
         setNewFeeData({ ...newFeeData, [e.target.name]: e.target.value });
     };
+
     const handleAddNewSave = async (e) => {
         e.preventDefault();
         const config = getAuthConfig();
@@ -129,6 +186,7 @@ const FeeManagement = () => {
         }
     };
 
+    // --- DELETE LOGIC ---
     const handleShowDeleteModal = (fee) => {
         setCurrentFee(fee);
         setError('');
@@ -182,40 +240,58 @@ const FeeManagement = () => {
                                 <thead>
                                     <tr>
                                         <th>Fee Name (Display)</th>
-                                        <th>Fee Code (Key)</th>
+                                        <th>Fee Code (System Key)</th>
                                         <th>Price</th>
                                         <th>Description</th>
                                         <th className="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {fees.map(fee => (
-                                        <tr key={fee.fee_id}>
-                                            <td>
-                                                <div className="fw-bold text-dark">{fee.fee_name}</div>
-                                            </td>
-                                            <td>
-                                                <span className="fee-code-badge">
-                                                    <TagFill size={12} className="me-1 opacity-50"/>
-                                                    {fee.fee_code}
-                                                </span>
-                                            </td>
-                                            <td className="fw-bold text-success" style={{fontSize: '1rem'}}>
-                                                {formatCurrency(fee.price)} <small className="text-muted fw-normal">VND</small>
-                                            </td>
-                                            <td className="text-muted small text-truncate" style={{maxWidth: '250px'}}>
-                                                {fee.description || <span className="fst-italic opacity-50">No description</span>}
-                                            </td>
-                                            <td className="text-end">
-                                                <Button variant="light" className="btn-residem-warning btn-sm me-2" onClick={() => handleShowEditModal(fee)}>
-                                                    <PencilSquare className="me-1" /> Edit
-                                                </Button>
-                                                <Button variant="light" className="btn-residem-danger btn-sm" onClick={() => handleShowDeleteModal(fee)}>
-                                                    <Trash className="me-1" /> Delete
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {fees.map(fee => {
+                                        // Phân biệt System Fee và Service Fee
+                                        const isSystem = SYSTEM_FEE_CODES.includes(fee.fee_code);
+                                        return (
+                                            <tr key={fee.fee_id}>
+                                                <td>
+                                                    <div className="fw-bold text-dark">
+                                                        {fee.fee_name}
+                                                        {isSystem ? 
+                                                            <Badge bg="secondary" className="ms-2" style={{fontSize: '0.65rem'}}>SYSTEM</Badge> : 
+                                                            <Badge bg="info" className="ms-2" style={{fontSize: '0.65rem'}}>SERVICE</Badge>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span className="fee-code-badge">
+                                                        <TagFill size={12} className="me-1 opacity-50"/>
+                                                        {fee.fee_code}
+                                                    </span>
+                                                </td>
+                                                <td className="fw-bold text-success" style={{fontSize: '1rem'}}>
+                                                    {formatCurrency(fee.price)} <small className="text-muted fw-normal">VND</small>
+                                                </td>
+                                                <td className="text-muted small text-truncate" style={{maxWidth: '250px'}}>
+                                                    {fee.description || <span className="fst-italic opacity-50">No description</span>}
+                                                </td>
+                                                <td className="text-end">
+                                                    <Button variant="light" className="btn-residem-warning btn-sm me-2" onClick={() => handleShowEditModal(fee)}>
+                                                        <PencilSquare className="me-1" /> Edit
+                                                    </Button>
+                                                    
+                                                    {/* System Fee bị khóa nút xóa */}
+                                                    {!isSystem ? (
+                                                        <Button variant="light" className="btn-residem-danger btn-sm" onClick={() => handleShowDeleteModal(fee)}>
+                                                            <Trash className="me-1" /> Delete
+                                                        </Button>
+                                                    ) : (
+                                                        <Button variant="light" className="btn-residem-secondary btn-sm" disabled title="System fees cannot be deleted">
+                                                            <ShieldLockFill className="me-1"/> Locked
+                                                        </Button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                     {fees.length === 0 && <tr><td colSpan="5" className="text-center text-muted py-5">No fee configurations found.</td></tr>}
                                 </tbody>
                             </Table>
@@ -293,7 +369,7 @@ const FeeManagement = () => {
                 </Form>
             </Modal>
 
-            {/* Modal ADD */}
+            {/* Modal ADD (CÓ TRICK DROPDOWN) */}
             <Modal show={showAddModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title">Add New Fee Configuration</Modal.Title>
@@ -301,6 +377,26 @@ const FeeManagement = () => {
                 <Form onSubmit={handleAddNewSave}>
                     <Modal.Body>
                         {error && showAddModal && <Alert variant="danger">{error}</Alert>}
+                        
+                        {/* [TRICK] Dropdown chọn Template mẫu */}
+                        <Card className="mb-3 border-0 bg-light">
+                            <Card.Body className="p-3">
+                                <Form.Group className="mb-0">
+                                    <Form.Label className="residem-form-label d-flex align-items-center text-primary">
+                                        <Stars className="me-2"/> Quick Select Service Template
+                                    </Form.Label>
+                                    <Form.Select className="residem-form-select" onChange={handleTemplateChange}>
+                                        {SERVICE_TEMPLATES.map(t => (
+                                            <option key={t.code} value={t.code}>{t.name}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Text className="text-muted small">
+                                        <Magic className="me-1"/> Select a pre-defined service to auto-fill scalability codes.
+                                    </Form.Text>
+                                </Form.Group>
+                            </Card.Body>
+                        </Card>
+
                         <Form.Group className="mb-3">
                             <Form.Label className="residem-form-label">Fee Code (System Key)<span className="required-star">*</span></Form.Label>
                             <Form.Control 
@@ -310,10 +406,10 @@ const FeeManagement = () => {
                                 value={newFeeData.fee_code} 
                                 onChange={handleNewFeeChange}
                                 required 
-                                placeholder="e.g., CAR_FEE"
+                                placeholder="e.g., GYM_FEE"
                             />
                             <Form.Text className="text-muted small">
-                                Unique identifier (UPPERCASE_UNDERSCORE).
+                                Unique identifier for backend processing (UPPERCASE_UNDERSCORE).
                             </Form.Text>
                         </Form.Group>
                         <Form.Group className="mb-3">
@@ -325,7 +421,7 @@ const FeeManagement = () => {
                                 value={newFeeData.fee_name} 
                                 onChange={handleNewFeeChange}
                                 required 
-                                placeholder="e.g., Car Parking Fee"
+                                placeholder="e.g., Gym Membership"
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
@@ -339,7 +435,7 @@ const FeeManagement = () => {
                                     onChange={handleNewFeeChange}
                                     required 
                                     min="0"
-                                    placeholder="e.g., 1200000"
+                                    placeholder="0"
                                 />
                                 <InputGroup.Text>VND</InputGroup.Text>
                             </InputGroup>
@@ -353,7 +449,7 @@ const FeeManagement = () => {
                                 name="description"
                                 value={newFeeData.description} 
                                 onChange={handleNewFeeChange}
-                                placeholder="e.g., Monthly car parking fee"
+                                placeholder="e.g., Monthly access fee..."
                             />
                         </Form.Group>
                     </Modal.Body>
