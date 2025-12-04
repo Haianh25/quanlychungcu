@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // [MỚI] Import useNavigate
 import EditUserModal from '../../components/admin/EditUserModal';
 import Pagination from '../../components/admin/Pagination';
 import { Card, Form, Table, Alert, InputGroup, Badge } from 'react-bootstrap';
-import { Search, PencilSquare, ShieldLock, ShieldCheck, CheckCircleFill, XCircle, ArrowUp, ArrowDown } from 'react-bootstrap-icons';
+import { Search, PencilSquare, ShieldLock, ShieldCheck, CheckCircleFill, XCircle, ArrowUp, ArrowDown, HouseExclamation } from 'react-bootstrap-icons';
 import './UserManagement.css';
 
 const UserManagement = () => {
@@ -17,9 +18,11 @@ const UserManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [usersPerPage] = useState(10);
 
-    // [MỚI] State cho sắp xếp
+    // State cho sắp xếp
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-    
+
+    const navigate = useNavigate(); // [MỚI] Hook điều hướng
+
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -28,6 +31,8 @@ const UserManagement = () => {
         try {
             const token = localStorage.getItem('adminToken');
             const config = { headers: { Authorization: `Bearer ${token}` } };
+            // [QUERY] Lấy thêm thông tin apartment_number từ bảng users (nếu có API hỗ trợ)
+            // Giả sử API /api/admin/users đã trả về trường này.
             const res = await axios.get('http://localhost:5000/api/admin/users', config);
             setUsers(res.data);
         } catch (err) {
@@ -59,8 +64,19 @@ const UserManagement = () => {
     
     const handleShowModal = (user) => { setSelectedUser(user); setShowModal(true); };
     const handleCloseModal = () => { setShowModal(false); setSelectedUser(null); };
+    
     const handleUserUpdate = (updatedUser) => { 
-        setUsers(users.map(user => (user.id === updatedUser.id ? updatedUser : user))); 
+        // Cập nhật danh sách
+        setUsers(users.map(user => (user.id === updatedUser.id ? updatedUser : user)));
+
+        // [MỚI - SMART WORKFLOW]
+        // Nếu user vừa được nâng cấp lên Resident (từ User -> Resident)
+        // -> Chuyển hướng sang trang Resident Management để gán phòng ngay
+        if (selectedUser && selectedUser.role === 'user' && updatedUser.role === 'resident') {
+            if (window.confirm(`User ${updatedUser.full_name} is now a Resident.\n\nDo you want to go to "Resident Management" to assign a room for them now?`)) {
+                navigate('/admin/resident-management', { state: { searchName: updatedUser.full_name } });
+            }
+        }
     };
     
     // 1. Filter
@@ -70,7 +86,7 @@ const UserManagement = () => {
         (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    // [MỚI] 2. Sort Logic
+    // 2. Sort Logic
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -86,7 +102,6 @@ const UserManagement = () => {
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
 
-                // Xử lý null/undefined cho an toàn
                 aValue = aValue ? aValue.toString().toLowerCase() : '';
                 bValue = bValue ? bValue.toString().toLowerCase() : '';
 
@@ -177,6 +192,12 @@ const UserManagement = () => {
                                                 <span className={`role-badge ${user.role === 'resident' ? 'role-resident' : 'role-user'}`}>
                                                     {user.role}
                                                 </span>
+                                                {/* [TIP] Nếu là Resident mà chưa có phòng, hiện cảnh báo */}
+                                                {user.role === 'resident' && !user.apartment_number && (
+                                                    <div className="text-danger small mt-1" style={{fontSize: '0.7rem'}}>
+                                                        <HouseExclamation className="me-1"/> No Room
+                                                    </div>
+                                                )}
                                             </td>
                                             <td>
                                                 <div className={user.is_active ? 'status-active' : 'status-disabled'}>

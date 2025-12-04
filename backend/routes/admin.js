@@ -20,7 +20,7 @@ const isStrongPassword = (password) => {
 router.get('/users', protect, isAdmin, async (req, res) => {
     try {
         const users = await query(
-            'SELECT id, full_name, email, phone, role, is_verified, is_active, created_at FROM users WHERE id != $1 ORDER BY created_at DESC',
+            'SELECT id, full_name, email, phone, role, is_verified, is_active, apartment_number, created_at FROM users WHERE id != $1 ORDER BY created_at DESC',
             [req.user.id]
         );
         res.status(200).json(users.rows);
@@ -73,6 +73,12 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         }
         const currentUser = userResult.rows[0];
         const oldRole = currentUser.role;
+
+        // [MỚI] CHẶN: Không cho phép nâng cấp lên Resident nếu chưa xác thực email
+        if (role === 'resident' && !currentUser.is_verified) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Cannot promote to Resident: User email is not verified yet.' });
+        }
 
         // --- LOGIC: DEMOTION (Resident -> User) ---
         if (oldRole === 'resident' && role === 'user') {
@@ -174,10 +180,9 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
                     console.log(`[Admin] Auto-assigned user ${id} back to room ${apartmentFullName}`);
 
                     // 3. Phục hồi thẻ xe (chuyển từ inactive -> active)
-                    // LƯU Ý: Cần kiểm tra lại Quota ở đây nếu muốn chặt chẽ hơn, nhưng tạm thời auto-restore cho tiện
                     await client.query("UPDATE vehicle_cards SET status = 'active' WHERE resident_id = $1 AND status = 'inactive'", [id]);
 
-                    // 4. Gọi hàm sinh bill (Hàm này đã được sửa để check trùng bill, nên an toàn)
+                    // 4. Gọi hàm sinh bill
                     try {
                         await generateMoveInBill(id, room.id, client);
                     } catch (billErr) {
@@ -201,7 +206,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
                     );
                 }
             } else {
-                // Không có phòng cũ -> Xử lý như cư dân mới bình thường
                 try {
                     const residentName = updatedUser.rows[0].full_name;
                     const message = `Welcome ${residentName}! You have officially become a resident of PTIT Apartment.`;
@@ -227,7 +231,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// [UPDATED] DELETE USER (Check Foreign Keys)
 router.delete('/users/:id', protect, isAdmin, async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
@@ -318,16 +321,19 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Room does not exist or is already occupied.' });
         }
 
-        // Clear old assignments (nếu resident đang ở phòng khác)
-        // [UPDATED] Set phòng cũ thành available
+        // Clear old assignments
         await client.query("UPDATE rooms SET resident_id = NULL, status = 'available' WHERE resident_id = $1", [residentId]);
         
-        // Assign new room
-        // [UPDATED] Set phòng mới thành occupied
+        // Assign new room & Update Status
         await client.query("UPDATE rooms SET resident_id = $1, status = 'occupied' WHERE id = $2", [residentId, roomId]);
         
         const apartmentFullName = `${roomInfo.rows[0].block_name} - ${roomInfo.rows[0].room_number}`;
-        await client.query("UPDATE users SET apartment_number = $1 WHERE id = $2", [apartmentFullName, residentId]);
+        
+        // [NEW LOGIC] Cập nhật apartment_number VÀ Nâng cấp role lên 'resident' luôn (nếu chưa phải)
+        await client.query(
+            "UPDATE users SET apartment_number = $1, role = 'resident' WHERE id = $2", 
+            [apartmentFullName, residentId]
+        );
 
         // Notification
         try {
@@ -340,12 +346,11 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
             console.error('Error sending room assignment notification:', notifyError);
         }
 
-        // [MỚI] Tự động tạo hóa đơn Move-in (Prorated) cho những ngày còn lại trong tháng
+        // Generate Move-in Bill
         try {
             await generateMoveInBill(residentId, roomId, client);
         } catch (billError) {
             console.error('Error generating move-in bill:', billError);
-            // Không throw lỗi để giao dịch Assign Room vẫn thành công
         }
 
         await client.query('COMMIT');
@@ -387,7 +392,6 @@ router.post('/unassign-room', protect, isAdmin, async (req, res) => {
         console.log(`[Admin] Unassigning resident ${residentId} from room ${currentApartment}`);
 
         // 2. Xóa liên kết trong bảng rooms & Cập nhật Status về 'available'
-        // [UPDATED] Set status = available
         await client.query("UPDATE rooms SET resident_id = NULL, status = 'available' WHERE resident_id = $1", [residentId]);
 
         // 3. Xóa apartment_number trong bảng users
@@ -582,10 +586,8 @@ router.delete('/news/:id', protect, isAdmin, async (req, res) => {
 // 4. POLICY MANAGEMENT (MỚI - BỔ SUNG)
 // ==========================================
 
-// GET /api/admin/policies
 router.get('/policies', protect, isAdmin, async (req, res) => {
     try {
-        // [UPDATED] Lấy cả cột max_bicycles
         const result = await query("SELECT * FROM room_type_policies ORDER BY type_code ASC");
         res.json(result.rows);
     } catch (err) {
@@ -594,10 +596,8 @@ router.get('/policies', protect, isAdmin, async (req, res) => {
     }
 });
 
-// PUT /api/admin/policies/:type_code
 router.put('/policies/:type_code', protect, isAdmin, async (req, res) => {
     const { type_code } = req.params;
-    // [UPDATED] Nhận thêm max_bicycles từ Body
     const { max_cars, max_motorbikes, max_bicycles, description } = req.body;
 
     if (max_cars < 0 || max_motorbikes < 0 || max_bicycles < 0) {
@@ -605,7 +605,6 @@ router.put('/policies/:type_code', protect, isAdmin, async (req, res) => {
     }
 
     try {
-        // [UPDATED] Cập nhật max_bicycles vào Database
         const result = await query(
             `UPDATE room_type_policies 
              SET max_cars = $1, max_motorbikes = $2, max_bicycles = $3, description = $4, updated_at = NOW() 

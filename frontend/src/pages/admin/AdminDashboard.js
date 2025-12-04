@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react'; // Import useRef
 import { Row, Col, Card, Spinner, Alert, ProgressBar } from 'react-bootstrap';
 import axios from 'axios';
 import { PeopleFill, CarFrontFill, CashCoin, ArrowUpRight, GraphUp, ExclamationTriangleFill, Newspaper } from 'react-bootstrap-icons';
-import './AdminDashboard.css'; 
+import './AdminDashboard.css';
 
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement
@@ -17,8 +17,9 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const isFirstLoad = useRef(true); // Ref để check lần load đầu tiên
 
-    const fetchStats = useCallback(async () => {
+    const fetchStats = useCallback(async (isPolling = false) => {
         const token = localStorage.getItem('adminToken');
         if (!token) return;
         try {
@@ -26,17 +27,22 @@ const AdminDashboard = () => {
             const res = await axios.get(`${API_BASE_URL}/api/admin/dashboard/stats`, config);
             setStats(res.data);
         } catch (err) {
-            setError('Could not load dashboard data.');
+            if (!isPolling) setError('Could not load dashboard data.');
         } finally {
             setLoading(false);
+            if (!isPolling) isFirstLoad.current = false; // Đánh dấu đã xong lần load đầu
         }
     }, []);
 
     useEffect(() => {
         fetchStats();
+        const intervalId = setInterval(() => {
+            fetchStats(true);
+        }, 5000); // Poll every 5 seconds
+
+        return () => clearInterval(intervalId);
     }, [fetchStats]);
 
-    // [ĐÃ SỬA] Format tiền tệ chuẩn: "500.000 VND"
     const formatCurrency = (val) => {
         return new Intl.NumberFormat('vi-VN').format(val) + ' VND';
     };
@@ -45,8 +51,8 @@ const AdminDashboard = () => {
     if (error) return <Alert variant="danger">{error}</Alert>;
     if (!stats) return null;
 
-    const paymentProgress = stats.bills.total_expected > 0 
-        ? (stats.bills.collected / stats.bills.expected) * 100 
+    const paymentProgress = stats.bills.total_expected > 0
+        ? (stats.bills.collected / stats.bills.expected) * 100
         : 0;
 
     const revenueLabels = stats.charts?.revenue_history.map(item => item.month) || [];
@@ -59,7 +65,7 @@ const AdminDashboard = () => {
             {
                 label: 'Collected',
                 data: revenueCollected,
-                backgroundColor: 'rgba(25, 135, 84, 0.85)', 
+                backgroundColor: 'rgba(25, 135, 84, 0.85)',
                 hoverBackgroundColor: 'rgba(25, 135, 84, 1)',
                 borderRadius: 4,
                 barPercentage: 0.6,
@@ -68,7 +74,7 @@ const AdminDashboard = () => {
             {
                 label: 'Expected',
                 data: revenueExpected,
-                backgroundColor: 'rgba(185, 154, 123, 0.5)', 
+                backgroundColor: 'rgba(185, 154, 123, 0.5)',
                 hoverBackgroundColor: 'rgba(185, 154, 123, 0.7)',
                 borderRadius: 4,
                 barPercentage: 0.6,
@@ -80,11 +86,14 @@ const AdminDashboard = () => {
     const barChartOptions = {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+            duration: isFirstLoad.current ? 1000 : 0 // Chỉ animate lần đầu
+        },
         plugins: {
-            legend: { 
-                position: 'top', 
+            legend: {
+                position: 'top',
                 align: 'end',
-                labels: { usePointStyle: true, boxWidth: 8, padding: 20, font: { family: "'Be Vietnam Pro', sans-serif" } } 
+                labels: { usePointStyle: true, boxWidth: 8, padding: 20, font: { family: "'Be Vietnam Pro', sans-serif" } }
             },
             tooltip: {
                 backgroundColor: 'rgba(0,0,0,0.8)',
@@ -98,7 +107,7 @@ const AdminDashboard = () => {
                 grid: { borderDash: [4, 4], color: '#f0f0f0', drawBorder: false },
                 ticks: {
                     font: { family: "'Be Vietnam Pro', sans-serif", size: 11 },
-                    callback: function(value) {
+                    callback: function (value) {
                         if (value >= 1000000) return value / 1000000 + 'M';
                         if (value >= 1000) return value / 1000 + 'k';
                         return value;
@@ -125,18 +134,21 @@ const AdminDashboard = () => {
         labels: ['Paid', 'Unpaid', 'Overdue'],
         datasets: [{
             data: [statusCounts.paid, statusCounts.unpaid, statusCounts.overdue],
-            backgroundColor: ['#198754', '#ffc107', '#dc3545'], 
+            backgroundColor: ['#198754', '#ffc107', '#dc3545'],
             borderWidth: 0,
             hoverOffset: 5
         }],
     };
-    
+
     const doughnutOptions = {
         cutout: '75%',
+        animation: {
+            duration: isFirstLoad.current ? 1000 : 0 // Chỉ animate lần đầu
+        },
         plugins: {
-            legend: { 
-                position: 'bottom', 
-                labels: { usePointStyle: true, padding: 20, font: { family: "'Be Vietnam Pro', sans-serif", size: 12 } } 
+            legend: {
+                position: 'bottom',
+                labels: { usePointStyle: true, padding: 20, font: { family: "'Be Vietnam Pro', sans-serif", size: 12 } }
             }
         }
     };
@@ -145,11 +157,18 @@ const AdminDashboard = () => {
 
     return (
         <div className="dashboard-container fadeIn">
-            <h2 className="page-main-title">Dashboard Overview</h2>
-            
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="page-main-title mb-0">Dashboard Overview</h2>
+                {/* Chỉ báo Live Update */}
+                <div className="live-indicator">
+                     <span className="pulsating-circle"></span> Live Updating
+                </div>
+            </div>
+
             <Row className="g-4 mb-4">
-                {/* 1. Residents */}
-                <Col md={6} xl={3}>
+                {/* ... (Giữ nguyên phần Cards Residents, Revenue, Vehicles, Action Required) ... */}
+                 {/* 1. Residents */}
+                 <Col md={6} xl={3}>
                     <Card className="dashboard-card">
                         <Card.Body>
                             <div className="d-flex justify-content-between align-items-start">
@@ -257,7 +276,7 @@ const AdminDashboard = () => {
                 <Col lg={8}>
                     <Card className="dashboard-card">
                         <Card.Body>
-                            <h5 className="fw-bold mb-4 text-dark" style={{fontSize: '1.1rem'}}>Revenue History</h5>
+                            <h5 className="fw-bold mb-4 text-dark" style={{ fontSize: '1.1rem' }}>Revenue History</h5>
                             <div style={{ height: '350px' }}>
                                 <Bar data={barChartData} options={barChartOptions} />
                             </div>
@@ -268,7 +287,7 @@ const AdminDashboard = () => {
                 <Col lg={4}>
                     <Card className="dashboard-card">
                         <Card.Header>
-                            <h5 className="fw-bold mb-0 text-dark" style={{fontSize: '1.1rem'}}>Bill Status</h5>
+                            <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '1.1rem' }}>Bill Status</h5>
                             <small className="text-muted">Current Month Overview</small>
                         </Card.Header>
                         <Card.Body className="d-flex align-items-center justify-content-center" style={{ minHeight: '280px' }}>
@@ -278,8 +297,8 @@ const AdminDashboard = () => {
                                     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                                     textAlign: 'center', pointerEvents: 'none'
                                 }}>
-                                    <div style={{fontSize: '1.5rem', fontWeight: '800', color: '#333'}}>{stats.bills.count}</div>
-                                    <div style={{fontSize: '0.7rem', color: '#999', textTransform: 'uppercase'}}>Invoices</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#333' }}>{stats.bills.count}</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#999', textTransform: 'uppercase' }}>Invoices</div>
                                 </div>
                             </div>
                         </Card.Body>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom'; // [MỚI] Import useLocation để nhận state từ trang User
 import AssignRoomModal from '../../components/admin/AssignRoomModal';
 import Pagination from '../../components/admin/Pagination';
 import { Card, Form, Table, Alert, InputGroup, Button, Spinner } from 'react-bootstrap';
@@ -21,6 +22,8 @@ const ResidentManagement = () => {
 
     // State loading cho hành động Unassign
     const [unassignLoading, setUnassignLoading] = useState(null);
+
+    const location = useLocation(); // [MỚI] Hook location
 
     // [MỚI] Hàm xóa dấu tiếng Việt để tìm kiếm thông minh
     const removeVietnameseTones = (str) => {
@@ -51,7 +54,14 @@ const ResidentManagement = () => {
 
     useEffect(() => {
         fetchResidents();
-    }, []);
+
+        // [MỚI] Nếu được redirect từ trang User Management kèm theo tên user
+        if (location.state && location.state.searchName) {
+            setSearchTerm(location.state.searchName);
+            // Clear state để tránh search lại khi reload
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]); // Thêm location vào dependency
 
     const handleShowModal = (resident) => {
         setSelectedResident(resident);
