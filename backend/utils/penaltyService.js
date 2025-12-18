@@ -180,8 +180,28 @@ async function notifyAdminOverdueBills() {
     // Logic đã được tích hợp vào Stage 3 của applyLateFees nên để trống hoặc log nhẹ
     console.log('[ADMIN_NOTIFY] Detailed checks are now handled in Staged Penalty logic.');
 }
+const calculateLateFee = (billAmount, daysLate) => {
+    // 1. Validate đầu vào (Check biên)
+    if (billAmount < 0 || daysLate < 0) {
+        return 0; // Hoặc ném lỗi tùy logic
+    }
 
+    // 2. Logic tính toán
+    let penaltyRate = 0;
+
+    if (daysLate <= 3) {
+        penaltyRate = 0; // Còn trong hạn
+    } else if (daysLate <= 30) {
+        penaltyRate = 0.05; // 5%
+    } else {
+        penaltyRate = 0.1; // 10%
+    }
+
+    // Làm tròn số tiền
+    return Math.round(billAmount * penaltyRate);
+};
 module.exports = {
     applyLateFees,
-    notifyAdminOverdueBills
+    notifyAdminOverdueBills,
+    calculateLateFee
 };
