@@ -4,6 +4,7 @@ const db = require('../db');
 const { protect } = require('../middleware/authMiddleware'); 
 const upload = require('../utils/upload'); 
 const fs = require('fs'); 
+const path = require('path');
 
 // GET /api/services/fees-table
 router.get('/fees-table', async (req, res) => {
@@ -101,6 +102,7 @@ router.get('/my-cards', protect, async (req, res) => {
             if (req.request_type === 'register') {
                 pendingRegistrations.push({
                     id: `req-${req.request_id}`, 
+                    real_request_id: req.request_id,
                     type: req.vehicle_type,
                     brand: req.brand,
                     license_plate: req.license_plate || 'N/A',
@@ -416,6 +418,79 @@ router.post('/cancel-card', protect, async (req, res) => {
         } else {
             res.status(500).json({ message: err.message || 'Server error.' });
         }
+    } finally {
+        client.release();
+    }
+});
+
+// [MỚI + UPDATED Notification] POST /api/services/cancel-pending-request
+router.post('/cancel-pending-request', protect, async (req, res) => {
+    const residentId = req.user.user ? req.user.user.id : req.user.id;
+    const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name; // Lấy tên cư dân
+    const { requestId } = req.body;
+
+    if (!requestId) {
+        return res.status(400).json({ message: 'Request ID is required.' });
+    }
+
+    const pool = db.getPool ? db.getPool() : db; 
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Kiểm tra yêu cầu có tồn tại và thuộc về user này không
+        // Lấy thêm vehicle_type và license_plate để hiển thị trong thông báo
+        const checkQuery = `
+            SELECT id, proof_image_url, vehicle_type, license_plate 
+            FROM vehicle_card_requests 
+            WHERE id = $1 AND resident_id = $2 AND status = 'pending' AND request_type = 'register'
+        `;
+        const checkRes = await client.query(checkQuery, [requestId, residentId]);
+
+        if (checkRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Pending registration request not found or cannot be cancelled.' });
+        }
+
+        const requestToDelete = checkRes.rows[0];
+
+        // 2. [MỚI] Gửi thông báo cho Admin
+        const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
+        
+        const notificationMessage = `Resident ${residentFullName} has CANCELLED their registration request for ${requestToDelete.vehicle_type} (Plate: ${requestToDelete.license_plate || 'N/A'}).`;
+        const linkTo = '/admin/vehicle-management';
+
+        for (const admin of admins.rows) {
+            await client.query(
+                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+                [admin.id, notificationMessage, linkTo]
+            );
+        }
+
+        // 3. Xóa record trong DB
+        await client.query('DELETE FROM vehicle_card_requests WHERE id = $1', [requestId]);
+
+        await client.query('COMMIT');
+
+        // 4. Xóa file ảnh minh chứng (nếu có) - thực hiện sau khi commit thành công
+        if (requestToDelete.proof_image_url) {
+            const fileName = path.basename(requestToDelete.proof_image_url);
+            const filePath = path.join(__dirname, '../uploads/proofs', fileName); 
+
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error("Warning: Could not delete proof image file:", err.message);
+                }
+            });
+        }
+
+        res.json({ message: 'Registration request cancelled successfully.' });
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error cancelling pending request:', err);
+        res.status(500).json({ message: 'Server error cancelling request.' });
     } finally {
         client.release();
     }
