@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../db');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
-// 1. Lấy danh sách phòng
 router.get('/rooms', protect, isAdmin, async (req, res) => {
     try {
         const query = `
@@ -19,7 +18,6 @@ router.get('/rooms', protect, isAdmin, async (req, res) => {
     }
 });
 
-// 2. Cập nhật phòng
 router.put('/rooms/:id', protect, isAdmin, async (req, res) => {
     const { name, description, image_url, status } = req.body;
     const { id } = req.params;
@@ -36,7 +34,6 @@ router.put('/rooms/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// 3. Lấy danh sách booking
 router.get('/bookings', protect, isAdmin, async (req, res) => {
     try {
         const query = `
@@ -53,7 +50,6 @@ router.get('/bookings', protect, isAdmin, async (req, res) => {
     }
 });
 
-// 4. Hủy lịch (Admin hủy -> Báo cho User kèm lý do)
 router.post('/bookings/:id/cancel', protect, isAdmin, async (req, res) => {
     const { reason } = req.body; // Nhận lý do từ client
 
@@ -62,7 +58,6 @@ router.post('/bookings/:id/cancel', protect, isAdmin, async (req, res) => {
     }
 
     try {
-        // Update và lấy thông tin để thông báo
         const result = await db.query(
             "UPDATE room_bookings SET status = 'cancelled' WHERE id = $1 RETURNING resident_id, room_id, booking_date", 
             [req.params.id]
@@ -74,11 +69,9 @@ router.post('/bookings/:id/cancel', protect, isAdmin, async (req, res) => {
 
         const booking = result.rows[0];
 
-        // Lấy tên phòng
         const roomRes = await db.query("SELECT name FROM community_rooms WHERE id = $1", [booking.room_id]);
         const roomName = roomRes.rows[0]?.name || 'Amenity Room';
 
-        // --- GỬI THÔNG BÁO CHO USER ---
         try {
             const dateStr = new Date(booking.booking_date).toLocaleDateString('en-GB');
             const message = `Your booking for ${roomName} on ${dateStr} has been CANCELLED by Admin. Reason: ${reason}`;
@@ -100,7 +93,6 @@ router.post('/bookings/:id/cancel', protect, isAdmin, async (req, res) => {
     }
 });
 
-// 5. Setup DB (Giữ nguyên)
 router.get('/init-database', async (req, res) => {
     res.send("DB Setup endpoint.");
 });

@@ -378,8 +378,50 @@ async function generateMoveInBill(userId, roomId, client) {
         console.log(`[MoveInBill] Generated bill #${billId} amount ${totalAmount}`);
     }
 }
+/**
+ * Tính tổng hóa đơn tháng dựa trên dữ liệu đầu vào
+ * @param {number} roomArea - Diện tích căn hộ (m2)
+ * @param {number} mgmtPricePerM2 - Đơn giá quản lý/m2
+ * @param {Array} vehicles - Danh sách xe đang hoạt động (gồm { type: 'car'|'motorbike'|..., fee: number })
+ * @param {number} waterFee - Tiền nước (nếu có)
+ * @param {number} electricityFee - Tiền điện (nếu có)
+ */
+function calculateMonthlyBill(roomArea, mgmtPricePerM2, vehicles, waterFee = 0, electricityFee = 0) {
+    // 1. Data Sanitization (Làm sạch dữ liệu đầu vào)
+    // Chuyển đổi về số, nếu null/undefined/string rác -> về 0
+    const area = Math.max(0, parseFloat(roomArea) || 0); // Diện tích không được âm
+    const price = Math.max(0, parseFloat(mgmtPricePerM2) || 0);
+    const water = Math.max(0, parseFloat(waterFee) || 0);
+    const electric = Math.max(0, parseFloat(electricityFee) || 0);
+    
+    // Xử lý danh sách xe: Nếu không phải mảng thì coi là rỗng
+    const vehicleList = Array.isArray(vehicles) ? vehicles : [];
 
+    // 2. Tính phí quản lý (Management Fee)
+    const managementFee = area * price;
+
+    // 3. Tính phí gửi xe (Parking Fee)
+    let parkingFee = 0;
+    vehicleList.forEach(v => {
+        // Đảm bảo phí của từng xe hợp lệ
+        const fee = Math.max(0, parseFloat(v.fee) || 0);
+        parkingFee += fee;
+    });
+
+    // 4. Tổng cộng
+    const totalAmount = managementFee + parkingFee + water + electric;
+
+    // 5. Trả về object chi tiết (để dễ debug hoặc hiển thị)
+    return {
+        managementFee,
+        parkingFee,
+        servicesFee: water + electric,
+        totalAmount,
+        isValid: true
+    };
+}
 module.exports = {
     generateBillsForMonth,
-    generateMoveInBill 
+    generateMoveInBill, 
+    calculateMonthlyBill
 };

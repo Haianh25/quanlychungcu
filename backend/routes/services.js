@@ -31,11 +31,10 @@ router.get('/fees-table', async (req, res) => {
     }
 });
 
-// [MỚI] GET /api/services/my-policy (Lấy chính sách giới hạn xe của User)
+// GET /api/services/my-policy
 router.get('/my-policy', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     try {
-        // 1. Tìm loại phòng của user
         const userCheck = await db.query(
             `SELECT r.room_type 
              FROM users u 
@@ -44,15 +43,14 @@ router.get('/my-policy', protect, async (req, res) => {
             [residentId]
         );
         
-        const roomType = userCheck.rows[0]?.room_type || 'A'; // Mặc định A nếu chưa có phòng
+        const roomType = userCheck.rows[0]?.room_type || 'A'; 
 
-        // 2. Lấy chính sách từ DB
         const policyRes = await db.query(
             "SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", 
             [roomType]
         );
         
-        let policy = { max_cars: 1, max_motorbikes: 2, max_bicycles: 2 }; // Default
+        let policy = { max_cars: 1, max_motorbikes: 2, max_bicycles: 2 }; 
 
         if (policyRes.rows.length > 0) {
             policy = policyRes.rows[0];
@@ -155,7 +153,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     try {
         await client.query('BEGIN');
 
-        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa + LẤY THÔNG TIN PHÒNG
+        // Check 1: User có phòng chưa
         const userCheck = await client.query(
             `SELECT u.apartment_number, r.room_type 
              FROM users u 
@@ -169,28 +167,20 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
-        // [UPDATED] Logic giới hạn xe DYNAMIC (Đọc từ DB)
+        // Logic giới hạn xe
         const roomType = userInfo.room_type || 'A'; 
-
-        // [UPDATED] Lấy cả max_bicycles
         const policyRes = await client.query(
             "SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", 
             [roomType]
         );
         
-        let maxCars = 1;
-        let maxMotorbikes = 2;
-        let maxBicycles = 2; // Default fallback cho xe đạp
-
+        let maxCars = 1, maxMotorbikes = 2, maxBicycles = 2;
         if (policyRes.rows.length > 0) {
             maxCars = policyRes.rows[0].max_cars;
             maxMotorbikes = policyRes.rows[0].max_motorbikes;
-            maxBicycles = policyRes.rows[0].max_bicycles; // Lấy từ DB
-        } else {
-            console.warn(`Warning: No policy found for Room Type ${roomType}. Using default limits.`);
+            maxBicycles = policyRes.rows[0].max_bicycles;
         }
 
-        // Đếm số xe hiện tại (bao gồm cả xe đạp)
         const activeCardRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status IN ($2, $3) GROUP BY vehicle_type',
             [residentId, 'active', 'inactive']
@@ -198,7 +188,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         const activeCounts = activeCardRes.rows.reduce((acc, row) => {
             acc[row.vehicle_type] = parseInt(row.count, 10);
             return acc;
-        }, { car: 0, motorbike: 0, bicycle: 0 }); // Init đủ loại
+        }, { car: 0, motorbike: 0, bicycle: 0 }); 
         
         const pendingReqRes = await client.query(
             'SELECT vehicle_type, COUNT(*) as count FROM vehicle_card_requests WHERE resident_id = $1 AND status = $2 AND request_type = $3 GROUP BY vehicle_type',
@@ -207,20 +197,18 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         const pendingCounts = pendingReqRes.rows.reduce((acc, row) => {
             acc[row.vehicle_type] = parseInt(row.count, 10);
             return acc;
-        }, { car: 0, motorbike: 0, bicycle: 0 }); // Init đủ loại
+        }, { car: 0, motorbike: 0, bicycle: 0 }); 
         
         const totalCarCount = (activeCounts.car || 0) + (pendingCounts.car || 0);
         const totalMotorbikeCount = (activeCounts.motorbike || 0) + (pendingCounts.motorbike || 0);
         const totalBicycleCount = (activeCounts.bicycle || 0) + (pendingCounts.bicycle || 0);
         
-        // Kiểm tra giới hạn (Quota Check)
         if (vehicleType === 'car' && totalCarCount >= maxCars) {
             throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxCars} car(s) allowed.`);
         }
         if (vehicleType === 'motorbike' && totalMotorbikeCount >= maxMotorbikes) {
             throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxMotorbikes} motorbike(s) allowed.`);
         }
-        // [UPDATED] Check giới hạn xe đạp
         if (vehicleType === 'bicycle' && totalBicycleCount >= maxBicycles) {
             throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxBicycles} bicycle(s) allowed.`);
         }
@@ -237,7 +225,6 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
         );
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        
         const notificationMessage = `Resident ${residentFullName} has submitted a new vehicle card registration request.`;
         const linkTo = '/admin/vehicle-management';
 
@@ -259,7 +246,7 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
                 if (unlinkErr) console.error("Error deleting uploaded file after DB error:", unlinkErr);
             });
         }
-        // Trả về lỗi 403 nếu là lỗi chưa có phòng hoặc quá giới hạn, ngược lại 500
+        
         if (err.message.includes('assigned an apartment') || err.message.includes('Limit reached')) {
             res.status(403).json({ message: err.message });
         } else {
@@ -291,7 +278,6 @@ router.post('/reissue-card', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
         const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
         if (!userCheck.rows[0]?.apartment_number) {
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
@@ -308,19 +294,27 @@ router.post('/reissue-card', protect, async (req, res) => {
              throw new Error('A request is already pending for this card.');
         }
 
+        // INSERT (đã thêm proof_image_url)
         await client.query(
             `INSERT INTO vehicle_card_requests (
                 resident_id, request_type, target_card_id, vehicle_type, full_name,
-                license_plate, brand, reason, status
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                license_plate, brand, reason, status, proof_image_url
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
             [
-                residentId, 'reissue', cardId, card.vehicle_type, residentFullName, 
-                card.license_plate, card.brand, reason, 'pending'
+                residentId, 
+                'reissue', 
+                cardId, 
+                card.vehicle_type, 
+                residentFullName, 
+                card.license_plate, 
+                card.brand, 
+                reason, 
+                'pending',
+                '' // proof_image_url: rỗng
             ]
         );
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        
         const notificationMessage = `Resident ${residentFullName} has requested to reissue vehicle card (Plate: ${card.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management'; 
 
@@ -337,8 +331,12 @@ router.post('/reissue-card', protect, async (req, res) => {
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error requesting card reissue:', err);
+        
+        // [CẬP NHẬT] Xử lý lỗi pending
         if (err.message.includes('assigned an apartment')) {
             res.status(403).json({ message: err.message });
+        } else if (err.message.includes('already pending')) {
+            res.status(400).json({ message: 'A request is already pending for this card.' });
         } else {
             res.status(500).json({ message: err.message || 'Server error.' });
         }
@@ -349,6 +347,9 @@ router.post('/reissue-card', protect, async (req, res) => {
 
 // POST /api/services/cancel-card
 router.post('/cancel-card', protect, async (req, res) => {
+    // Debug log
+    console.log(">>> [DEBUG] Cancel Card Request:", req.body);
+
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
@@ -368,36 +369,46 @@ router.post('/cancel-card', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // [CHECK KIM CƯƠNG] Kiểm tra xem Resident đã có phòng chưa
+        // 1. Check user info
         const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
         if (!userCheck.rows[0]?.apartment_number) {
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
+        // 2. Check card existence
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
             throw new Error('Valid card not found.');
         }
-         const card = cardRes.rows[0];
+        const card = cardRes.rows[0];
 
-         const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
-         if(pendingReq.rows.length > 0) {
-             throw new Error('A request is already pending for this card.');
-         }
+        // 3. Check duplicate request
+        const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
+        if(pendingReq.rows.length > 0) {
+            throw new Error('A request is already pending for this card.');
+        }
 
-         await client.query(
-             `INSERT INTO vehicle_card_requests (
-                 resident_id, request_type, target_card_id, vehicle_type, full_name,
-                 license_plate, brand, reason, status
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-             [
-                 residentId, 'cancel', cardId, card.vehicle_type, residentFullName,
-                 card.license_plate, card.brand, reason, 'pending'
-             ]
-         );
+        // INSERT (đã thêm proof_image_url)
+        await client.query(
+            `INSERT INTO vehicle_card_requests (
+                resident_id, request_type, target_card_id, vehicle_type, full_name,
+                license_plate, brand, reason, status, proof_image_url
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [
+                residentId, 
+                'cancel', 
+                cardId, 
+                card.vehicle_type, 
+                residentFullName,
+                card.license_plate || 'N/A', 
+                card.brand || 'N/A',         
+                reason, 
+                'pending',
+                '' // proof_image_url: Truyền chuỗi rỗng
+            ]
+        );
 
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        
         const notificationMessage = `Resident ${residentFullName} has requested to cancel vehicle card (Plate: ${card.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management'; 
 
@@ -410,11 +421,17 @@ router.post('/cancel-card', protect, async (req, res) => {
 
         await client.query('COMMIT');
         res.status(201).json({ message: 'Cancellation request submitted successfully!' });
+
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error('Error requesting card cancellation:', err);
+        console.error('Error requesting card cancellation:', err); 
+        
+        // [CẬP NHẬT QUAN TRỌNG] Xử lý lỗi pending để không trả về 500
         if (err.message.includes('assigned an apartment')) {
             res.status(403).json({ message: err.message });
+        } else if (err.message.includes('already pending')) {
+            // Trả về 400 Bad Request
+            res.status(400).json({ message: 'Request pending: You have already submitted a request for this card.' });
         } else {
             res.status(500).json({ message: err.message || 'Server error.' });
         }
@@ -423,10 +440,10 @@ router.post('/cancel-card', protect, async (req, res) => {
     }
 });
 
-// [MỚI + UPDATED Notification] POST /api/services/cancel-pending-request
+// POST /api/services/cancel-pending-request
 router.post('/cancel-pending-request', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
-    const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name; // Lấy tên cư dân
+    const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name; 
     const { requestId } = req.body;
 
     if (!requestId) {
@@ -439,8 +456,6 @@ router.post('/cancel-pending-request', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Kiểm tra yêu cầu có tồn tại và thuộc về user này không
-        // Lấy thêm vehicle_type và license_plate để hiển thị trong thông báo
         const checkQuery = `
             SELECT id, proof_image_url, vehicle_type, license_plate 
             FROM vehicle_card_requests 
@@ -455,9 +470,7 @@ router.post('/cancel-pending-request', protect, async (req, res) => {
 
         const requestToDelete = checkRes.rows[0];
 
-        // 2. [MỚI] Gửi thông báo cho Admin
         const admins = await client.query("SELECT id FROM users WHERE role = 'admin'");
-        
         const notificationMessage = `Resident ${residentFullName} has CANCELLED their registration request for ${requestToDelete.vehicle_type} (Plate: ${requestToDelete.license_plate || 'N/A'}).`;
         const linkTo = '/admin/vehicle-management';
 
@@ -468,12 +481,10 @@ router.post('/cancel-pending-request', protect, async (req, res) => {
             );
         }
 
-        // 3. Xóa record trong DB
         await client.query('DELETE FROM vehicle_card_requests WHERE id = $1', [requestId]);
 
         await client.query('COMMIT');
 
-        // 4. Xóa file ảnh minh chứng (nếu có) - thực hiện sau khi commit thành công
         if (requestToDelete.proof_image_url) {
             const fileName = path.basename(requestToDelete.proof_image_url);
             const filePath = path.join(__dirname, '../uploads/proofs', fileName); 

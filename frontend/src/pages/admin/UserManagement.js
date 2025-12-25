@@ -79,12 +79,29 @@ const UserManagement = () => {
         }
     };
     
-    // 1. Filter
-    const filteredUsers = users.filter(user => 
-        user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.phone && user.phone.includes(searchTerm)) ||
-        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // --- [START] LOGIC TÌM KIẾM KHÔNG DẤU (ACCENT INSENSITIVE) ---
+    
+    // Hàm bỏ dấu tiếng Việt: "Lê Văn" -> "le van"
+    const removeVietnameseTones = (str) => {
+        if (!str) return '';
+        str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+        return str.toLowerCase();
+    };
+
+    // 1. Filter (Đã cập nhật logic)
+    const filteredUsers = users.filter(user => {
+        const searchSlug = removeVietnameseTones(searchTerm);
+        const nameSlug = removeVietnameseTones(user.full_name);
+        const emailSlug = removeVietnameseTones(user.email);
+        const phoneSlug = user.phone ? removeVietnameseTones(user.phone) : '';
+
+        return nameSlug.includes(searchSlug) || 
+               emailSlug.includes(searchSlug) || 
+               phoneSlug.includes(searchSlug);
+    });
+
+    // --- [END] LOGIC TÌM KIẾM KHÔNG DẤU ---
 
     // 2. Sort Logic
     const requestSort = (key) => {
