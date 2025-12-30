@@ -1,20 +1,17 @@
-// frontend/src/components/layout/AdminSidebar.js
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Speedometer2, People, HouseDoor, Grid, Newspaper, Truck, Receipt, Wallet2, CalendarEvent, GearFill } from 'react-bootstrap-icons'; // [MỚI] Thêm GearFill
 
 const AdminSidebar = () => {
-    // Helper để tạo class cho Link
+ 
     const getLinkClass = ({ isActive }) => {
         const baseClass = "d-flex align-items-center py-3 px-4 text-decoration-none fw-medium transition-all";
-        // Active: Nền vàng nhạt, Chữ vàng đậm, Viền trái
-        // Inactive: Chữ xám
+
         return isActive 
             ? `${baseClass} bg-opacity-10 text-dark border-start border-4` 
             : `${baseClass} text-secondary hover-bg-light`;
     };
 
-    // Inline style cho active state để đảm bảo màu chính xác
     const activeStyle = {
         borderColor: '#b99a7b',
         color: '#b99a7b',
@@ -52,8 +49,6 @@ const AdminSidebar = () => {
             <NavLink to="/admin/amenity-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
                 <CalendarEvent className="me-3 fs-5" /> Amenity Management
             </NavLink>
-            
-            {/* [MỚI] Nút Policy Management */}
             <NavLink to="/admin/policy-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
                 <GearFill className="me-3 fs-5" /> Policy Management
             </NavLink>

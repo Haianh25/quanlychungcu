@@ -5,12 +5,10 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const { protect } = require('../middleware/authMiddleware');
 
-// === GET /api/profile/me ===
-// Lấy thông tin hồ sơ (Kèm chi tiết căn hộ)
+
 router.get('/me', protect, async (req, res) => {
     const residentId = req.user.id;
     try {
-        // [UPDATED] Join với bảng rooms để lấy thông tin chi tiết căn hộ
         const result = await db.query(
             `SELECT u.id, u.full_name, u.email, u.phone, u.apartment_number, 
                     r.area, r.bedrooms, r.room_type 
@@ -29,8 +27,7 @@ router.get('/me', protect, async (req, res) => {
     }
 });
 
-// === [MỚI] GET /api/profile/status ===
-// API nhẹ để check trạng thái phòng real-time (dùng cho polling ở Frontend)
+
 router.get('/status', protect, async (req, res) => {
     const userId = req.user.id;
     try {
@@ -39,23 +36,20 @@ router.get('/status', protect, async (req, res) => {
         
         res.json(result.rows[0]);
     } catch (err) {
-        // Không log lỗi 500 để tránh spam log server khi polling
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-// === PUT /api/profile/update-details ===
-// SỬA ĐỔI: Chỉ cho phép cập nhật số điện thoại
+
 router.put('/update-details', protect, async (req, res) => {
     const residentId = req.user.id;
-    const { phone } = req.body; // Chỉ lấy phone từ request
+    const { phone } = req.body; 
 
     if (!phone) {
         return res.status(400).json({ message: 'Phone number is required.' });
     }
 
     try {
-        // Chỉ cập nhật cột phone, giữ nguyên full_name và email
         const result = await db.query(
             'UPDATE users SET phone = $1 WHERE id = $2 RETURNING id, full_name, email, phone',
             [phone, residentId]
@@ -76,7 +70,6 @@ router.put('/update-details', protect, async (req, res) => {
     }
 });
 
-// === PUT /api/profile/change-password ===
 router.put('/change-password', protect, async (req, res) => {
     const residentId = req.user.id;
     const { currentPassword, newPassword, confirmPassword } = req.body;

@@ -1,14 +1,12 @@
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-// Import Icons (cần cài đặt: npm install react-bootstrap-icons)
 import { BuildingCheck, PeopleFill, ShieldCheck, HeartFill } from 'react-bootstrap-icons';
-import './AboutUs.css'; // CSS riêng cho trang này
+import './AboutUs.css'; 
 
 const AboutUs = () => {
     return (
         <div className="about-page fadeIn">
-            {/* --- 1. HERO SECTION (Giống Homepage nhưng ngắn hơn) --- */}
             <section 
                 className="page-hero-section" 
                 style={{ 
@@ -22,7 +20,6 @@ const AboutUs = () => {
                 </Container>
             </section>
 
-            {/* --- 2. OUR STORY --- */}
             <section className="about-story-section my-5">
                 <Container>
                     <Row className="align-items-center">
@@ -49,7 +46,6 @@ const AboutUs = () => {
                 </Container>
             </section>
 
-            {/* --- 3. STATS COUNTER (Bố cục phụ - Điểm nhấn) --- */}
             <section className="about-stats-section py-5 bg-white">
                 <Container>
                     <Row className="text-center">
@@ -81,7 +77,6 @@ const AboutUs = () => {
                 </Container>
             </section>
 
-            {/* --- 4. CORE VALUES (Bố cục phụ) --- */ }
             <section className="about-values-section my-5">
                 <Container>
                     <div className="text-center mb-5">

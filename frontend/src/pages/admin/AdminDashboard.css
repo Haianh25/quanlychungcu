@@ -1,26 +1,23 @@
 /* --- AdminDashboard.css --- */
 
-/* 1. BIẾN MÀU (THEME RESIDEM - ĐỒNG BỘ) */
 :root {
-    --dashboard-primary: #b99a7b;       /* Vàng đồng */
+    --dashboard-primary: #b99a7b;       
     --dashboard-primary-hover: #a38568;
     --dashboard-text-dark: #333333;
     --dashboard-text-muted: #6c757d;
     --dashboard-bg-card: #ffffff;
     --dashboard-border: #e0e0e0;
     
-    /* Màu nền soft cho icon */
     --bg-soft-gold: rgba(185, 154, 123, 0.15);
     --bg-soft-green: rgba(25, 135, 84, 0.15);
     --bg-soft-red: rgba(220, 53, 69, 0.15);
     --bg-soft-blue: rgba(13, 202, 240, 0.15);
 }
 
-/* 2. CONTAINER */
 .dashboard-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
-    font-family: 'Be Vietnam Pro', sans-serif; /* Đảm bảo font đồng bộ */
+    font-family: 'Be Vietnam Pro', sans-serif; 
 }
 
 .page-main-title {
@@ -31,12 +28,11 @@
     letter-spacing: -0.5px;
 }
 
-/* 3. DASHBOARD CARDS */
 .dashboard-card {
     background-color: var(--dashboard-bg-card) !important;
     border: 1px solid var(--dashboard-border) !important;
-    border-radius: 12px !important; /* Bo góc mềm mại */
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important; /* Đổ bóng rất nhẹ */
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important; 
     transition: all 0.3s ease;
     height: 100%;
 }
@@ -44,7 +40,7 @@
 .dashboard-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
-    border-color: var(--dashboard-primary) !important; /* Hover hiện viền vàng đồng */
+    border-color: var(--dashboard-primary) !important; 
 }
 
 .dashboard-card .card-header {
@@ -76,17 +72,15 @@
 }
 
 .dashboard-card:hover .dashboard-icon-box {
-    transform: scale(1.1) rotate(5deg); /* Hiệu ứng xoay nhẹ khi hover card */
+    transform: scale(1.1) rotate(5deg); 
 }
 
-/* Màu nền icon */
 .bg-primary-soft { background-color: var(--bg-soft-gold); color: var(--dashboard-primary); }
 .bg-success-soft { background-color: var(--bg-soft-green); color: #198754; }
 .bg-danger-soft  { background-color: var(--bg-soft-red); color: #dc3545; }
 .bg-info-soft    { background-color: var(--bg-soft-blue); color: #0dcaf0; }
 .bg-warning-soft { background-color: rgba(255, 193, 7, 0.15); color: #ffc107; }
 
-/* 5. TYPOGRAPHY & ELEMENTS */
 .stat-label {
     font-size: 0.75rem;
     font-weight: 700;
@@ -110,7 +104,6 @@
     border-radius: 50px;
 }
 
-/* Progress Bar Custom */
 .progress-custom {
     background-color: #f0f0f0;
     border-radius: 10px;
@@ -118,7 +111,6 @@
     overflow: hidden;
 }
 
-/* Action Required Highlighting */
 .action-required-card.has-pending {
     border-left: 4px solid #dc3545 !important;
 }
@@ -126,7 +118,6 @@
     border-left: 4px solid #198754 !important;
 }
 
-/* Welcome Card (Nếu bạn muốn dùng lại style cũ, nếu không thì xóa đoạn này) */
 .welcome-card {
     background: linear-gradient(135deg, #b99a7b 0%, #a08365 100%);
     border-radius: 12px;
@@ -135,13 +126,11 @@
     color: #a08365 !important;
 }
 
-/* Animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 .fadeIn { animation: fadeIn 0.5s ease-out; }
-/* Thêm vào AdminDashboard.css */
 .live-indicator {
     display: flex;
     align-items: center;

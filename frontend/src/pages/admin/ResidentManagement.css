@@ -1,20 +1,17 @@
-/* --- ResidentManagement.css (Theme Residem - High Contrast) --- */
+/* --- ResidentManagement.css  --- */
 
-/* 1. BIẾN MÀU */
 :root {
-    --res-primary: #b99a7b;       /* Vàng đồng */
+    --res-primary: #b99a7b;      
     --res-primary-hover: #a38568;
     --res-text-dark: #333333;
     --res-text-muted: #6c757d;
     --res-bg-card: #ffffff;
     --res-border: #e0e0e0;
 
-    /* Màu Badge Đậm đà */
-    --badge-assigned-bg: #198754;  /* Xanh lá đậm */
-    --badge-unassigned-bg: #6c757d; /* Xám đậm */
+    --badge-assigned-bg: #198754;  
+    --badge-unassigned-bg: #6c757d; 
 }
 
-/* 2. CONTAINER & ANIMATION */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -34,7 +31,6 @@
     letter-spacing: -0.5px;
 }
 
-/* 3. CARD STYLE */
 .residem-card {
     background-color: var(--res-bg-card);
     border: 1px solid var(--res-border);
@@ -48,7 +44,6 @@
     padding: 1.5rem;
 }
 
-/* 4. SEARCH BAR */
 .residem-search-bar {
     background-color: #fff;
     border: 1px solid var(--res-border);
@@ -81,7 +76,6 @@
     border-bottom-left-radius: 0;
 }
 
-/* 5. TABLE STYLE */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
@@ -104,10 +98,9 @@
     border-bottom: 2px solid var(--res-border);
     vertical-align: middle;
     white-space: nowrap;
-    user-select: none; /* Không cho bôi đen khi click nhanh */
+    user-select: none; 
 }
 
-/* [MỚI] Style cho tiêu đề cột có thể sort */
 .sortable-header {
     cursor: pointer;
     transition: background-color 0.2s;
@@ -117,7 +110,7 @@
     color: var(--res-primary);
 }
 .sort-icon-placeholder {
-    opacity: 0.3; /* Icon mờ khi chưa sort */
+    opacity: 0.3; 
 }
 
 .residem-table tbody td {
@@ -134,12 +127,11 @@
     text-align: right;
 }
 
-/* 6. BADGES (Solid Style) */
 .status-badge {
     padding: 0.5em 1em; 
     font-size: 0.85rem;
     font-weight: 600;
-    border-radius: 50px; /* Bo tròn viên thuốc */
+    border-radius: 50px; 
     letter-spacing: 0.5px;
     display: inline-flex;
     align-items: center;
@@ -159,7 +151,6 @@
     opacity: 0.9;
 }
 
-/* 7. BUTTONS */
 .btn-residem-primary {
     background-color: var(--res-primary);
     border-color: var(--res-primary);
@@ -178,7 +169,6 @@
     box-shadow: 0 4px 8px rgba(185, 154, 123, 0.3);
 }
 
-/* 8. PAGINATION */
 .residem-pagination {
     margin-top: 1.5rem;
 }

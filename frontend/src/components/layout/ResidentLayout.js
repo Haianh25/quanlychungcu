@@ -8,9 +8,9 @@ const ResidentLayout = () => {
         
         <div className="homepage-container"> 
             <ResidentHeader />
-            {/* THAY ĐỔI: Thêm className="main-content" vào đây */}
+           
             <main className="main-content">
-                {/* Outlet sẽ render Homepage, News, NewsDetail... */}
+            
                 <Outlet /> 
             </main>
             <ResidentFooter />

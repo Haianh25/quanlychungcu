@@ -51,7 +51,7 @@ router.get('/bookings', protect, isAdmin, async (req, res) => {
 });
 
 router.post('/bookings/:id/cancel', protect, isAdmin, async (req, res) => {
-    const { reason } = req.body; // Nhận lý do từ client
+    const { reason } = req.body; 
 
     if (!reason) {
         return res.status(400).json({ message: 'Cancellation reason is required.' });

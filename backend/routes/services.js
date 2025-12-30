@@ -6,7 +6,6 @@ const upload = require('../utils/upload');
 const fs = require('fs'); 
 const path = require('path');
 
-// GET /api/services/fees-table
 router.get('/fees-table', async (req, res) => {
     try {
         const feeCodes = [
@@ -31,7 +30,6 @@ router.get('/fees-table', async (req, res) => {
     }
 });
 
-// GET /api/services/my-policy
 router.get('/my-policy', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     try {
@@ -63,7 +61,6 @@ router.get('/my-policy', protect, async (req, res) => {
     }
 });
 
-// GET /api/services/my-cards
 router.get('/my-cards', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     
@@ -128,7 +125,6 @@ router.get('/my-cards', protect, async (req, res) => {
     }
 });
 
-// POST /api/services/register-card
 router.post('/register-card', protect, upload.single('proofImage'), async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name;
@@ -153,7 +149,6 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     try {
         await client.query('BEGIN');
 
-        // Check 1: User có phòng chưa
         const userCheck = await client.query(
             `SELECT u.apartment_number, r.room_type 
              FROM users u 
@@ -167,7 +162,6 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
-        // Logic giới hạn xe
         const roomType = userInfo.room_type || 'A'; 
         const policyRes = await client.query(
             "SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", 
@@ -257,7 +251,6 @@ router.post('/register-card', protect, upload.single('proofImage'), async (req, 
     }
 });
 
-// POST /api/services/reissue-card
 router.post('/reissue-card', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name;
@@ -294,7 +287,6 @@ router.post('/reissue-card', protect, async (req, res) => {
              throw new Error('A request is already pending for this card.');
         }
 
-        // INSERT (đã thêm proof_image_url)
         await client.query(
             `INSERT INTO vehicle_card_requests (
                 resident_id, request_type, target_card_id, vehicle_type, full_name,
@@ -310,7 +302,7 @@ router.post('/reissue-card', protect, async (req, res) => {
                 card.brand, 
                 reason, 
                 'pending',
-                '' // proof_image_url: rỗng
+                '' 
             ]
         );
 
@@ -332,7 +324,6 @@ router.post('/reissue-card', protect, async (req, res) => {
         await client.query('ROLLBACK');
         console.error('Error requesting card reissue:', err);
         
-        // [CẬP NHẬT] Xử lý lỗi pending
         if (err.message.includes('assigned an apartment')) {
             res.status(403).json({ message: err.message });
         } else if (err.message.includes('already pending')) {
@@ -345,9 +336,7 @@ router.post('/reissue-card', protect, async (req, res) => {
     }
 });
 
-// POST /api/services/cancel-card
 router.post('/cancel-card', protect, async (req, res) => {
-    // Debug log
     console.log(">>> [DEBUG] Cancel Card Request:", req.body);
 
     const residentId = req.user.user ? req.user.user.id : req.user.id;
@@ -369,26 +358,22 @@ router.post('/cancel-card', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Check user info
         const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
         if (!userCheck.rows[0]?.apartment_number) {
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
-        // 2. Check card existence
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
             throw new Error('Valid card not found.');
         }
         const card = cardRes.rows[0];
 
-        // 3. Check duplicate request
         const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
         if(pendingReq.rows.length > 0) {
             throw new Error('A request is already pending for this card.');
         }
 
-        // INSERT (đã thêm proof_image_url)
         await client.query(
             `INSERT INTO vehicle_card_requests (
                 resident_id, request_type, target_card_id, vehicle_type, full_name,
@@ -404,7 +389,7 @@ router.post('/cancel-card', protect, async (req, res) => {
                 card.brand || 'N/A',         
                 reason, 
                 'pending',
-                '' // proof_image_url: Truyền chuỗi rỗng
+                '' 
             ]
         );
 
@@ -426,11 +411,9 @@ router.post('/cancel-card', protect, async (req, res) => {
         await client.query('ROLLBACK');
         console.error('Error requesting card cancellation:', err); 
         
-        // [CẬP NHẬT QUAN TRỌNG] Xử lý lỗi pending để không trả về 500
         if (err.message.includes('assigned an apartment')) {
             res.status(403).json({ message: err.message });
         } else if (err.message.includes('already pending')) {
-            // Trả về 400 Bad Request
             res.status(400).json({ message: 'Request pending: You have already submitted a request for this card.' });
         } else {
             res.status(500).json({ message: err.message || 'Server error.' });
@@ -440,7 +423,6 @@ router.post('/cancel-card', protect, async (req, res) => {
     }
 });
 
-// POST /api/services/cancel-pending-request
 router.post('/cancel-pending-request', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentFullName = req.user.user ? req.user.user.full_name : req.user.full_name; 

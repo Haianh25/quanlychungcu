@@ -1,4 +1,3 @@
-/* --- BIẾN MÀU --- */
 :root {
     --color-bg-light: #f8f6f3;
     --color-primary-accent: #b99a7b;
@@ -8,12 +7,10 @@
     --color-border-light: #e0e0e0;
 }
 
-/* Container chính */
 .news-page-container {
     max-width: 1200px;
 }
 
-/* Animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -22,13 +19,11 @@
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Tiêu đề trang */
 .news-page-title {
     color: var(--color-text-dark);
     font-weight: 700;
 }
 
-/* Dropdown Sort */
 .news-sort-dropdown.dropdown-toggle {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -54,7 +49,6 @@
 .dropdown-item:active { background-color: var(--color-primary-accent); color: #FFFFFF; }
 
 
-/* --- CARD TIN TỨC CHUNG --- */
 .news-card {
     border: none !important;
     border-radius: 0.75rem !important;
@@ -68,7 +62,6 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-/* Ảnh Thumbnail */
 .news-img-top-wrapper {
     height: 220px;
     overflow: hidden;
@@ -94,7 +87,6 @@
     font-size: 3rem;
 }
 
-/* Nội dung Card */
 .news-card .card-title {
     color: var(--color-text-dark);
     font-weight: 700;
@@ -106,13 +98,12 @@
     line-height: 1.6;
 }
 
-/* --- BÀI VIẾT NỔI BẬT (FEATURED) --- */
 .featured-news-card {
     border-radius: 1rem !important;
 }
 .featured-news-image {
     width: 100%;
-    height: 400px; /* Ảnh lớn hơn */
+    height: 400px; 
     object-fit: cover;
     border-top-left-radius: 1rem;
     border-bottom-left-radius: 1rem;
@@ -132,7 +123,6 @@
     }
 }
 
-/* --- LINK & BUTTONS --- */
 .read-more-link {
     color: var(--color-primary-accent);
     font-weight: 600;
@@ -158,7 +148,7 @@
     color: #fff !important;
     padding: 0.6rem 1.5rem;
     font-weight: 600;
-    border-radius: 50px; /* Bo tròn nhiều hơn */
+    border-radius: 50px;
     transition: all 0.3s ease;
 }
 .btn-residem-primary:hover {
@@ -167,7 +157,6 @@
     transform: translateY(-2px);
 }
 
-/* Alert */
 .no-news-alert {
     background-color: #fff;
     border: 1px solid var(--color-border-light);
@@ -177,7 +166,6 @@
     text-align: center;
 }
 
-/* Pagination */
 .residem-pagination .pagination { margin: 0; }
 .residem-pagination .page-item .page-link {
     color: var(--color-text-muted-dark);
@@ -199,15 +187,13 @@
     color: #FFFFFF;
     box-shadow: 0 2px 8px rgba(185, 154, 123, 0.4);
 }
-/* ... (Giữ nguyên code cũ ở trên) ... */
 
-/* --- SIDEBAR RECENT POSTS (FIX) --- */
 .recent-posts-list .list-group-item {
     border: none;
     border-bottom: 1px dashed var(--color-border-light);
     padding: 12px 0;
     background: transparent;
-    display: flex;       /* Đảm bảo layout ngang */
+    display: flex;
     align-items: flex-start;
 }
 
@@ -215,17 +201,15 @@
     border-bottom: none;
 }
 
-/* Quy định kích thước ảnh thumbnail nhỏ */
 .recent-post-img {
-    width: 80px;         /* Chiều rộng cố định */
-    height: 60px;        /* Chiều cao cố định */
-    object-fit: cover;   /* Cắt ảnh vừa khung, không bị méo */
-    border-radius: 6px;  /* Bo góc */
-    flex-shrink: 0;      /* Ngăn ảnh bị co lại */
-    margin-right: 15px;  /* Khoảng cách với chữ */
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-right: 15px;
 }
 
-/* Placeholder khi không có ảnh */
 .recent-post-img-placeholder {
     width: 80px;
     height: 60px;
@@ -240,7 +224,6 @@
     flex-shrink: 0;
 }
 
-/* Phần thông tin bài viết bên cạnh ảnh */
 .recent-post-info {
     display: flex;
     flex-direction: column;
@@ -254,7 +237,6 @@
     margin-bottom: 4px;
     color: var(--color-text-dark);
     
-    /* Tự động cắt dòng nếu tiêu đề quá dài (tối đa 2 dòng) */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;

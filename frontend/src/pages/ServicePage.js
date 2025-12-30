@@ -10,7 +10,7 @@ const ServicePage = () => {
             <h2 className="page-main-title mb-5 text-center">Choose a Service</h2>
 
             <Row className="justify-content-center g-4">
-                {/* BOX 1: GỬI XE -> Link tới /services/vehicle */}
+                
                 <Col md={5} lg={4}>
                     <Link to="/services/vehicle" className="service-link-box">
                         <Card className="residem-card service-box-card h-100 text-center">
@@ -28,7 +28,6 @@ const ServicePage = () => {
                     </Link>
                 </Col>
 
-                {/* BOX 2: ĐẶT PHÒNG -> Link tới /services/amenity */}
                 <Col md={5} lg={4}>
                     <Link to="/services/amenity" className="service-link-box">
                         <Card className="residem-card service-box-card h-100 text-center">

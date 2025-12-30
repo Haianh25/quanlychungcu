@@ -1,9 +1,7 @@
-/* --- SỬ DỤNG BIẾN MÀU TỪ INDEX.CSS --- */
 
-/* 1. HERO SECTION (BANNER) */
 .page-hero-section {
     position: relative;
-    height: 50vh; /* Chiều cao khoảng 50% màn hình, giống Homepage */
+    height: 50vh; 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -11,24 +9,23 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: #FFFFFF; /* Chữ bắt buộc màu trắng */
+    color: #FFFFFF; 
     margin-bottom: 3rem;
 }
 
-/* Lớp phủ màu đen mờ để làm nổi chữ */
 .page-hero-overlay {
     position: absolute;
     top: 0; 
     left: 0; 
     width: 100%; 
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.65); /* Tăng độ tối lên 0.65 */
+    background-color: rgba(0, 0, 0, 0.65); 
     z-index: 1;
 }
 
 .page-hero-title {
     position: relative;
-    z-index: 2; /* Đè lên lớp phủ */
+    z-index: 2; 
     padding: 0 15px;
 }
 
@@ -37,7 +34,7 @@
     font-weight: 800;
     margin-bottom: 1rem;
     color: #FFFFFF;
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.5); /* Đổ bóng chữ */
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5); 
     letter-spacing: 1px;
 }
 
@@ -51,7 +48,6 @@
 }
 
 
-/* 2. SECTION TITLES (TIÊU ĐỀ CÁC PHẦN) */
 .section-title {
     color: var(--color-text-dark);
     font-weight: 700;
@@ -60,7 +56,6 @@
     position: relative;
 }
 
-/* Gạch chân vàng đồng dưới tiêu đề */
 .section-title::after {
     content: '';
     display: block;
@@ -70,7 +65,6 @@
     margin-top: 0.5rem;
     border-radius: 2px;
 }
-/* Nếu tiêu đề căn giữa */
 .text-center .section-title::after {
     margin: 0.5rem auto 0 auto;
 }
@@ -86,7 +80,6 @@
 }
 
 
-/* 3. OUR STORY SECTION */
 .about-story-section {
     padding: 3rem 0;
 }
@@ -102,17 +95,15 @@
     transform: translateY(-5px);
 }
 
-/* Căn chỉnh text bên phải ảnh */
 .about-story-content p {
     font-size: 1.05rem;
     line-height: 1.8;
     color: var(--color-text-muted-dark);
     margin-bottom: 1.5rem;
-    text-align: justify; /* Căn đều 2 bên cho đẹp */
+    text-align: justify;
 }
 
 
-/* 4. STATS COUNTER (SỐ LIỆU) */
 .about-stats-section {
     background-color: #FFFFFF;
     padding: 4rem 0;
@@ -142,10 +133,9 @@
 }
 
 
-/* 5. CORE VALUES (GIÁ TRỊ CỐT LÕI) */
 .about-values-section {
     padding: 5rem 0;
-    background-color: var(--color-bg-light); /* Nền kem nhẹ */
+    background-color: var(--color-bg-light); 
 }
 
 .value-card {
@@ -199,9 +189,8 @@
 }
 
 
-/* 6. CTA SECTION (KÊU GỌI HÀNH ĐỘNG) */
 .about-cta-section {
-    background-color: var(--color-bg-dark-teal); /* Màu xanh rêu đậm */
+    background-color: var(--color-bg-dark-teal); 
     padding: 5rem 0;
     color: #fff;
     position: relative;
@@ -221,7 +210,6 @@
     color: #e0e0e0;
 }
 
-/* Animation */
 .fadeIn {
     animation: fadeIn 0.8s ease-out;
 }
@@ -230,7 +218,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
 @media (max-width: 992px) {
     .about-story-content {
         margin-top: 2rem;

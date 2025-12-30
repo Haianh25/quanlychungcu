@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Tabs, Tab, Card, Form, Button, Spinner, Alert, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
-import { HouseDoorFill, Grid3x3GapFill, MoonStarsFill } from 'react-bootstrap-icons'; // Thêm icon
+import { HouseDoorFill, Grid3x3GapFill, MoonStarsFill } from 'react-bootstrap-icons'; 
 import './ProfilePage.css'; 
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -11,7 +11,6 @@ const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // [UPDATED] Thêm state lưu thông tin căn hộ
     const [apartmentInfo, setApartmentInfo] = useState(null);
 
     const [detailsFormData, setDetailsFormData] = useState({ fullName: '', email: '', phone: '' });
@@ -46,7 +45,6 @@ const ProfilePage = () => {
                     phone: res.data.phone || ''
                 });
 
-                // [UPDATED] Lưu thông tin căn hộ
                 if (res.data.apartment_number) {
                     setApartmentInfo({
                         name: res.data.apartment_number,
@@ -80,13 +78,11 @@ const ProfilePage = () => {
         setDetailsLoading(true); setDetailsError(''); setDetailsSuccess('');
         
         try {
-            // Chỉ gửi Phone lên server
             const res = await axios.put(`${API_BASE_URL}/api/profile/update-details`, {
                 phone: detailsFormData.phone
             }, config);
 
             setDetailsSuccess(res.data.message || 'Update successful!');
-            // Update state với dữ liệu mới từ server trả về
             setDetailsFormData(prev => ({
                 ...prev,
                 phone: res.data.user.phone
@@ -129,8 +125,7 @@ const ProfilePage = () => {
         <Container className="profile-page-container my-5 fadeIn">
             <h2 className="mb-4 profile-page-title">Your Profile</h2>
             {error && <Alert variant="danger">{error}</Alert>}
-            
-            {/* [MỚI] Card Thông tin căn hộ (Chỉ hiện khi đã có phòng) */}
+
             {apartmentInfo && (
                 <Card className="mb-4 border-0 shadow-sm" style={{ backgroundColor: '#fdfbf7', borderLeft: '5px solid #b99a7b' }}>
                     <Card.Body className="d-flex align-items-center justify-content-around flex-wrap p-4">
@@ -165,7 +160,6 @@ const ProfilePage = () => {
 
             <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
                 
-                {/* === TAB 1: THÔNG TIN CHI TIẾT === */}
                 <Tab eventKey="details" title="Profile Details">
                     <Card className="profile-form-card">
                         <Card.Body>
@@ -174,7 +168,6 @@ const ProfilePage = () => {
                                     <Col md={6}>
                                         <Form.Group className="mb-3">
                                             <Form.Label>Full Name</Form.Label>
-                                            {/* KHÓA: Disabled & ReadOnly */}
                                             <Form.Control 
                                                 type="text" 
                                                 value={detailsFormData.fullName} 
@@ -203,7 +196,6 @@ const ProfilePage = () => {
 
                                 <Form.Group className="mb-3">
                                     <Form.Label>Email</Form.Label>
-                                    {/* KHÓA: Disabled & ReadOnly */}
                                     <Form.Control 
                                         type="email" 
                                         value={detailsFormData.email} 
@@ -229,7 +221,6 @@ const ProfilePage = () => {
                     </Card>
                 </Tab>
 
-                {/* === TAB 2: ĐỔI MẬT KHẨU === */}
                 <Tab eventKey="password" title="Change Password">
                     <Card className="profile-form-card">
                         <Card.Body>

@@ -1,21 +1,18 @@
 /* --- FeeManagement.css (Theme Residem) --- */
 
-/* 1. BIẾN MÀU */
 :root {
-    --fee-primary: #b99a7b;       /* Vàng đồng */
+    --fee-primary: #b99a7b;       
     --fee-primary-hover: #a38568;
     --fee-text-dark: #333333;
     --fee-text-muted: #6c757d;
     --fee-bg-card: #ffffff;
     --fee-border: #e0e0e0;
     
-    /* Màu riêng cho Code Badge */
     --code-bg: #e7f1ff;
     --code-text: #0c63e4;
     --code-border: #b6d4fe;
 }
 
-/* 2. CONTAINER & ANIMATION */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -35,7 +32,6 @@
     letter-spacing: -0.5px;
 }
 
-/* 3. CARD STYLE */
 .residem-card {
     background-color: var(--fee-bg-card);
     border: 1px solid var(--fee-border);
@@ -49,7 +45,6 @@
     padding: 1.5rem;
 }
 
-/* 4. TABLE STYLE */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
@@ -82,7 +77,6 @@
     font-size: 0.95rem;
 }
 
-/* FEE CODE BADGE (Style xịn) */
 .fee-code-badge {
     background-color: var(--code-bg);
     color: var(--code-text);
@@ -96,7 +90,6 @@
     display: inline-block;
 }
 
-/* 5. FORM CONTROLS */
 .residem-form-label {
     font-weight: 600;
     color: var(--fee-text-muted);
@@ -121,7 +114,6 @@
     box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15);
 }
 
-/* Input Group Text (VND) */
 .input-group-text {
     background-color: #f8f9fa;
     border: 1px solid var(--fee-border);
@@ -136,7 +128,6 @@
     font-weight: bold;
 }
 
-/* 6. BUTTONS */
 .btn-residem-primary {
     background-color: var(--fee-primary);
     border-color: var(--fee-primary);
@@ -154,7 +145,6 @@
     box-shadow: 0 4px 8px rgba(185, 154, 123, 0.4);
 }
 
-/* Nút nhỏ trong bảng */
 .btn-residem-warning.btn-sm,
 .btn-residem-danger.btn-sm {
     padding: 0.4rem 0.8rem;
@@ -196,7 +186,6 @@
     color: #333 !important;
 }
 
-/* 7. MODAL */
 .modal-content {
     border-radius: 12px;
     border: none;

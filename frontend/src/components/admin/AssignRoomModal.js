@@ -8,7 +8,6 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
     const [selectedBlockId, setSelectedBlockId] = useState('');
     const [selectedFloor, setSelectedFloor] = useState('');
 
-    // Fetch blocks when modal opens
     useEffect(() => {
         if (show) {
             const fetchBlocks = async () => {
@@ -22,32 +21,29 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
                 }
             };
             fetchBlocks();
-            
-            // Reset state to avoid stale data
+
             setSelectedBlockId('');
             setSelectedFloor('');
             setAvailableRooms([]);
         }
     }, [show]);
 
-    // Fetch available rooms or cleanup state
     useEffect(() => {
         if (selectedBlockId) {
-            // If a block is selected
             const fetchRooms = async () => {
                 const token = localStorage.getItem('adminToken');
                 const config = { headers: { 'Authorization': `Bearer ${token}` } };
                 try {
                     const res = await axios.get(`http://localhost:5000/api/admin/blocks/${selectedBlockId}/available-rooms`, config);
                     setAvailableRooms(res.data);
-                    setSelectedFloor(''); // Reset selected floor
+                    setSelectedFloor(''); 
                 } catch (err) {
                     console.error("Failed to fetch rooms");
                 }
             };
             fetchRooms();
         } else {
-            // If "-- Choose Block --" is selected
+
             setAvailableRooms([]); 
             setSelectedFloor('');  
         }
@@ -63,15 +59,13 @@ const AssignRoomModal = ({ show, handleClose, resident, onAssignSuccess }) => {
             onAssignSuccess(); 
             handleClose();
         } catch (error) {
-            // [ĐÃ DỊCH] Sửa thông báo lỗi sang tiếng Anh
+           
             alert(error.response?.data?.message || 'Failed to assign room!');
         }
     };
 
-    // Extract unique floors from available rooms
     const floors = [...new Set(availableRooms.map(room => room.floor))].sort((a, b) => a - b);
-    
-    // Filter rooms based on selected floor
+
     const roomsOnSelectedFloor = selectedFloor 
         ? availableRooms.filter(room => room.floor === parseInt(selectedFloor))
         : []; 

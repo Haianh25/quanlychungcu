@@ -1,10 +1,6 @@
 const db = require('../db');
 const { sendNewBillEmail } = require('./mailer');
 
-/**
- * Hàm tạo hóa đơn tự động cho tất cả các phòng có người ở (resident)
- * Chạy vào ngày 1 hàng tháng
- */
 async function generateBillsForMonth(month, year) {
     console.log('Running job: generateBillsForMonth...');
     const pool = db.getPool ? db.getPool() : db;
@@ -23,7 +19,6 @@ async function generateBillsForMonth(month, year) {
         const prevMonthStartDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
         const currentMonthStartDate = `${year}-${String(month).padStart(2, '0')}-01`;
 
-        // [UPDATED] Lấy thêm thông tin area (diện tích) của phòng
         const resRooms = await client.query(
             `SELECT 
                 r.id AS room_id, 
@@ -42,7 +37,6 @@ async function generateBillsForMonth(month, year) {
             return { success: true, count: 0 }; 
         }
 
-        // Lấy bảng giá phí
         const resFees = await client.query('SELECT fee_code, price FROM fees');
         const fees = {};
         resFees.rows.forEach(fee => {
@@ -68,10 +62,7 @@ async function generateBillsForMonth(month, year) {
             let totalAmount = 0;
             const billItems = [];
 
-            // --- 3a. Phí cố định (Đã cập nhật logic tính theo m2) ---
             if (fees['MANAGEMENT_FEE']) {
-                // [UPDATED] Tính phí quản lý dựa trên diện tích (Area x Price per m2)
-                // Nếu area chưa có (null/0), mặc định tính là 1 unit (hoặc bỏ qua tùy logic, ở đây fallback là 1)
                 const roomArea = parseFloat(area) || 0;
                 let managementFee = 0;
                 let itemName = '';
@@ -80,7 +71,6 @@ async function generateBillsForMonth(month, year) {
                     managementFee = fees['MANAGEMENT_FEE'] * roomArea;
                     itemName = `Apartment Management Fee (${roomArea}m² x ${fees['MANAGEMENT_FEE'].toLocaleString('vi-VN')} VND)`;
                 } else {
-                    // Fallback cho phòng cũ chưa có diện tích: Tính giá gốc (coi như trọn gói)
                     managementFee = fees['MANAGEMENT_FEE'];
                     itemName = `Apartment Management Fee (${month}/${year})`;
                 }
@@ -99,7 +89,6 @@ async function generateBillsForMonth(month, year) {
                 totalAmount += fees['ADMIN_FEE'];
             }
 
-            // --- 3b. Phí gửi xe hàng tháng ---
             const vehicleRes = await client.query(
                 "SELECT vehicle_type, COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = 'active' GROUP BY vehicle_type", 
                 [user_id]
@@ -124,7 +113,6 @@ async function generateBillsForMonth(month, year) {
                 }
             }
 
-            // --- 3c. Phí một lần (Đăng ký/Cấp lại) ---
             const oneTimeFeeRes = await client.query(
                 `SELECT id, request_type, vehicle_type, one_time_fee_amount 
                  FROM vehicle_card_requests 
@@ -144,7 +132,6 @@ async function generateBillsForMonth(month, year) {
                 }
             }
             
-            // --- 3d. Phí tính theo tỷ lệ (Prorated) ---
             const proratedCardsRes = await client.query(
                 `SELECT vehicle_type, issued_at 
                  FROM vehicle_cards 
@@ -180,7 +167,6 @@ async function generateBillsForMonth(month, year) {
                 }
             }
 
-            // --- 3e. Phí đặt phòng (Amenities) ---
             const bookingRes = await client.query(
                 `SELECT b.id, r.name as room_name, b.booking_date, b.start_time, b.end_time, b.total_price
                  FROM room_bookings b
@@ -204,7 +190,6 @@ async function generateBillsForMonth(month, year) {
                 }
             }
 
-            // 4. Tạo hóa đơn tổng (Bills)
             const resBill = await client.query(
                 `INSERT INTO bills (user_id, room_id, issue_date, due_date, total_amount, status)
                  VALUES ($1, $2, $3, $4, $5, 'unpaid') RETURNING bill_id`,
@@ -212,7 +197,6 @@ async function generateBillsForMonth(month, year) {
             );
             const billId = resBill.rows[0].bill_id;
 
-            // 5. Tạo các chi tiết hóa đơn (Bill_Items)
             for (const item of billItems) {
                 await client.query(
                     `INSERT INTO bill_items (bill_id, item_name, unit_price, total_item_amount, quantity)
@@ -221,20 +205,16 @@ async function generateBillsForMonth(month, year) {
                 );
             }
             
-            // 6. Cập nhật trạng thái request thẻ
             if (requestIdsToUpdate.length > 0) {
                 await client.query('UPDATE vehicle_card_requests SET billed_in_bill_id = $1 WHERE id = ANY($2::int[])', [billId, requestIdsToUpdate]);
             }
 
-            // --- [MỚI] GỬI THÔNG BÁO CHO RESIDENT ---
             const notiMessage = `New Bill Alert: Your service bill for ${month}/${year} (Invoice #${billId}) has been issued. Total: ${totalAmount.toLocaleString('vi-VN')} VND.`;
             await client.query(
                 "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
                 [user_id, notiMessage, '/bill']
             );
-            // -----------------------------------------
 
-            // Gửi Email thông báo
             if (email && full_name) {
                 const billDetails = {
                     billId: billId,
@@ -266,10 +246,6 @@ async function generateBillsForMonth(month, year) {
     }
 }
 
-/**
- * [MỚI - UPDATED] Hàm tạo hóa đơn chuyển đến (Move-in Bill)
- * Đã thêm logic kiểm tra: Nếu tháng này đã có bill rồi thì KHÔNG tạo thêm bill mới.
- */
 async function generateMoveInBill(userId, roomId, client) {
     console.log(`[MoveInBill] Checking bills for user ${userId} room ${roomId}...`);
     
@@ -278,7 +254,6 @@ async function generateMoveInBill(userId, roomId, client) {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    // [CHECK KIM CƯƠNG] Kiểm tra xem tháng này user đã có hóa đơn nào chưa (bất kể trạng thái)
     const existingBillCheck = await client.query(
         `SELECT 1 FROM bills 
          WHERE user_id = $1 AND EXTRACT(MONTH FROM issue_date) = $2 AND EXTRACT(YEAR FROM issue_date) = $3`,
@@ -287,25 +262,20 @@ async function generateMoveInBill(userId, roomId, client) {
 
     if (existingBillCheck.rows.length > 0) {
         console.log(`[MoveInBill] Existing bill found for ${currentMonth}/${currentYear}. SKIPPING new bill generation.`);
-        return; // Dừng hàm, không tạo hóa đơn mới
+        return; 
     }
 
     console.log(`[MoveInBill] No bill found. Generating prorated move-in bill...`);
     
-    // Lấy ngày cuối cùng của tháng hiện tại
     const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
     
-    // Số ngày phải trả tiền (từ hôm nay đến hết tháng)
     const daysToCharge = (lastDayOfMonth - currentDay) + 1;
 
-    // Nếu còn ít hơn 3 ngày thì thôi, để tháng sau tính luôn (tùy chính sách)
     if (daysToCharge <= 0) return; 
 
-    // [UPDATED] Lấy thông tin diện tích phòng
     const roomRes = await client.query("SELECT area FROM rooms WHERE id = $1", [roomId]);
     const roomArea = parseFloat(roomRes.rows[0]?.area) || 0;
 
-    // Lấy bảng giá
     const resFees = await client.query("SELECT fee_code, price FROM fees WHERE fee_code IN ('MANAGEMENT_FEE', 'ADMIN_FEE')");
     const fees = {};
     resFees.rows.forEach(fee => fees[fee.fee_code] = parseFloat(fee.price));
@@ -313,7 +283,6 @@ async function generateMoveInBill(userId, roomId, client) {
     let totalAmount = 0;
     const billItems = [];
 
-    // Tính phí quản lý theo tỷ lệ (VÀ THEO DIỆN TÍCH)
     if (fees['MANAGEMENT_FEE']) {
         let monthlyFee = 0;
         let desc = '';
@@ -336,7 +305,6 @@ async function generateMoveInBill(userId, roomId, client) {
         });
     }
 
-    // Tính phí Admin theo tỷ lệ
     if (fees['ADMIN_FEE']) {
         const dailyRate = fees['ADMIN_FEE'] / lastDayOfMonth;
         const proratedAmount = Math.round(dailyRate * daysToCharge);
@@ -348,7 +316,6 @@ async function generateMoveInBill(userId, roomId, client) {
     }
 
     if (totalAmount > 0) {
-        // Hạn thanh toán: 5 ngày sau khi chuyển đến
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 5); 
 
@@ -367,51 +334,34 @@ async function generateMoveInBill(userId, roomId, client) {
             );
         }
 
-        // --- [MỚI] GỬI THÔNG BÁO CHO RESIDENT ---
         const notiMessage = `New Bill Alert: Move-in bill generated (Invoice #${billId}). Total: ${totalAmount.toLocaleString('vi-VN')} VND.`;
         await client.query(
             "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
             [userId, notiMessage, '/bill']
         );
-        // -----------------------------------------
 
         console.log(`[MoveInBill] Generated bill #${billId} amount ${totalAmount}`);
     }
 }
-/**
- * Tính tổng hóa đơn tháng dựa trên dữ liệu đầu vào
- * @param {number} roomArea - Diện tích căn hộ (m2)
- * @param {number} mgmtPricePerM2 - Đơn giá quản lý/m2
- * @param {Array} vehicles - Danh sách xe đang hoạt động (gồm { type: 'car'|'motorbike'|..., fee: number })
- * @param {number} waterFee - Tiền nước (nếu có)
- * @param {number} electricityFee - Tiền điện (nếu có)
- */
+
 function calculateMonthlyBill(roomArea, mgmtPricePerM2, vehicles, waterFee = 0, electricityFee = 0) {
-    // 1. Data Sanitization (Làm sạch dữ liệu đầu vào)
-    // Chuyển đổi về số, nếu null/undefined/string rác -> về 0
-    const area = Math.max(0, parseFloat(roomArea) || 0); // Diện tích không được âm
+    const area = Math.max(0, parseFloat(roomArea) || 0); 
     const price = Math.max(0, parseFloat(mgmtPricePerM2) || 0);
     const water = Math.max(0, parseFloat(waterFee) || 0);
     const electric = Math.max(0, parseFloat(electricityFee) || 0);
     
-    // Xử lý danh sách xe: Nếu không phải mảng thì coi là rỗng
     const vehicleList = Array.isArray(vehicles) ? vehicles : [];
 
-    // 2. Tính phí quản lý (Management Fee)
     const managementFee = area * price;
 
-    // 3. Tính phí gửi xe (Parking Fee)
     let parkingFee = 0;
     vehicleList.forEach(v => {
-        // Đảm bảo phí của từng xe hợp lệ
         const fee = Math.max(0, parseFloat(v.fee) || 0);
         parkingFee += fee;
     });
 
-    // 4. Tổng cộng
     const totalAmount = managementFee + parkingFee + water + electric;
 
-    // 5. Trả về object chi tiết (để dễ debug hoặc hiển thị)
     return {
         managementFee,
         parkingFee,

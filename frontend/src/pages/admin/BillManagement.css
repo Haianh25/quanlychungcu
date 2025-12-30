@@ -1,6 +1,5 @@
 /* --- BillManagement.css --- */
 
-/* 1. BIẾN MÀU & THEME RESIDEM */
 :root {
     --bill-primary: #b99a7b;       /* Vàng đồng */
     --bill-primary-hover: #a38568;
@@ -15,7 +14,6 @@
     --bill-status-overdue: #dc3545;
 }
 
-/* 2. CONTAINER & ANIMATION */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -49,7 +47,6 @@
     padding: 1.5rem;
 }
 
-/* 4. FORM CONTROLS */
 .residem-form-label {
     font-weight: 600;
     color: var(--bill-text-muted);
@@ -76,7 +73,6 @@
     box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15);
 }
 
-/* 5. TABLE STYLE */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
@@ -114,7 +110,6 @@
     width: 1%;
 }
 
-/* 6. BADGES */
 .status-badge {
     padding: 0.4em 0.8em;
     font-size: 0.75rem;
@@ -132,7 +127,6 @@
 .status-danger  { background-color: var(--bill-status-overdue); }
 .status-secondary { background-color: #6c757d; }
 
-/* 7. BUTTONS */
 .btn-residem-primary {
     background-color: var(--bill-primary);
     border-color: var(--bill-primary);
@@ -185,7 +179,6 @@
     background-color: #1e6b41;
 }
 
-/* 8. MODAL */
 .modal-content {
     border-radius: 12px;
     border: none;

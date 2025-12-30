@@ -1,4 +1,3 @@
-// backend/hash_password.js
 const bcrypt = require('bcryptjs');
 
 const password = 'Admin@12345';

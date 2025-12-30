@@ -1,15 +1,3 @@
-/* --- BIẾN MÀU (TỪ index.css) ---
-:root {
-    --color-bg-light: #f8f6f3;
-    --color-primary-accent: #b99a7b;
-    --color-primary-accent-hover: #a98a6b;
-    --color-text-dark: #333333;
-    --color-text-muted-dark: #555555;
-    --color-border-light: #e0e0e0;
-}
--------------------------------- */
-
-/* Bố cục 2 cột toàn màn hình */
 .login-page-wrapper {
     display: flex;
     width: 100vw;
@@ -18,7 +6,6 @@
     font-family: var(--font-primary);
 }
 
-/* 1. CỘT ẢNH NỀN (BÊN TRÁI) */
 .login-image-panel {
     flex: 1;
     background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEzfHxsaXZpbmclMjByb29tfGVufDB8fHx8MTcwMTU4NTYyMnww&ixid=M3wzNjkzN3wwfDF8c2VhcmNofDEzfHxsaXZpbmclMjByb29tfGVufDB8fHx8MTcwMTU4NTYyMnww&ixlib-rb-4.0.3&q=80&w=1000');
@@ -26,24 +13,22 @@
     background-position: center;
 }
 
-/* 2. CỘT FORM (BÊN PHẢI) */
 .login-form-panel {
     flex: 1;
-    background-color: var(--color-bg-light); /* Nền trắng kem */
+    background-color: var(--color-bg-light);
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 2rem;
-    overflow-y: auto; /* Cho phép cuộn nếu form quá dài */
+    overflow-y: auto;
 }
 
 .login-form-content {
     max-width: 450px;
     width: 100%;
-    text-align: left; /* Căn trái nội dung */
+    text-align: left;
 }
 
-/* Logo (Giống Header) */
 .login-logo {
     display: flex;
     align-items: center;
@@ -60,7 +45,6 @@
     margin-right: 10px;
 }
 
-/* Tiêu đề */
 .login-title {
     font-size: 2.5rem;
     font-weight: 700;
@@ -74,7 +58,6 @@
     margin-bottom: 2rem;
 }
 
-/* Nút bấm (Style lại từ btn-residem-primary) */
 .login-form-content .btn-residem-primary {
     background-color: var(--color-primary-accent);
     border-color: var(--color-primary-accent);
@@ -86,7 +69,7 @@
     width: 100%;
     transition: all 0.3s ease;
     text-decoration: none !important;
-    text-align: center; /* Đảm bảo chữ căn giữa */
+    text-align: center;
 }
 
 .login-form-content .btn-residem-primary:hover {
@@ -95,14 +78,11 @@
     transform: translateY(-2px);
 }
 
-/* Responsive cho điện thoại */
 @media (max-width: 992px) {
-    /* Ẩn cột ảnh bên trái */
     .login-image-panel {
         display: none;
     }
     
-    /* Cột form chiếm 100% */
     .login-form-panel {
         flex: auto;
         width: 100%;

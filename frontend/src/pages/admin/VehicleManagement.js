@@ -6,7 +6,6 @@ import './VehicleManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
-// --- (Component Edit Modal - Giữ nguyên) ---
 const getVehicleTypeText = (type) => ({ car: 'Car', motorbike: 'Motorbike', bicycle: 'Bicycle' }[type] || type);
 
 const EditCardModal = ({ show, handleClose, cardData, onSave, loading }) => {
@@ -96,8 +95,7 @@ const VehicleManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [cardToEditDetails, setCardToEditDetails] = useState(null);
     const [editLoading, setEditLoading] = useState(false);
-    
-    // Sort state for Pending Requests
+
     const [sortRequestsBy, setSortRequestsBy] = useState('newest');
 
     // [MỚI] Filter & Sort states for All Cards

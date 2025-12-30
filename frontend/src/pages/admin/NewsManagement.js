@@ -6,7 +6,6 @@ import 'react-quill/dist/quill.snow.css';
 import { PlusCircleFill, PencilSquare, Trash, Image as ImageIcon, Funnel } from 'react-bootstrap-icons'; // Thêm icons
 import './NewsManagement.css'; 
 
-// Define API URL constant to reuse
 const API_BASE_URL = 'http://localhost:5000';
 
 const NewsManagement = () => {
@@ -26,12 +25,10 @@ const NewsManagement = () => {
     const [error, setError] = useState('');
     const [uploading, setUploading] = useState(false);
 
-    // --- HELPER FUNCTION ĐỂ XỬ LÝ URL ẢNH ---
     const getImageUrl = (path) => {
         if (!path) return '';
-        // Nếu đường dẫn đã có http/https thì giữ nguyên (ảnh online)
+
         if (path.startsWith('http')) return path;
-        // Nếu là đường dẫn tương đối từ server, thêm API_BASE_URL vào trước
         return `${API_BASE_URL}${path}`;
     };
 

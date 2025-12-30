@@ -1,4 +1,3 @@
-/* --- HEADER (THEME RESIDEM SÁNG - GIỐNG MẪU NHẤT) --- */
 .resident-header.residem-header-light {
     background-color: var(--color-bg-light);
     padding: 0.8rem 0;
@@ -16,30 +15,28 @@
     display: flex; 
     align-items: center;
     padding: 0;
-    /* margin-right: 2rem; */ /* Bỏ margin-right để nó gần các link hơn nếu cần */
     text-decoration: none;
     white-space: nowrap; 
 }
 
 .residem-header-light .new-logo {
-    height: 35px; /* Nhỏ hơn một chút so với trước để khớp mẫu */
+    height: 35px; 
     width: auto;
-    margin-right: 8px; /* Giảm khoảng cách */
+    margin-right: 8px; 
 }
 
-/* THAY ĐỔI LỚN: Cấu trúc Navbar để khớp mẫu 'Residem' */
 .residem-header-light .navbar-nav {
-    flex-grow: 1; /* Cho phép các nav-item co giãn */
-    justify-content: flex-start; /* Căn trái các mục nav */
-    margin-left: 2rem; /* Thêm khoảng cách với logo */
+    flex-grow: 1; 
+    justify-content: flex-start; 
+    margin-left: 2rem; 
 }
 
 .residem-header-light .navbar-nav .nav-item {
-    margin: 0 10px; /* Giữ nguyên khoảng cách */
+    margin: 0 10px; 
 }
 
 .residem-header-light .navbar-nav .nav-link {
-    color: var(--color-text-muted-dark); /* Chữ phụ màu tối */
+    color: var(--color-text-muted-dark); 
     font-weight: 500;
     font-size: 1.05rem;
     padding: 0.5rem 1rem;
@@ -49,7 +46,7 @@
 
 .residem-header-light .navbar-nav .nav-link:hover,
 .residem-header-light .navbar-nav .nav-link.active {
-    color: var(--color-primary-accent); /* Hover ra màu vàng đồng */
+    color: var(--color-primary-accent); 
     background-color: transparent;
 }
 
@@ -60,7 +57,6 @@
     opacity: 0.7;
 }
 
-/* Toggler cho theme sáng */
 .residem-header-light .navbar-toggler {
     border-color: var(--color-border-light);
 }
@@ -68,7 +64,6 @@
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 0, 0, 0.55)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* Nút bấm (vàng đồng) - Đặt ở bên phải cuối cùng như mẫu */
 .btn-residem-primary {
     background-color: var(--color-primary-accent);
     color: var(--color-text-light);
@@ -79,8 +74,8 @@
     font-size: 1rem;
     transition: background-color 0.3s ease, transform 0.2s ease;
     white-space: nowrap;
-    text-decoration: none !important; /* Ghi đè */
-    margin-left: 1rem; /* Khoảng cách với các icon */
+    text-decoration: none !important;
+    margin-left: 1rem; 
 }
 .btn-residem-primary:hover {
     background-color: var(--color-primary-accent-hover);
@@ -88,7 +83,6 @@
     color: var(--color-text-light);
 }
 
-/* Icon (chuông, profile) màu tối */
 .residem-header-light .icon-btn-light {
     background: none;
     border: none;
@@ -107,28 +101,27 @@
     font-size: 1.4rem;
 }
 .residem-header-light .header-right-items {
-    margin-left: auto; /* Đẩy về bên phải */
+    margin-left: auto; 
     display: flex;
     align-items: center;
 }
 
 
-/* --- HERO SECTION MỚI (THEME RESIDEM) --- */
 .residem-hero {
     position: relative;
-    height: 85vh; /* Cao hơn 1 chút */
+    height: 85vh; 
     background-size: cover;
     background-position: center center;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: left; /* Căn trái như mẫu */
+    text-align: left; 
     color: var(--color-text-light);
     padding: 0;
     margin: 0;
-    max-width: 100vw; /* Đảm bảo full width */
-    overflow: hidden; /* Tránh scroll ngang nếu có lỗi nhỏ */
+    max-width: 100vw; 
+    overflow: hidden; 
 }
 
 .residem-hero .hero-overlay {
@@ -137,23 +130,22 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4); /* Lớp phủ tối nhẹ */
+    background-color: rgba(0, 0, 0, 0.4); 
     z-index: 1;
 }
 
-/* Căn lề nội dung Hero */
 .residem-hero .hero-content-wrapper {
     position: relative;
     z-index: 2;
     width: 100%;
-    max-width: 1200px; /* Khớp .container */
+    max-width: 1200px; 
     padding: 20px;
-    margin-top: auto; /* Đẩy xuống dưới */
-    margin-bottom: 8rem; /* Nâng lên khỏi bottom bar */
+    margin-top: auto;
+    margin-bottom: 8rem; 
 }
 
 .residem-hero .hero-content {
-    max-width: 500px; /* Giới hạn chiều rộng text */
+    max-width: 500px; 
 }
 
 .residem-hero .hero-content h1 {
@@ -177,7 +169,6 @@
     gap: 15px;
 }
 
-/* Nút phụ (viền trắng) */
 .btn-residem-secondary {
     background-color: transparent;
     color: var(--color-text-light);
@@ -195,9 +186,8 @@
     text-decoration: none;
 }
 
-/* Thanh thông tin dưới cùng của Hero */
 .residem-hero .hero-bottom-bar {
-    position: absolute; /* Đặt ở đáy */
+    position: absolute; 
     bottom: 0;
     left: 0;
     z-index: 2;
@@ -208,7 +198,7 @@
     font-size: 0.95rem;
     backdrop-filter: blur(5px);
 }
-.residem-hero .hero-bottom-bar .col-md-3 { /* 4 cột như mẫu */
+.residem-hero .hero-bottom-bar .col-md-3 { 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -218,16 +208,14 @@
 }
 
 
-/* --- GALLERY SECTION (THEME SÁNG) --- */
 .gallery-section-light {
     background-color: var(--color-bg-light);
     color: var(--color-text-dark);
-    padding: 5rem 0; /* Thêm padding trên dưới */
+    padding: 5rem 0; 
 }
 
-/* Sub-heading màu vàng đồng */
 .gallery-section-light .sub-heading,
-.highlights-section-light .sub-heading, /* Thêm cho Highlights */
+.highlights-section-light .sub-heading, 
 .location-section-dark .sub-heading {
     color: var(--color-primary-accent);
     font-weight: 600;
@@ -238,22 +226,21 @@
 }
 
 .gallery-section-light h2,
-.highlights-section-light h2, /* Thêm cho Highlights */
+.highlights-section-light h2, 
 .location-section-dark h2 {
     font-size: 2.5rem;
     margin-bottom: 2rem;
-    color: var(--color-text-dark); /* Chữ tối */
+    color: var(--color-text-dark); 
 }
 .location-section-dark h2 {
-    color: var(--color-text-light); /* Chữ sáng (cho section tối) */
+    color: var(--color-text-light); 
 }
 
-/* Nút filter (vàng đồng) */
 .gallery-section-light .filter-buttons .btn-residem-filter {
     background-color: transparent;
     color: var(--color-text-muted-dark);
     border: 1px solid var(--color-border-light);
-    border-radius: 20px; /* Bo tròn */
+    border-radius: 20px; 
     padding: 8px 20px;
     margin: 5px;
     font-weight: 500;
@@ -270,7 +257,7 @@
 
 .gallery-image-wrapper {
     overflow: hidden;
-    border-radius: 8px; /* Bo góc ảnh */
+    border-radius: 8px; 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 .gallery-image {
@@ -284,7 +271,6 @@
 }
 
 
-/* --- HIGHLIGHTS NEARBY SECTION (MỚI - THEME SÁNG) --- */
 .highlights-section-light {
     background-color: var(--color-bg-light);
     color: var(--color-text-dark);
@@ -297,7 +283,7 @@
     overflow: hidden;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    height: 100%; /* Đảm bảo chiều cao bằng nhau */
+    height: 100%; 
     display: flex;
     flex-direction: column;
 }
@@ -310,17 +296,17 @@
 
 .highlights-section-light .highlight-card img {
     width: 100%;
-    height: 180px; /* Chiều cao cố định cho ảnh */
+    height: 180px; 
     object-fit: cover;
     display: block;
 }
 
 .highlights-section-light .card-body {
     padding: 20px;
-    flex-grow: 1; /* Cho phép phần body co giãn */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Đẩy tên và khoảng cách ra 2 đầu */
+    justify-content: space-between; 
 }
 
 .highlights-section-light .card-title {
@@ -337,11 +323,9 @@
 }
 
 
-/* --- LOCATION SECTION (THEME TỐI - f1d423) --- */
 .location-section-dark {
     background-color: var(--color-bg-dark-teal);
     padding: 5rem 0;
-    /* Ghi đè container-fluid để nó full-width */
     width: 100vw;
     position: relative;
     left: 50%;
@@ -357,7 +341,7 @@
 .location-section-dark .amenities-list {
     list-style: none;
     padding-left: 0;
-    color: var(--color-text-light); /* Chữ sáng */
+    color: var(--color-text-light); 
     font-size: 1rem;
 }
 .location-section-dark .amenities-list li {
@@ -366,31 +350,27 @@
     align-items: center;
 }
 .location-section-dark .amenities-list i {
-    color: var(--color-primary-accent); /* Icon vàng đồng */
+    color: var(--color-primary-accent); 
     margin-right: 10px;
     font-size: 1.1rem;
 }
 
 
-/* --- BIẾN MÀU (Cập nhật biến màu cho footer mới nếu chưa có trong index.css) --- */
-/* Nếu bạn chưa có, hãy thêm vào file index.css hoặc file chứa các biến màu gốc */
 :root {
-    --color-bg-footer-new: #3a342a; /* Màu vàng nâu trầm cho footer */
-    --color-text-footer-light: #f1ede8; /* Chữ sáng trên nền footer */
-    --color-text-footer-muted: #c7bda9; /* Chữ mờ trên nền footer */
-    --color-border-footer: #4d4438; /* Đường kẻ footer */
+    --color-bg-footer-new: #3a342a; 
+    --color-text-footer-light: #f1ede8; 
+    --color-text-footer-muted: #c7bda9; 
+    --color-border-footer: #4d4438; 
 }
 
-/* --- FOOTER MỚI (GỌN GÀNG, HIỆN ĐẠI, MÀU VÀNG NÂU) --- */
 
 .resident-footer.new-footer-compact {
-    background-color: var(--color-bg-footer-new); /* SỬ DỤNG MÀU MỚI */
+    background-color: var(--color-bg-footer-new); 
     padding: 3rem 0 1.5rem 0; 
     color: var(--color-text-footer-muted);
     font-size: 0.95rem;
 }
 
-/* Cột 1: Logo và Địa chỉ */
 .footer-logo-compact {
     color: var(--color-text-footer-light);
     font-weight: 600;
@@ -411,7 +391,6 @@
     line-height: 1.6;
 }
 
-/* Cột 2 & 3: Tiêu đề và List */
 .footer-heading-compact {
     font-size: 1.1rem;
     font-weight: 600;
@@ -435,7 +414,7 @@
     transition: color 0.3s ease;
 }
 .footer-links-list li a:hover {
-    color: var(--color-primary-accent); /* Vàng đồng accent */
+    color: var(--color-primary-accent); 
 }
 
 .footer-contact-list li {
@@ -444,17 +423,16 @@
     color: var(--color-text-footer-light);
 }
 .footer-contact-list li i {
-    color: var(--color-primary-accent); /* Vàng đồng accent */
+    color: var(--color-primary-accent); 
     margin-right: 10px;
     font-size: 1.1rem;
 }
 
-/* Thanh Copyright bên dưới */
 .footer-bottom-bar {
     text-align: center;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border-footer); /* Đường kẻ mờ */
+    border-top: 1px solid var(--color-border-footer); 
     font-size: 0.9rem;
     color: var(--color-text-footer-muted);
     display: flex;
@@ -468,10 +446,9 @@
     transition: color 0.3s ease;
 }
 .social-icons-compact a:hover {
-    color: var(--color-primary-accent); /* Vàng đồng accent */
+    color: var(--color-primary-accent); 
 }
 
-/* Responsive cho Footer mới */
 @media (max-width: 991.98px) {
     .footer-logo-compact,
     .footer-heading-compact {

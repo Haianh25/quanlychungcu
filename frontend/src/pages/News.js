@@ -5,11 +5,10 @@ import Pagination from '../components/admin/Pagination';
 import './News.css';
 import { Container, Row, Col, Dropdown, Alert, Spinner } from 'react-bootstrap';
 
-// Define API URL
 const API_BASE_URL = 'http://localhost:5000';
 
 const News = () => {
-    // --- LOGIC GIỮ NGUYÊN ---
+
     const [newsList, setNewsList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -17,18 +16,17 @@ const News = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const postsPerPage = 9; 
 
-    // --- HELPER TO FIX IMAGE URL ---
     const getImageUrl = (path) => {
         if (!path) return '';
-        if (path.startsWith('http')) return path; // Keep external links
-        return `${API_BASE_URL}${path}`; // Prepend backend URL for local uploads
+        if (path.startsWith('http')) return path; 
+        return `${API_BASE_URL}${path}`; 
     };
 
     useEffect(() => {
         const fetchNews = async () => {
             try {
                 setLoading(true);
-                const res = await axios.get(`${API_BASE_URL}/api/news`); // Use constant
+                const res = await axios.get(`${API_BASE_URL}/api/news`); 
                 setNewsList(res.data);
             } catch (err) {
                 console.error('Error fetching public news:', err);
@@ -49,7 +47,6 @@ const News = () => {
         return plainText.slice(0, maxLength) + '...';
     };
 
-    // Sắp xếp
     const sortedNewsList = useMemo(() => {
         return [...newsList].sort((a, b) => {
             const dateA = new Date(a.created_at).getTime();
@@ -58,7 +55,6 @@ const News = () => {
         });
     }, [newsList, sortOrder]);
 
-    // Phân trang
     const currentNewsList = useMemo(() => {
         const indexOfLastPost = currentPage * postsPerPage;
         const indexOfFirstPost = indexOfLastPost - postsPerPage;
@@ -72,15 +68,12 @@ const News = () => {
         window.scrollTo(0, 0); 
     };
 
-    // Bài nổi bật (Featured)
     const featuredPost = currentNewsList.length > 0 ? currentNewsList[0] : null;
     const remainingPosts = currentNewsList.length > 1 ? currentNewsList.slice(1) : [];
 
-    // --- GIAO DIỆN ĐÃ CẬP NHẬT ---
     return (
         <Container className="news-page-container my-5 fadeIn">
             
-            {/* Header & Sort */}
             <Row className="mb-4 align-items-center">
                 <Col md={6}>
                     <h2 className="news-page-title">Latest News</h2>
@@ -105,8 +98,7 @@ const News = () => {
                     </Dropdown>
                 </Col>
             </Row>
-            
-            {/* Danh sách tin tức */}
+
             {loading ? (
                 <div className="text-center p-5"><Spinner animation="border" /></div>
             ) : error ? (
@@ -117,15 +109,14 @@ const News = () => {
                 </Alert>
             ) : (
                 <div className="news-grid-wrapper">
-                    {/* 1. FEATURED POST */}
+
                     {featuredPost && (
                         <Row className="mb-5">
                             <Col xs={12}>
                                 <div className="card news-card featured-news-card h-100">
                                     <Row g={0}>
-                                        <Col lg={8}> {/* Ảnh rộng hơn */}
+                                        <Col lg={8}> 
                                             {featuredPost.imageurl || featuredPost.image_url ? (
-                                                // UPDATE: Use getImageUrl
                                                 <img 
                                                     src={getImageUrl(featuredPost.imageurl || featuredPost.image_url)} 
                                                     className="featured-news-image" 
@@ -158,14 +149,12 @@ const News = () => {
                         </Row>
                     )}
 
-                    {/* 2. REMAINING POSTS */}
                     <Row>
                         {remainingPosts.map(item => (
                             <Col md={6} lg={4} className="mb-4" key={item.id}>
                                 <div className="card news-card h-100">
                                     <div className="news-img-top-wrapper">
                                         {item.imageurl || item.image_url ? (
-                                            // UPDATE: Use getImageUrl
                                             <img 
                                                 src={getImageUrl(item.imageurl || item.image_url)} 
                                                 className="card-img-top news-image" 
@@ -196,7 +185,6 @@ const News = () => {
                 </div>
             )}
 
-            {/* Phân trang */}
             {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-5 residem-pagination">
                     <Pagination

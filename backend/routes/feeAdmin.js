@@ -63,14 +63,12 @@ router.delete('/:id', protect, isAdmin, async (req, res) => {
     const { id } = req.params;
 
     try {
-        // (An toàn) Kiểm tra xem phí này có phải là phí cốt lõi không
         const feeCheck = await db.query('SELECT fee_code FROM fees WHERE fee_id = $1', [id]);
         if (feeCheck.rows.length > 0 && 
             (feeCheck.rows[0].fee_code === 'MANAGEMENT_FEE' || feeCheck.rows[0].fee_code === 'ADMIN_FEE')) {
             return res.status(400).json({ message: 'Cannot delete core system fees.' });
         }
 
-        // Proceed to delete
         const { rowCount } = await db.query('DELETE FROM fees WHERE fee_id = $1', [id]);
 
         if (rowCount === 0) {
@@ -79,7 +77,6 @@ router.delete('/:id', protect, isAdmin, async (req, res) => {
         res.json({ message: 'Fee deleted successfully.' });
     } catch (err) {
         console.error('Error while deleting fee:', err.message);
-        // Check for foreign key constraint error (if the fee has been used in old invoices)
         if (err.code === '23503') { 
             return res.status(400).json({ message: 'Deletion failed. This fee has been used in old invoices and cannot be deleted.' });
         }

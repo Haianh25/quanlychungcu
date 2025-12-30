@@ -1,8 +1,7 @@
 /* --- NewsManagement.css --- */
 
-/* 1. BIẾN MÀU & THEME */
 :root {
-    --news-primary: #b99a7b;       /* Vàng đồng */
+    --news-primary: #b99a7b;       
     --news-primary-hover: #a38568;
     --news-text-dark: #333333;
     --news-text-muted: #6c757d;
@@ -10,7 +9,6 @@
     --news-border: #e0e0e0;
 }
 
-/* 2. CONTAINER & ANIMATION */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -30,7 +28,6 @@
     letter-spacing: -0.5px;
 }
 
-/* 3. CARD STYLE */
 .residem-card {
     background-color: var(--news-bg-card);
     border: 1px solid var(--news-border);
@@ -44,7 +41,6 @@
     padding: 1.5rem;
 }
 
-/* 4. FORM CONTROLS */
 .residem-form-label {
     font-weight: 600;
     color: var(--news-text-muted);
@@ -77,11 +73,10 @@
     font-weight: bold;
 }
 
-/* 5. LIST GROUP (DANH SÁCH TIN TỨC) */
 .news-list-container {
     max-height: 70vh;
     overflow-y: auto;
-    border: 1px solid var(--news-border); /* Thêm viền bao quanh list */
+    border: 1px solid var(--news-border); 
     border-radius: 8px;
 }
 
@@ -89,7 +84,7 @@
     background-color: #fff;
     color: var(--news-text-dark);
     border: none;
-    border-bottom: 1px solid var(--news-border); /* Chỉ có viền dưới */
+    border-bottom: 1px solid var(--news-border); 
     padding: 1.2rem;
     display: flex;
     justify-content: space-between;
@@ -106,7 +101,7 @@
 }
 
 .news-thumbnail-list {
-    width: 120px; /* Tăng kích thước thumb */
+    width: 120px; 
     height: 80px;
     object-fit: cover;
     border-radius: 8px;
@@ -133,7 +128,6 @@
     margin-bottom: 0.5rem;
 }
 
-/* 6. BADGES */
 .status-badge {
     padding: 0.35em 0.7em;
     font-size: 0.75rem;
@@ -146,7 +140,6 @@
 .status-success { background-color: #198754; }
 .status-secondary { background-color: #6c757d; }
 
-/* 7. BUTTONS */
 .btn-residem-primary {
     background-color: var(--news-primary);
     border-color: var(--news-primary);
@@ -162,7 +155,6 @@
     transform: translateY(-1px);
 }
 
-/* Nút nhỏ trong list */
 .btn-residem-warning.btn-sm,
 .btn-residem-danger.btn-sm,
 .btn-residem-secondary.btn-sm {
@@ -203,7 +195,6 @@
     border-color: #ccc;
 }
 
-/* 8. QUILL EDITOR */
 .quill-editor-container.residem-quill {
     background-color: #fff;
     border-radius: 6px;
@@ -224,7 +215,6 @@
     font-size: 1rem;
 }
 
-/* 9. IMAGE PREVIEW */
 .image-preview-box {
     border: 1px dashed var(--news-border);
     border-radius: 8px;
@@ -241,7 +231,6 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* 10. MODAL */
 .modal-content {
     border-radius: 12px;
     border: none;

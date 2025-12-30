@@ -18,10 +18,9 @@ const UserManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [usersPerPage] = useState(10);
 
-    // State cho sắp xếp
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
 
-    const navigate = useNavigate(); // [MỚI] Hook điều hướng
+    const navigate = useNavigate(); 
 
     useEffect(() => {
         fetchUsers();
@@ -31,8 +30,6 @@ const UserManagement = () => {
         try {
             const token = localStorage.getItem('adminToken');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            // [QUERY] Lấy thêm thông tin apartment_number từ bảng users (nếu có API hỗ trợ)
-            // Giả sử API /api/admin/users đã trả về trường này.
             const res = await axios.get('http://localhost:5000/api/admin/users', config);
             setUsers(res.data);
         } catch (err) {
@@ -66,22 +63,14 @@ const UserManagement = () => {
     const handleCloseModal = () => { setShowModal(false); setSelectedUser(null); };
     
     const handleUserUpdate = (updatedUser) => { 
-        // Cập nhật danh sách
         setUsers(users.map(user => (user.id === updatedUser.id ? updatedUser : user)));
-
-        // [MỚI - SMART WORKFLOW]
-        // Nếu user vừa được nâng cấp lên Resident (từ User -> Resident)
-        // -> Chuyển hướng sang trang Resident Management để gán phòng ngay
         if (selectedUser && selectedUser.role === 'user' && updatedUser.role === 'resident') {
             if (window.confirm(`User ${updatedUser.full_name} is now a Resident.\n\nDo you want to go to "Resident Management" to assign a room for them now?`)) {
                 navigate('/admin/resident-management', { state: { searchName: updatedUser.full_name } });
             }
         }
     };
-    
-    // --- [START] LOGIC TÌM KIẾM KHÔNG DẤU (ACCENT INSENSITIVE) ---
-    
-    // Hàm bỏ dấu tiếng Việt: "Lê Văn" -> "le van"
+
     const removeVietnameseTones = (str) => {
         if (!str) return '';
         str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
@@ -89,7 +78,6 @@ const UserManagement = () => {
         return str.toLowerCase();
     };
 
-    // 1. Filter (Đã cập nhật logic)
     const filteredUsers = users.filter(user => {
         const searchSlug = removeVietnameseTones(searchTerm);
         const nameSlug = removeVietnameseTones(user.full_name);
@@ -101,9 +89,7 @@ const UserManagement = () => {
                phoneSlug.includes(searchSlug);
     });
 
-    // --- [END] LOGIC TÌM KIẾM KHÔNG DẤU ---
 
-    // 2. Sort Logic
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -134,13 +120,12 @@ const UserManagement = () => {
         return sortableItems;
     }, [filteredUsers, sortConfig]);
 
-    // 3. Pagination
+
     const indexOfLastUser = currentPage * usersPerPage;
     const indexOfFirstUser = indexOfLastUser - usersPerPage;
     const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // Helper icon sort
     const getSortIcon = (columnName) => {
         if (sortConfig.key !== columnName) return <span style={{opacity: 0.3, fontSize: '0.7em', marginLeft: '5px'}}>⇅</span>;
         return sortConfig.direction === 'ascending' ? <ArrowUp size={12} className="ms-1"/> : <ArrowDown size={12} className="ms-1"/>;
@@ -209,7 +194,7 @@ const UserManagement = () => {
                                                 <span className={`role-badge ${user.role === 'resident' ? 'role-resident' : 'role-user'}`}>
                                                     {user.role}
                                                 </span>
-                                                {/* [TIP] Nếu là Resident mà chưa có phòng, hiện cảnh báo */}
+                                               
                                                 {user.role === 'resident' && !user.apartment_number && (
                                                     <div className="text-danger small mt-1" style={{fontSize: '0.7rem'}}>
                                                         <HouseExclamation className="me-1"/> No Room

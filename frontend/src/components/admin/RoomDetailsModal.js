@@ -1,4 +1,3 @@
-// frontend/src/components/admin/RoomDetailsModal.js
 import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Badge, Spinner, Alert } from 'react-bootstrap';
 import { CarFrontFill, Scooter, Bicycle, Grid3x3GapFill, MoonStarsFill, PersonBadgeFill, PersonDashFill, ExclamationTriangleFill } from 'react-bootstrap-icons';
@@ -14,15 +13,13 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName, onUnassignSu
     const roomFullName = `${blockName} - ${roomData.room_number}`;
     const typeBadgeColor = roomData.room_type === 'A' ? 'info' : 'primary';
 
-    // [MỚI] Lấy thông tin số hóa đơn nợ từ props
     const unpaidBillsCount = roomData.unpaid_bills_count || 0;
 
     const handleUnassign = async () => {
         if (!roomData.resident_id) return;
         
         let confirmMsg = `Are you sure you want to remove resident "${roomData.resident_name}"? This action will deactivate their vehicle cards.`;
-        
-        // [MỚI] Thêm cảnh báo nếu còn nợ
+
         if (unpaidBillsCount > 0) {
             confirmMsg = `WARNING: This resident has ${unpaidBillsCount} UNPAID BILLS!\n\nThe debt will remain on their account, but are you sure you want to let them leave now?`;
         }
@@ -56,7 +53,7 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName, onUnassignSu
                 <Modal.Title className="fw-bold">Room Details</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                {/* Header: Room Name & Status */}
+
                 <div className="d-flex justify-content-between align-items-start mb-4">
                     <div>
                         <h3 className="mb-1 text-primary">{roomFullName}</h3>
@@ -70,7 +67,6 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName, onUnassignSu
                     </div>
                 </div>
 
-                {/* Section 1: Room Specs */}
                 <div className="bg-light p-3 rounded mb-4">
                     <h6 className="text-muted text-uppercase small fw-bold mb-3">Apartment Specifications</h6>
                     <Row className="g-3 text-center">
@@ -91,7 +87,6 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName, onUnassignSu
                     </Row>
                 </div>
 
-                {/* Section 2: Resident Info */}
                 <div className="mb-4">
                     <h6 className="text-muted text-uppercase small fw-bold mb-2">Resident Information</h6>
                     <div className="d-flex align-items-center justify-content-between p-2 border rounded">
@@ -101,7 +96,7 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName, onUnassignSu
                                 <div className={`fw-medium ${!roomData.resident_name ? 'text-muted fst-italic' : ''}`}>
                                     {ownerText}
                                 </div>
-                                {/* [MỚI] Hiển thị cảnh báo nợ nhỏ */}
+                    
                                 {unpaidBillsCount > 0 && (
                                     <small className="text-danger fw-bold d-block">
                                         <ExclamationTriangleFill className="me-1"/> {unpaidBillsCount} Unpaid Bills
@@ -124,7 +119,6 @@ const RoomDetailsModal = ({ show, handleClose, roomData, blockName, onUnassignSu
                     </div>
                 </div>
 
-                {/* Section 3: Vehicles */}
                 {roomData.resident_name && (
                     <div>
                         <h6 className="text-muted text-uppercase small fw-bold mb-3">Registered Vehicles</h6>

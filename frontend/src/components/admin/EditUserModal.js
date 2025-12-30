@@ -1,4 +1,3 @@
-// frontend/src/components/admin/EditUserModal.js
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
@@ -26,10 +25,7 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
         try {
             
             const token = localStorage.getItem('adminToken');
-            // highlight-end
-            
             const config = { headers: { 'Authorization': `Bearer ${token}` } };
-            
             const payload = {
                 fullName: formData.fullName,
                 role: formData.role,
@@ -45,12 +41,10 @@ const EditUserModal = ({ show, handleClose, user, onUserUpdate }) => {
             handleClose();
         } catch (error) {
             console.error("Lỗi khi cập nhật:", error);
-            // Dịch thông báo lỗi sang Tiếng Anh cho đồng bộ
             alert(error.response?.data?.message || 'Update failed!');
         }
     };
 
-    // Dịch các text sang Tiếng Anh
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

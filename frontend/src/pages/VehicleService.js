@@ -11,7 +11,6 @@ const initialRegFormData = {
     fullName: '', dob: '', phone: '', relationship: '', licensePlate: '', brand: '', color: ''
 };
 
-// Component Bảng giá (Giữ nguyên)
 const VehiclePriceTable = () => {
     const [prices, setPrices] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -97,8 +96,7 @@ const VehicleService = () => {
     const [manageLoading, setManageLoading] = useState(false);
     const [manageError, setManageError] = useState('');
     const [manageSuccess, setManageSuccess] = useState('');
-    
-    // [UPDATED] State cho Policy
+ 
     const [policy, setPolicy] = useState({ max_cars: 0, max_motorbikes: 0, max_bicycles: 0, roomType: 'A' });
 
     const getUserAuthConfig = useCallback(() => {
@@ -119,7 +117,6 @@ const VehicleService = () => {
         finally { setLoading(false); }
     }, [getUserAuthConfig]);
 
-    // [UPDATED] Fetch Policy
     useEffect(() => {
         const fetchPolicy = async () => {
             const config = getUserAuthConfig();
@@ -149,10 +146,9 @@ const VehicleService = () => {
         return counts;
     }, [existingCards]);
 
-    // [UPDATED] Check limit using dynamic policy
     const canRegisterCar = vehicleCounts.car < policy.max_cars;
     const canRegisterMotorbike = vehicleCounts.motorbike < policy.max_motorbikes;
-    const canRegisterBicycle = vehicleCounts.bicycle < policy.max_bicycles; // Check for bike
+    const canRegisterBicycle = vehicleCounts.bicycle < policy.max_bicycles; 
     
     const handleVehicleSelect = (type) => { setRegVehicleType(type); setRegFormData(initialRegFormData); setRegFile(null); setRegError(''); setRegSuccess(''); };
     const handleRegFormChange = (e) => { setRegFormData({ ...regFormData, [e.target.name]: e.target.value }); };
@@ -204,7 +200,7 @@ const VehicleService = () => {
         finally { setManageLoading(false); }
     };
 
-    // [MỚI] Hàm xử lý hủy yêu cầu đăng ký
+    
     const handleCancelPendingRequest = async (requestId) => {
         if (!window.confirm("Are you sure you want to cancel this registration request?")) return;
         
@@ -212,10 +208,10 @@ const VehicleService = () => {
         if (!config) return;
         
         try {
-            // Hiển thị loading nhẹ (nếu cần) hoặc chỉ chờ
+         
             await axios.post(`${API_BASE_URL}/api/services/cancel-pending-request`, { requestId }, config);
             setManageSuccess('Registration request cancelled.');
-            fetchExistingCards(); // Refresh list
+            fetchExistingCards(); 
         } catch (err) {
             setFetchError(err.response?.data?.message || 'Failed to cancel request.');
         }
@@ -240,7 +236,7 @@ const VehicleService = () => {
             case 'pending_register': 
                 statusText = 'Pending Reg.'; 
                 statusClass = 'status-badge status-pending';
-                // [UPDATED] Thêm nút Cancel Request
+                
                 actions = (
                     <div className="d-flex align-items-center gap-2">
                         <div className="processing-indicator"><i className="bi bi-hourglass-split"></i><span>Processing...</span></div>
@@ -268,7 +264,7 @@ const VehicleService = () => {
         );
     };
 
-    // --- FORM ĐĂNG KÝ (GIAO DIỆN MỚI ĐẸP HƠN & CÓ CHÚ THÍCH) ---
+
     const renderRegisterForm = () => {
          if (!regVehicleType) return null;
          const typeName = getVehicleTypeText(regVehicleType);
@@ -282,7 +278,7 @@ const VehicleService = () => {
 
                  <Form onSubmit={handleRegisterSubmit} className="p-2">
                      
-                     {/* PHẦN 1: THÔNG TIN CHỦ XE */}
+                    
                      <div className="form-section">
                           <h6 className="form-section-header"><PersonBadge className="me-2"/>Owner Information</h6>
                           <Row className="g-3">
@@ -318,7 +314,7 @@ const VehicleService = () => {
                           </Row>
                       </div>
 
-                      {/* PHẦN 2: THÔNG TIN XE */}
+             
                       <div className="form-section mt-4">
                            <h6 className="form-section-header"><CardChecklist className="me-2"/>Vehicle Details</h6>
                            <Row className="g-3">
@@ -345,7 +341,7 @@ const VehicleService = () => {
                            </Row>
                       </div>
 
-                      {/* PHẦN 3: HỒ SƠ MINH CHỨNG */}
+                     
                       <div className="form-section mt-4">
                           <h6 className="form-section-header"><FileEarmarkImage className="me-2"/>Documents</h6>
                            <Form.Group className="file-upload-box p-3 rounded border-dashed">
@@ -357,9 +353,9 @@ const VehicleService = () => {
                            </Form.Group>
                       </div>
                       
-                      {/* NÚT BẤM VÀ THÔNG BÁO (CHỈ CÒN NÚT BẤM) */}
+                    
                        <div className="mt-4 pt-3 border-top">
-                         {/* [FIX] Bỏ Alert regSuccess ở đây vì nó sẽ bị mất khi form đóng */}
+                         
                          {regError && <Alert variant="danger" className="mb-3 py-2 small"><i className="bi bi-exclamation-circle me-2"></i>{regError}</Alert>}
                          
                          <div className="d-flex justify-content-end gap-3">
@@ -383,13 +379,12 @@ const VehicleService = () => {
             </div>
             
             <Row>
-                {/* CỘT TRÁI: NỘI DUNG CHÍNH */}
+                
                 <Col lg={8}>
                     <h2 className="mb-4 page-main-title">Vehicle Parking</h2>
               
                     <VehiclePriceTable />
-                    
-                    {/* [FIX] THÔNG BÁO ĐƯỢC ĐƯA RA NGOÀI ĐỂ LUÔN HIỂN THỊ */}
+
                     {fetchError && <Alert variant="danger">{fetchError}</Alert>}
                     {manageSuccess && <Alert variant="success" dismissible onClose={() => setManageSuccess('')}>{manageSuccess}</Alert>}
                     {regSuccess && <Alert variant="success" dismissible onClose={() => setRegSuccess('')} className="mb-3 fade show">
@@ -401,7 +396,7 @@ const VehicleService = () => {
                             {!regVehicleType ? (
                                 <Row className="g-3 mt-2">
                                     {['car', 'motorbike', 'bicycle'].map(type => {
-                                        // [UPDATED] Check disabled status using dynamic policy
+                                        
                                          const disabled = (type === 'car' && !canRegisterCar) || 
                                                           (type === 'motorbike' && !canRegisterMotorbike) ||
                                                           (type === 'bicycle' && !canRegisterBicycle);
@@ -442,17 +437,17 @@ const VehicleService = () => {
                                 <ListGroup variant="flush" className="policy-list">
                                      <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                          <span><CarFrontFill className="me-2 text-muted"/> Car</span>
-                                         {/* [UPDATED] Display dynamic limit */}
+                                         
                                          <Badge bg="warning" text="dark" className="rounded-pill">Max {policy.max_cars}</Badge>
                                      </ListGroup.Item>
                                      <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                               <span><Scooter className="me-2 text-muted"/> Motorbike</span>
-                                         {/* [UPDATED] Display dynamic limit */}
+                                         
                                          <Badge bg="warning" text="dark" className="rounded-pill">Max {policy.max_motorbikes}</Badge>
                                       </ListGroup.Item>
                                      <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                                          <span><Bicycle className="me-2 text-muted"/> Bicycle</span>
-                                         {/* [UPDATED] Display dynamic limit */}
+                                        
                                          <Badge bg="success" className="rounded-pill">Max {policy.max_bicycles}</Badge>
                                      </ListGroup.Item>
                                 </ListGroup>

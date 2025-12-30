@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom'; // [MỚI] Import useLocation để nhận state từ trang User
+import { useLocation } from 'react-router-dom'; 
 import AssignRoomModal from '../../components/admin/AssignRoomModal';
 import Pagination from '../../components/admin/Pagination';
 import { Card, Form, Table, Alert, InputGroup, Button, Spinner } from 'react-bootstrap';
@@ -17,15 +17,12 @@ const ResidentManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [residentsPerPage] = useState(10);
 
-    // State cho sắp xếp
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
 
-    // State loading cho hành động Unassign
     const [unassignLoading, setUnassignLoading] = useState(null);
 
-    const location = useLocation(); // [MỚI] Hook location
+    const location = useLocation(); 
 
-    // [MỚI] Hàm xóa dấu tiếng Việt để tìm kiếm thông minh
     const removeVietnameseTones = (str) => {
         if (!str) return '';
         str = str.toLowerCase();
@@ -36,8 +33,8 @@ const ResidentManagement = () => {
         str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
         str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
         str = str.replace(/đ/g, "d");
-        str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); // Huyền sắc hỏi ngã nặng
-        str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // Â, Ă, Ơ
+        str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); 
+        str = str.replace(/\u02C6|\u0306|\u031B/g, ""); 
         return str;
     };
 
@@ -55,13 +52,11 @@ const ResidentManagement = () => {
     useEffect(() => {
         fetchResidents();
 
-        // [MỚI] Nếu được redirect từ trang User Management kèm theo tên user
         if (location.state && location.state.searchName) {
             setSearchTerm(location.state.searchName);
-            // Clear state để tránh search lại khi reload
             window.history.replaceState({}, document.title);
         }
-    }, [location]); // Thêm location vào dependency
+    }, [location]); 
 
     const handleShowModal = (resident) => {
         setSelectedResident(resident);
@@ -77,7 +72,6 @@ const ResidentManagement = () => {
         fetchResidents();
     };
 
-    // Hàm xử lý Unassign (Trả phòng)
     const handleUnassignRoom = async (resident) => {
         if (!window.confirm(`Are you sure you want to remove resident "${resident.full_name}" from room ${resident.apartment_number}?`)) {
             return;
@@ -92,7 +86,6 @@ const ResidentManagement = () => {
                 residentId: resident.id
             }, config);
 
-            // Refresh danh sách sau khi thành công
             await fetchResidents();
             alert('Resident unassigned successfully.');
         } catch (err) {
@@ -102,7 +95,6 @@ const ResidentManagement = () => {
         }
     };
 
-    // [UPDATED] 1. Lọc theo tìm kiếm (Hỗ trợ tiếng Việt không dấu)
     const filteredResidents = useMemo(() => {
         if (!searchTerm) return residents;
         const normalizedSearch = removeVietnameseTones(searchTerm);
@@ -116,7 +108,6 @@ const ResidentManagement = () => {
         });
     }, [residents, searchTerm]);
 
-    // 2. Xử lý Sắp xếp (Sort)
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -132,7 +123,6 @@ const ResidentManagement = () => {
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
 
-                // Xử lý riêng cho cột 'apartment_number'
                 if (sortConfig.key === 'apartment_number') {
                     aValue = aValue || ''; 
                     bValue = bValue || '';
@@ -155,13 +145,11 @@ const ResidentManagement = () => {
         return sortableItems;
     }, [filteredResidents, sortConfig]);
 
-    // 3. Phân trang
     const indexOfLastResident = currentPage * residentsPerPage;
     const indexOfFirstResident = indexOfLastResident - residentsPerPage;
     const currentResidents = sortedResidents.slice(indexOfFirstResident, indexOfLastResident);
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // Helper hiển thị icon sort
     const getSortIcon = (columnName) => {
         if (sortConfig.key !== columnName) return <span className="sort-icon-placeholder">↕</span>;
         return sortConfig.direction === 'ascending' ? <ArrowUp size={12}/> : <ArrowDown size={12}/>;
@@ -240,7 +228,7 @@ const ResidentManagement = () => {
                                                 )}
                                             </td>
                                             <td className="col-actions">
-                                                {/* Hiển thị nút Gán Phòng nếu chưa có phòng */}
+
                                                 {!resident.apartment_number && (
                                                     <button 
                                                         className="btn btn-residem-primary btn-sm d-inline-flex align-items-center gap-2" 
@@ -250,7 +238,6 @@ const ResidentManagement = () => {
                                                     </button>
                                                 )}
 
-                                                {/* Hiển thị nút Trả Phòng nếu ĐÃ có phòng */}
                                                 {resident.apartment_number && (
                                                     <Button 
                                                         variant="outline-danger" 

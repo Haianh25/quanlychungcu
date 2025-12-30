@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './AdminLogin.css'; // Import CSS
+import './AdminLogin.css'; 
 
 const AdminLogin = () => {
-    // --- LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -28,15 +27,13 @@ const AdminLogin = () => {
         }
     };
 
-    // --- GIAO DIỆN JSX ĐÃ ĐƯỢC THAY ĐỔI THEO THEME MỚI ---
     return (
         <div className="login-page-wrapper">
-            {/* 1. CỘT ẢNH NỀN BÊN TRÁI */}
+            
             <div className="login-image-panel">
-                {/* Ảnh nền được đặt trong CSS */}
+
             </div>
 
-            {/* 2. CỘT FORM BÊN PHẢI */}
             <div className="login-form-panel">
                 <div className="login-form-content">
                     
@@ -78,9 +75,6 @@ const AdminLogin = () => {
                         </div>
 
                         {error && <div className="alert alert-danger mt-3">{error}</div>}
-
-                        {/* === THAY ĐỔI TẠI ĐÂY === */}
-                        {/* Bỏ class 'd-grid' để nút không bị kéo dãn */}
                         <div className="mt-4">
                             <button type="submit" className="btn btn-residem-primary">
                                 Login

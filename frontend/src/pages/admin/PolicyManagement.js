@@ -12,10 +12,8 @@ const PolicyManagement = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     
-    // Modal State
     const [showModal, setShowModal] = useState(false);
     const [currentPolicy, setCurrentPolicy] = useState(null);
-    // [UPDATED] State cho max_bicycles
     const [formData, setFormData] = useState({ max_cars: 0, max_motorbikes: 0, max_bicycles: 0, description: '' });
     const [saving, setSaving] = useState(false);
 
@@ -44,7 +42,7 @@ const PolicyManagement = () => {
         setFormData({
             max_cars: policy.max_cars,
             max_motorbikes: policy.max_motorbikes,
-            max_bicycles: policy.max_bicycles || 0, // [UPDATED] Lấy giá trị cũ hoặc 0
+            max_bicycles: policy.max_bicycles || 0, 
             description: policy.description || ''
         });
         setError(''); setSuccess('');
@@ -86,7 +84,7 @@ const PolicyManagement = () => {
                                         <th>Description</th>
                                         <th>Max Cars</th>
                                         <th>Max Motorbikes</th>
-                                        {/* [UPDATED] Thêm cột Max Bicycles */}
+
                                         <th>Max Bicycles</th>
                                         <th className="text-end">Action</th>
                                     </tr>
@@ -104,7 +102,7 @@ const PolicyManagement = () => {
                                             <td className="fw-bold text-dark">
                                                 <Scooter className="me-2 text-secondary"/> {p.max_motorbikes}
                                             </td>
-                                            {/* [UPDATED] Hiển thị Max Bicycles */}
+
                                             <td className="fw-bold text-dark">
                                                 <Bicycle className="me-2 text-secondary"/> {p.max_bicycles || 'Unl.'}
                                             </td>
@@ -122,7 +120,6 @@ const PolicyManagement = () => {
                 </Card.Body>
             </Card>
 
-            {/* Edit Modal */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title">Edit Quota: Type {currentPolicy?.type_code}</Modal.Title>
@@ -152,7 +149,6 @@ const PolicyManagement = () => {
                                     </InputGroup>
                                 </Form.Group>
                             </div>
-                            {/* [UPDATED] Ô nhập Max Bicycles */}
                             <div className="col-4">
                                 <Form.Group className="mb-3">
                                     <Form.Label className="residem-form-label">Max Bicycles</Form.Label>

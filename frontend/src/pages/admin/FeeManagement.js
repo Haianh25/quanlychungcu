@@ -6,24 +6,20 @@ import './FeeManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
 
-// Danh sách các phí CỐT LÕI (System) - Có logic tính toán ngầm
 const SYSTEM_FEE_CODES = [
     'MANAGEMENT_FEE', 'ADMIN_FEE', 'CAR_FEE', 'MOTORBIKE_FEE', 'BICYCLE_FEE',
     'CAR_CARD_FEE', 'MOTORBIKE_CARD_FEE', 'BICYCLE_CARD_FEE', 'LATE_PAYMENT_FEE'
 ];
 
-// [TRICK] Danh sách phí MẪU "Siêu To Khổng Lồ" để demo Scalability
 const SERVICE_TEMPLATES = [
     { code: 'CUSTOM', name: '✨ Create Custom Fee...', price: '', desc: '' },
     
-    // --- Nhóm Sức khỏe & Thể thao ---
     { code: 'GYM_MONTHLY', name: 'Gym Membership (Monthly)', price: 300000, desc: 'Unlimited access to Gym & Fitness center.' },
     { code: 'POOL_ACCESS', name: 'Swimming Pool Pass', price: 500000, desc: 'Monthly access to Infinity Pool (Level 5).' },
     { code: 'YOGA_CLASS', name: 'Yoga Class (Per Session)', price: 100000, desc: 'Join daily Yoga sessions with instructor.' },
     { code: 'TENNIS_COURT', name: 'Tennis Court Rental', price: 150000, desc: 'Hourly rate for tennis court usage.' },
     { code: 'SAUNA_SPA', name: 'Sauna & Spa Access', price: 200000, desc: 'Weekend access to Sauna facilities.' },
 
-    // --- Nhóm Giải trí & Cộng đồng ---
     { code: 'BBQ_BOOKING', name: 'BBQ Area Reservation', price: 250000, desc: 'Fee per 4-hour slot booking (Cleaning included).' },
     { code: 'KARAOKE_VIP', name: 'Karaoke Room (VIP)', price: 300000, desc: 'Hourly rate including equipment rental.' },
     { code: 'PRIVATE_CINEMA', name: 'Private Cinema Room', price: 400000, desc: 'Rent the mini-theater for private screening (3 hours).' },
@@ -31,7 +27,6 @@ const SERVICE_TEMPLATES = [
     { code: 'LIBRARY_MEMBER', name: 'Library Membership', price: 50000, desc: 'Annual library card issuance fee.' },
     { code: 'COWORKING_DESK', name: 'Co-working Hot Desk', price: 100000, desc: 'Daily pass for Co-working space usage.' },
 
-    // --- Nhóm Tiện ích & Gia đình ---
     { code: 'EV_CHARGING', name: 'EV Charging Subscription', price: 500000, desc: 'Monthly subscription for Electric Vehicle charging.' },
     { code: 'PARKING_GUEST', name: 'Overnight Guest Parking', price: 50000, desc: 'Per night fee for visitor vehicles.' },
     { code: 'HOUSE_CLEANING', name: 'House Cleaning Service', price: 250000, desc: 'Basic cleaning service (2 hours).' },
@@ -56,7 +51,6 @@ const FeeManagement = () => {
     const [modalLoading, setModalLoading] = useState(false);
     const [currentFee, setCurrentFee] = useState(null);
     
-    // State form
     const [editFormData, setEditFormData] = useState({ fee_name: '', price: 0, description: '' });
     const [newFeeData, setNewFeeData] = useState({ fee_name: '', fee_code: '', price: '', description: '' });
 
@@ -97,7 +91,6 @@ const FeeManagement = () => {
         setError(''); 
     };
 
-    // --- EDIT LOGIC ---
     const handleShowEditModal = (fee) => {
         setCurrentFee(fee);
         setEditFormData({
@@ -135,7 +128,6 @@ const FeeManagement = () => {
         }
     };
 
-    // --- ADD NEW LOGIC (CÓ TRICK) ---
     const handleShowAddModal = () => {
         setNewFeeData({ fee_name: '', fee_code: '', price: '', description: '' });
         setError('');
@@ -143,7 +135,6 @@ const FeeManagement = () => {
         setShowAddModal(true);
     };
 
-    // [TRICK] Hàm xử lý khi chọn Template
     const handleTemplateChange = (e) => {
         const code = e.target.value;
         if (code === 'CUSTOM') {
@@ -186,7 +177,6 @@ const FeeManagement = () => {
         }
     };
 
-    // --- DELETE LOGIC ---
     const handleShowDeleteModal = (fee) => {
         setCurrentFee(fee);
         setError('');
@@ -248,7 +238,6 @@ const FeeManagement = () => {
                                 </thead>
                                 <tbody>
                                     {fees.map(fee => {
-                                        // Phân biệt System Fee và Service Fee
                                         const isSystem = SYSTEM_FEE_CODES.includes(fee.fee_code);
                                         return (
                                             <tr key={fee.fee_id}>
@@ -278,7 +267,6 @@ const FeeManagement = () => {
                                                         <PencilSquare className="me-1" /> Edit
                                                     </Button>
                                                     
-                                                    {/* System Fee bị khóa nút xóa */}
                                                     {!isSystem ? (
                                                         <Button variant="light" className="btn-residem-danger btn-sm" onClick={() => handleShowDeleteModal(fee)}>
                                                             <Trash className="me-1" /> Delete
@@ -369,7 +357,7 @@ const FeeManagement = () => {
                 </Form>
             </Modal>
 
-            {/* Modal ADD (CÓ TRICK DROPDOWN) */}
+            {/* Modal ADD  */}
             <Modal show={showAddModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title">Add New Fee Configuration</Modal.Title>
@@ -378,7 +366,7 @@ const FeeManagement = () => {
                     <Modal.Body>
                         {error && showAddModal && <Alert variant="danger">{error}</Alert>}
                         
-                        {/* [TRICK] Dropdown chọn Template mẫu */}
+                        {/*  */}
                         <Card className="mb-3 border-0 bg-light">
                             <Card.Body className="p-3">
                                 <Form.Group className="mb-0">
@@ -464,7 +452,7 @@ const FeeManagement = () => {
                 </Form>
             </Modal>
 
-            {/* Modal DELETE */}
+            {/*  */}
             <Modal show={showDeleteModal} onHide={handleClose} centered>
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title text-danger">

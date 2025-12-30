@@ -91,9 +91,6 @@ const BillPage = () => {
         if (status === 'overdue') return <Badge bg="danger">Overdue</Badge>;
         return <Badge bg="secondary">{status}</Badge>;
     };
-
-    // --- RENDER FUNCTIONS ---
-
     const renderUnpaidBills = () => {
         if (loading) return <div className="text-center p-5"><Spinner animation="border"/></div>;
         if (unpaidBills.length === 0) return <Alert variant="residem-info">You have no unpaid bills.</Alert>; 
@@ -175,7 +172,6 @@ const BillPage = () => {
                 <Table striped hover responsive size="sm" className="residem-table history-table">
                     <thead>
                         <tr>
-                            {/* [UPDATED] Thêm cột No. và xóa cột Bill ID */}
                             <th>No.</th>
                             <th>Trans ID</th>
                             <th>Amount</th>
@@ -185,7 +181,6 @@ const BillPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* [UPDATED] Dùng index + 1 để hiển thị số thứ tự tự tăng */}
                         {transactions.map((t, index) => (
                             <tr key={t.transaction_id}>
                                 <td>#{index + 1}</td> 

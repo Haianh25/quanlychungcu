@@ -1,23 +1,19 @@
-/* --- UserManagement.css (Theme Residem) --- */
 
-/* 1. BIẾN MÀU */
 :root {
-    --user-primary: #b99a7b;       /* Vàng đồng */
+    --user-primary: #b99a7b;       
     --user-primary-hover: #a38568;
     --user-text-dark: #333333;
     --user-text-muted: #6c757d;
     --user-bg-card: #ffffff;
     --user-border: #e0e0e0;
     
-    /* Màu Badge */
-    --badge-resident-bg: #d1e7dd;   /* Xanh lá nhạt */
-    --badge-resident-text: #0f5132; /* Xanh lá đậm */
+    --badge-resident-bg: #d1e7dd;   
+    --badge-resident-text: #0f5132; 
     
-    --badge-user-bg: #e2e3e5;       /* Xám nhạt */
-    --badge-user-text: #41464b;     /* Xám đậm */
+    --badge-user-bg: #e2e3e5;       
+    --badge-user-text: #41464b;     
 }
 
-/* 2. CONTAINER & ANIMATION */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -37,7 +33,6 @@
     letter-spacing: -0.5px;
 }
 
-/* 3. CARD STYLE */
 .residem-card {
     background-color: var(--user-bg-card);
     border: 1px solid var(--user-border);
@@ -51,7 +46,6 @@
     padding: 1.5rem;
 }
 
-/* 4. SEARCH BAR */
 .residem-search-bar {
     background-color: #fff;
     border: 1px solid var(--user-border);
@@ -84,7 +78,6 @@
     border-bottom-left-radius: 0;
 }
 
-/* 5. TABLE STYLE */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
@@ -107,7 +100,7 @@
     border-bottom: 2px solid var(--user-border);
     vertical-align: middle;
     white-space: nowrap;
-    cursor: pointer; /* Thêm con trỏ cho header sort */
+    cursor: pointer; 
     user-select: none;
     transition: background-color 0.2s;
 }
@@ -125,7 +118,6 @@
     font-size: 0.95rem;
 }
 
-/* 6. BADGES (ROLE & STATUS) */
 .role-badge {
     padding: 0.4em 0.8em;
     font-size: 0.75rem;
@@ -148,13 +140,11 @@
     color: var(--badge-user-text);
 }
 
-/* Status Text */
 .status-active { color: #198754; font-weight: 600; }
 .status-disabled { color: #dc3545; font-weight: 600; }
 .status-verified { color: #0d6efd; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; }
 .status-unverified { color: #6c757d; font-size: 0.85rem; font-style: italic; }
 
-/* 7. BUTTONS */
 .btn-residem-warning {
     background-color: #fff3cd;
     border: 1px solid #ffecb5;
@@ -190,7 +180,6 @@
 }
 .btn-toggle-status.disable:hover { background-color: #f1aeb5; }
 
-/* 8. PAGINATION */
 .residem-pagination {
     margin-top: 1.5rem;
 }

@@ -1,11 +1,9 @@
-// frontend/src/components/layout/AdminHeader.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios'; 
 import { Dropdown, ListGroup, Badge } from 'react-bootstrap'; 
-import { BellFill, PersonCircle } from 'react-bootstrap-icons'; // Thêm icon Person
+import { BellFill, PersonCircle } from 'react-bootstrap-icons'; 
 
-// Hàm tính thời gian tương đối (Giữ nguyên)
 function timeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     let interval = seconds / 31536000;
@@ -22,7 +20,6 @@ function timeAgo(date) {
 }
 
 const AdminHeader = () => {
-    // ... (GIỮ NGUYÊN TOÀN BỘ LOGIC STATE & EFFECT CỦA BẠN) ...
     const navigate = useNavigate();
     const location = useLocation();
     const [notifications, setNotifications] = useState([]);
@@ -45,7 +42,6 @@ const AdminHeader = () => {
     
     useEffect(() => {
         fetchNotifications();
-        // [UPDATED] Giảm thời gian polling xuống 5 giây (5000ms) để Admin nhận thông báo nhanh hơn
         const intervalId = setInterval(fetchNotifications, 5000); 
         return () => clearInterval(intervalId);
     }, [location.pathname, fetchNotifications]); 
@@ -75,12 +71,10 @@ const AdminHeader = () => {
     };
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
-
-    // --- JSX ĐÃ ĐƯỢC SỬA GIAO DIỆN ---
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top" style={{borderBottom: '1px solid #e0e0e0'}}> 
             <div className="container-fluid px-4">
-                {/* Logo & Brand */}
+
                 <Link className="navbar-brand d-flex align-items-center" to="/admin/dashboard" style={{color: '#333', fontWeight: '600', fontSize: '1.4rem'}}>
                     <img src="/images/logoo.png" alt="Logo" style={{height: '35px', marginRight: '10px'}} />
                     PTIT Apartment <span className="badge bg-light text-secondary ms-2 border" style={{fontSize: '0.7rem', fontWeight: '500'}}>Admin</span>
@@ -88,8 +82,7 @@ const AdminHeader = () => {
 
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav ms-auto d-flex align-items-center gap-3">
-                        
-                        {/* Notification Bell */}
+
                         <li className="nav-item position-relative">
                             <Dropdown show={showNotifications} onToggle={handleBellClick} align="end">
                                 <Dropdown.Toggle as="div" className="position-relative cursor-pointer text-secondary p-2" style={{cursor: 'pointer'}}>
@@ -131,8 +124,7 @@ const AdminHeader = () => {
                                 </Dropdown.Menu>
                             </Dropdown>
                         </li>
-                        
-                        {/* User Profile & Logout */}
+
                         <li className="nav-item d-flex align-items-center border-start ps-3">
                             <div className="d-flex align-items-center gap-2">
                                 <div className="d-none d-md-block text-end me-2">

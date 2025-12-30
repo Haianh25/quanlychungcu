@@ -4,20 +4,16 @@ const router = express.Router();
 const db = require('../db');
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
-// GET /api/admin/dashboard/stats
 router.get('/stats', protect, isAdmin, async (req, res) => {
     try {
         const now = new Date();
-        // Get start of current month
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         
-        // Get start of 6 months ago for revenue chart
         const sixMonthsAgoDate = new Date();
         sixMonthsAgoDate.setMonth(sixMonthsAgoDate.getMonth() - 5);
         sixMonthsAgoDate.setDate(1);
         const startOfSixMonthsAgo = sixMonthsAgoDate.toISOString();
 
-        // Use Promise.all to execute queries in parallel
         const [
             residentRes,
             vehicleRes,
@@ -25,11 +21,9 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
             billRes,
             revenueHistoryRes, 
             billStatusRes,
-            // [MỚI] Queries for Pending Actions
             pendingVehicleRes,
             pendingUserRes
         ] = await Promise.all([
-            // 1. Resident Statistics
             db.query(`
                 SELECT 
                     COUNT(*) AS total,
@@ -38,21 +32,18 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 WHERE role = 'resident'
             `, [startOfMonth]),
 
-            // 2. Vehicle Statistics
             db.query(`
                 SELECT COUNT(*) AS total 
                 FROM vehicle_cards 
                 WHERE status = 'active'
             `),
 
-            // 3. News Statistics
             db.query(`
                 SELECT COUNT(*) AS total 
                 FROM news 
                 WHERE created_at >= $1
             `, [startOfMonth]),
 
-            // 4. Bill Statistics
             db.query(`
                 SELECT 
                     COUNT(*) AS total_bills,
@@ -63,7 +54,6 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 WHERE issue_date >= $1
             `, [startOfMonth]),
 
-            // 5. Revenue History
             db.query(`
                 SELECT 
                     TO_CHAR(issue_date, 'MM/YYYY') as month_year,
@@ -75,7 +65,6 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 ORDER BY date_trunc('month', issue_date) ASC
             `, [startOfSixMonthsAgo]),
 
-            // 6. Bill Status Breakdown
             db.query(`
                 SELECT status, COUNT(*) as count
                 FROM bills
@@ -83,10 +72,8 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 GROUP BY status
             `, [startOfMonth]),
 
-            // 7. [MỚI] Pending Vehicle Requests
             db.query(`SELECT COUNT(*) as count FROM vehicle_card_requests WHERE status = 'pending'`),
 
-            // 8. [MỚI] Users waiting for room assignment (Verified but no apartment)
             db.query(`SELECT COUNT(*) as count FROM users WHERE role = 'user' AND is_verified = true AND (apartment_number IS NULL OR apartment_number = '')`)
         ]);
 
@@ -103,7 +90,6 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 expected: parseFloat(billRes.rows[0].total_expected),
                 collected: parseFloat(billRes.rows[0].total_collected)
             },
-            // [MỚI] Pending Actions Data
             pending_actions: {
                 vehicles: parseInt(pendingVehicleRes.rows[0].count),
                 residents: parseInt(pendingUserRes.rows[0].count)

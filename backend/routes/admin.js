@@ -13,9 +13,7 @@ const isStrongPassword = (password) => {
     return regex.test(password);
 };
 
-// ==========================================
-// 1. USER MANAGEMENT
-// ==========================================
+
 
 router.get('/users', protect, isAdmin, async (req, res) => {
     try {
@@ -30,7 +28,7 @@ router.get('/users', protect, isAdmin, async (req, res) => {
     }
 });
 
-// Toggle User Status (Enable/Disable)
+
 router.patch('/users/:id/status', protect, isAdmin, async (req, res) => {
     const { id } = req.params;
     const { isActive } = req.body; 
@@ -74,41 +72,33 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
         const currentUser = userResult.rows[0];
         const oldRole = currentUser.role;
 
-        // [MỚI] CHẶN: Không cho phép nâng cấp lên Resident nếu chưa xác thực email
         if (role === 'resident' && !currentUser.is_verified) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'Cannot promote to Resident: User email is not verified yet.' });
         }
 
-        // --- LOGIC: DEMOTION (Resident -> User) ---
         if (oldRole === 'resident' && role === 'user') {
             console.log(`[Admin] Demoting user ${id}. Cleaning up services...`);
             
-            // 1. Tìm phòng hiện tại của user này (nếu có) và lưu vào last_room_id
             const currentRoomRes = await client.query('SELECT id FROM rooms WHERE resident_id = $1', [id]);
             if (currentRoomRes.rows.length > 0) {
                 const currentRoomId = currentRoomRes.rows[0].id;
-                // [UPDATED] Set status phòng cũ về available
                 await client.query("UPDATE rooms SET status = 'available' WHERE id = $1", [currentRoomId]);
                 
                 await client.query('UPDATE users SET last_room_id = $1 WHERE id = $2', [currentRoomId, id]);
                 console.log(`[Admin] Saved room ${currentRoomId} as last_room_id for user ${id}`);
             }
 
-            // 2. Remove from Room
             await client.query('UPDATE rooms SET resident_id = NULL WHERE resident_id = $1', [id]);
             await client.query('UPDATE users SET apartment_number = NULL WHERE id = $1', [id]);
             
-            // 3. Deactivate Vehicle Cards
             await client.query("UPDATE vehicle_cards SET status = 'inactive' WHERE resident_id = $1 AND status = 'active'", [id]);
             
-            // 4. Reject Pending Requests
             await client.query(
                 "UPDATE vehicle_card_requests SET status = 'rejected', admin_notes = 'User demoted to regular user' WHERE resident_id = $1 AND status = 'pending'", 
                 [id]
             );
 
-            // 5. Cancel Future Bookings
             await client.query(
                 "UPDATE room_bookings SET status = 'cancelled' WHERE resident_id = $1 AND booking_date >= CURRENT_DATE AND status = 'confirmed'",
                 [id]
@@ -150,46 +140,37 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
             updatedUser = await client.query(updateQuery, queryParams);
         }
 
-        // --- Logic: PROMOTION (User -> Resident) ---
         const newRole = setClauses.length > 0 ? updatedUser.rows[0].role : role;
         
         if (newRole === 'resident' && oldRole !== 'resident') {
-            // Kiểm tra xem có last_room_id không
             if (currentUser.last_room_id) {
                 console.log(`[Admin] Promoting user ${id}. Found last_room_id: ${currentUser.last_room_id}`);
                 
-                // Kiểm tra phòng cũ có trống không
                 const roomCheck = await client.query(
                     "SELECT id, room_number, block_id FROM rooms WHERE id = $1 AND resident_id IS NULL FOR UPDATE",
                     [currentUser.last_room_id]
                 );
 
                 if (roomCheck.rows.length > 0) {
-                    // Phòng TRỐNG -> Tự động gán lại
                     const room = roomCheck.rows[0];
                     
-                    // 1. Lấy tên Block để cập nhật apartment_number
                     const blockRes = await client.query("SELECT name FROM blocks WHERE id = $1", [room.block_id]);
                     const blockName = blockRes.rows[0]?.name || '?';
                     const apartmentFullName = `${blockName} - ${room.room_number}`;
 
-                    // 2. Gán phòng & Cập nhật status
                     await client.query("UPDATE rooms SET resident_id = $1, status = 'occupied' WHERE id = $2", [id, room.id]);
                     await client.query("UPDATE users SET apartment_number = $1, last_room_id = NULL WHERE id = $2", [apartmentFullName, id]);
                     
                     console.log(`[Admin] Auto-assigned user ${id} back to room ${apartmentFullName}`);
 
-                    // 3. Phục hồi thẻ xe (chuyển từ inactive -> active)
                     await client.query("UPDATE vehicle_cards SET status = 'active' WHERE resident_id = $1 AND status = 'inactive'", [id]);
 
-                    // 4. Gọi hàm sinh bill
                     try {
                         await generateMoveInBill(id, room.id, client);
                     } catch (billErr) {
                         console.error('Error ensuring bill existence during promotion:', billErr);
                     }
 
-                    // 5. Notification
                     const welcomeMsg = `Welcome back ${updatedUser.rows[0].full_name}! Your room ${apartmentFullName} and services have been restored.`;
                     await client.query(
                         "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
@@ -198,7 +179,6 @@ router.put('/users/:id', protect, isAdmin, async (req, res) => {
 
                 } else {
                     console.log(`[Admin] Last room ${currentUser.last_room_id} is occupied. Cannot auto-assign.`);
-                    // Vẫn gửi thông báo Welcome nhưng báo là chưa có phòng
                     const message = `Welcome ${updatedUser.rows[0].full_name}! You are now a resident. Please contact admin for room assignment.`;
                     await client.query(
                         "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
@@ -237,21 +217,18 @@ router.delete('/users/:id', protect, isAdmin, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Kiểm tra xem user có bills không
         const billCheck = await client.query('SELECT 1 FROM bills WHERE user_id = $1 LIMIT 1', [id]);
         if (billCheck.rows.length > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'Cannot delete user because they have invoices. Please disable the account instead.' });
         }
 
-        // 2. Kiểm tra xem user có vehicle cards không
         const cardCheck = await client.query('SELECT 1 FROM vehicle_cards WHERE resident_id = $1 LIMIT 1', [id]);
         if (cardCheck.rows.length > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'Cannot delete user because they have vehicle cards. Please disable the account instead.' });
         }
 
-        // 3. Nếu sạch sẽ thì xóa
         await client.query('DELETE FROM users WHERE id = $1', [id]);
         
         await client.query('COMMIT');
@@ -265,9 +242,6 @@ router.delete('/users/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// ==========================================
-// 2. RESIDENT & ROOM MANAGEMENT
-// ==========================================
 
 router.get('/residents', protect, isAdmin, async (req, res) => {
     try {
@@ -305,7 +279,6 @@ router.get('/blocks/:blockId/available-rooms', protect, isAdmin, async (req, res
     }
 });
 
-// [UPDATED] Assign Room + Generate Move-in Bill
 router.post('/assign-room', protect, isAdmin, async (req, res) => {
     const { residentId, roomId } = req.body;
     const client = await pool.connect();
@@ -321,21 +294,17 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Room does not exist or is already occupied.' });
         }
 
-        // Clear old assignments
         await client.query("UPDATE rooms SET resident_id = NULL, status = 'available' WHERE resident_id = $1", [residentId]);
         
-        // Assign new room & Update Status
         await client.query("UPDATE rooms SET resident_id = $1, status = 'occupied' WHERE id = $2", [residentId, roomId]);
         
         const apartmentFullName = `${roomInfo.rows[0].block_name} - ${roomInfo.rows[0].room_number}`;
         
-        // [NEW LOGIC] Cập nhật apartment_number VÀ Nâng cấp role lên 'resident' luôn (nếu chưa phải)
         await client.query(
             "UPDATE users SET apartment_number = $1, role = 'resident' WHERE id = $2", 
             [apartmentFullName, residentId]
         );
 
-        // Notification
         try {
             const message = `Welcome Home! You have been assigned to apartment ${apartmentFullName}.`;
             await client.query(
@@ -346,7 +315,6 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
             console.error('Error sending room assignment notification:', notifyError);
         }
 
-        // Generate Move-in Bill
         try {
             await generateMoveInBill(residentId, roomId, client);
         } catch (billError) {
@@ -364,7 +332,6 @@ router.post('/assign-room', protect, isAdmin, async (req, res) => {
     }
 });
 
-// [UPDATED API] Unassign Room (Trả phòng/Rời đi)
 router.post('/unassign-room', protect, isAdmin, async (req, res) => {
     const { residentId } = req.body;
     
@@ -376,7 +343,6 @@ router.post('/unassign-room', protect, isAdmin, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Kiểm tra resident có phòng không
         const userRes = await client.query('SELECT apartment_number, id FROM users WHERE id = $1', [residentId]);
         if (userRes.rows.length === 0) {
             await client.query('ROLLBACK');
@@ -391,22 +357,20 @@ router.post('/unassign-room', protect, isAdmin, async (req, res) => {
 
         console.log(`[Admin] Unassigning resident ${residentId} from room ${currentApartment}`);
 
-        // 2. Xóa liên kết trong bảng rooms & Cập nhật Status về 'available'
         await client.query("UPDATE rooms SET resident_id = NULL, status = 'available' WHERE resident_id = $1", [residentId]);
 
-        // 3. Xóa apartment_number trong bảng users
         await client.query('UPDATE users SET apartment_number = NULL WHERE id = $1', [residentId]);
 
-        // 4. Vô hiệu hóa thẻ xe (chuyển sang inactive)
+       
         await client.query("UPDATE vehicle_cards SET status = 'inactive' WHERE resident_id = $1 AND status = 'active'", [residentId]);
 
-        // 5. [NEW] Hủy các Booking tiện ích trong tương lai
+      
         await client.query(
             "UPDATE room_bookings SET status = 'cancelled' WHERE resident_id = $1 AND booking_date >= CURRENT_DATE AND status = 'confirmed'",
             [residentId]
         );
 
-        // 6. Gửi thông báo
+        
         try {
             const message = `You have been unassigned from apartment ${currentApartment}. Your vehicle cards and future bookings have been cancelled.`;
             await client.query(
@@ -429,11 +393,11 @@ router.post('/unassign-room', protect, isAdmin, async (req, res) => {
     }
 });
 
-// [UPDATED] Get rooms in a block (WITH VEHICLE COUNTS & UNPAID BILLS)
+
 router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
     const { blockId } = req.params;
     try {
-        // [MỚI] Thêm subquery đếm unpaid_bills
+       
         const rooms = await query(
             `SELECT 
                 r.id, 
@@ -475,9 +439,7 @@ router.get('/blocks/:blockId/rooms', protect, isAdmin, async (req, res) => {
     }
 });
 
-// ==========================================
-// 3. NEWS MANAGEMENT
-// ==========================================
+
 
 router.post('/news', protect, isAdmin, async (req, res) => {
     const { title, content, status, imageUrl } = req.body;
@@ -582,9 +544,7 @@ router.delete('/news/:id', protect, isAdmin, async (req, res) => {
     }
 });
 
-// ==========================================
-// 4. POLICY MANAGEMENT (MỚI - BỔ SUNG)
-// ==========================================
+
 
 router.get('/policies', protect, isAdmin, async (req, res) => {
     try {

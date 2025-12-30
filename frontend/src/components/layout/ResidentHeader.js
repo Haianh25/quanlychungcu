@@ -2,11 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import '../../pages/Homepage.css'; // Import CSS
+import '../../pages/Homepage.css'; 
 import axios from 'axios'; 
 import { Dropdown, ListGroup } from 'react-bootstrap'; 
 
-// --- TOÀN BỘ LOGIC CỦA BẠN (timeAgo, ...các hàm) ĐƯỢC GIỮ NGUYÊN ---
 function timeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     let interval = seconds / 31536000;
@@ -26,7 +25,6 @@ const ResidentHeader = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
-    // State lưu số phòng
     const [apartmentNumber, setApartmentNumber] = useState(null);
     
     const navigate = useNavigate();
@@ -39,28 +37,20 @@ const ResidentHeader = () => {
         return localStorage.getItem(tokenType);
     }
 
-    // [MỚI] Hàm fetch trạng thái phòng Real-time & Tự động đá ra nếu mất quyền
     const fetchProfileStatus = useCallback(async () => {
         const token = getAuthToken();
         if (!token) return;
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            // Gọi API nhẹ để lấy status mới nhất
             const res = await axios.get('http://localhost:5000/api/profile/status', config);
             
             const newApartmentNumber = res.data.apartment_number;
-            
-            // Cập nhật state nếu có sự thay đổi
+
             if (newApartmentNumber !== apartmentNumber) {
                 console.log("Apartment status updated:", newApartmentNumber);
                 setApartmentNumber(newApartmentNumber);
-
-                // [LOGIC BỔ SUNG QUAN TRỌNG]
-                // Nếu bị mất phòng (new = null) VÀ đang đứng ở trang cần quyền hạn (Services/Bill)
-                // -> Đá về trang chủ ngay lập tức
                 if (!newApartmentNumber) {
                     const restrictedPaths = ['/services', '/bill'];
-                    // Kiểm tra xem đường dẫn hiện tại có bắt đầu bằng các path cấm không
                     const isOnRestrictedPage = restrictedPaths.some(path => location.pathname.startsWith(path));
                     
                     if (isOnRestrictedPage) {
@@ -70,12 +60,10 @@ const ResidentHeader = () => {
                 }
             }
 
-            // Check role change (nếu bị demote role)
             if (res.data.role !== userRole && userRole !== null) {
                  window.location.reload();
             }
         } catch (err) {
-            // Không làm gì nếu lỗi nhẹ, để tránh spam console
         }
     }, [apartmentNumber, userRole, location.pathname, navigate]);
 
@@ -128,18 +116,16 @@ const ResidentHeader = () => {
                     }
                     setUserRole(normalizedRole);
                     setUserName(decodedToken.full_name || decodedToken.email);
-                    
-                    // Lấy giá trị ban đầu từ token
+
                     if (decodedToken.apartment_number) {
                         setApartmentNumber(decodedToken.apartment_number);
                     }
                     
                     fetchNotifications(); 
-                    
-                    // [UPDATED] Polling cả Notification và Profile Status mỗi 5s
+
                     const intervalId = setInterval(() => {
                         fetchNotifications();
-                        fetchProfileStatus(); // Check phòng mới
+                        fetchProfileStatus(); 
                     }, 5000); 
                     return () => clearInterval(intervalId);
                 }
@@ -206,7 +192,7 @@ const ResidentHeader = () => {
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const isResident = isLoggedIn && userRole === 'resident';
     
-    const hasRoom = isResident && apartmentNumber; // Kiểm tra có phòng real-time
+    const hasRoom = isResident && apartmentNumber; 
 
     const isNavLinkActive = (path) => { 
         return location.pathname === path;
@@ -248,8 +234,7 @@ const ResidentHeader = () => {
                         <li className="nav-item">
                             <Link className={`nav-link ${isNavLinkActive('/') ? 'active' : ''}`} aria-current="page" to="/">Home</Link>
                         </li>
-                        
-                        {/* SERVICES LINK */}
+
                         <li className="nav-item">
                             {isResident ? (
                                 <a 
@@ -264,7 +249,6 @@ const ResidentHeader = () => {
                             )}
                         </li>
 
-                        {/* BILL LINK */}
                         <li className="nav-item">
                             {isResident ? (
                                 <a 

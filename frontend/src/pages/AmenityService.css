@@ -1,6 +1,4 @@
-/* --- AMENITY SERVICE CSS (Riêng biệt) --- */
 
-/* --- 1. AMENITY CARD (Thẻ phòng) --- */
 .amenity-card {
     border: none;
     border-radius: 0.75rem;
@@ -18,10 +16,9 @@
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
-/* Phần ảnh */
 .amenity-img-wrapper {
     position: relative;
-    height: 220px; /* Tăng chiều cao ảnh chút cho đẹp */
+    height: 220px; 
     background-color: #eee;
     overflow: hidden;
 }
@@ -34,7 +31,7 @@
 }
 
 .amenity-card:hover .amenity-img-wrapper .card-img-top {
-    transform: scale(1.05); /* Zoom ảnh nhẹ khi hover */
+    transform: scale(1.05); 
 }
 
 .amenity-img-placeholder {
@@ -48,7 +45,6 @@
     background-color: #f0f0f0;
 }
 
-/* Tag giá tiền nổi bật */
 .price-tag {
     position: absolute;
     top: 15px;
@@ -56,15 +52,14 @@
     font-size: 0.9rem;
     padding: 0.5em 0.9em;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    background-color: rgba(255, 255, 255, 0.95) !important; /* Nền trắng mờ */
-    color: #b99a7b !important; /* Màu vàng đồng (Hardcode hoặc dùng var) */
+    background-color: rgba(255, 255, 255, 0.95) !important; 
+    color: #b99a7b !important; 
     border: 1px solid #b99a7b;
     font-weight: 700;
     border-radius: 30px;
     z-index: 2;
 }
 
-/* Phần nội dung Card */
 .amenity-card .card-body {
     padding: 1.5rem;
     display: flex;
@@ -76,19 +71,17 @@
     font-weight: 700;
     font-size: 1.35rem;
     margin-bottom: 0.5rem;
-    color: #333; /* Màu text tối */
+    color: #333; 
 }
 
-/* Dòng thông tin phụ (Số người, Tầng) */
 .amenity-info-row {
     font-size: 0.95rem;
-    color: #6c757d; /* Muted text */
+    color: #6c757d;
     margin-bottom: 1rem;
     display: flex;
     gap: 1rem;
 }
 
-/* Text mô tả */
 .amenity-card .card-text {
     font-size: 0.95rem;
     line-height: 1.6;
@@ -96,14 +89,12 @@
     margin-bottom: 1.5rem;
 }
 
-/* --- 2. BOOKING HISTORY LIST (Sidebar) --- */
 .booking-history-list {
     max-height: 450px;
     overflow-y: auto;
-    padding-right: 5px; /* Để scrollbar không đè nội dung */
+    padding-right: 5px; 
 }
 
-/* Tùy chỉnh thanh cuộn cho đẹp */
 .booking-history-list::-webkit-scrollbar {
     width: 5px;
 }
@@ -116,7 +107,7 @@
 }
 
 .booking-item {
-    background-color: #f8f9fa; /* Nền xám rất nhạt */
+    background-color: #f8f9fa; 
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 0.75rem;
@@ -130,7 +121,6 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* Badge trạng thái nhỏ trong lịch sử */
 .status-badge-mini {
     font-size: 0.7rem;
     padding: 0.35em 0.6em;
@@ -140,14 +130,13 @@
     letter-spacing: 0.5px;
 }
 
-/* Các trạng thái màu sắc riêng cho booking item */
 .booking-item.status-confirmed {
-    border-left: 3px solid #198754; /* Xanh lá */
+    border-left: 3px solid #198754; 
 }
 .booking-item.status-cancelled {
-    border-left: 3px solid #6c757d; /* Xám */
+    border-left: 3px solid #6c757d; 
     opacity: 0.7;
 }
 .booking-item.status-completed {
-    border-left: 3px solid #0d6efd; /* Xanh dương */
+    border-left: 3px solid #0d6efd; 
 }

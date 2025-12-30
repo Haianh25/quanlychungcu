@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios'; // [MỚI]
+import axios from 'axios'; 
 import '../../pages/Homepage.css';
 
 const ResidentFooter = () => {
@@ -10,7 +10,6 @@ const ResidentFooter = () => {
     const [userRole, setUserRole] = useState(null);
     const [apartmentNumber, setApartmentNumber] = useState(null);
 
-    // [MỚI] Polling check status phòng (Logic y hệt Header)
     useEffect(() => {
         let intervalId;
         const token = localStorage.getItem('token');
@@ -33,8 +32,7 @@ const ResidentFooter = () => {
                     setIsLoggedIn(false);
                 } else {
                     setIsLoggedIn(true);
-                    
-                    // Get Role
+
                     const rawRole = decoded.role || decoded.roles || decoded.user?.role;
                     let normalizedRole = null;
                     if (Array.isArray(rawRole)) {
@@ -46,10 +44,8 @@ const ResidentFooter = () => {
                     }
                     setUserRole(normalizedRole);
 
-                    // Set initial apartment
                     if (decoded.apartment_number) setApartmentNumber(decoded.apartment_number);
 
-                    // Start polling
                     intervalId = setInterval(fetchStatus, 5000);
                 }
             } catch (e) {
@@ -89,8 +85,6 @@ const ResidentFooter = () => {
         <footer className="resident-footer new-footer-compact mt-5">
             <div className="container">
                 <div className="row">
-                    
-                    {/* COLUMN 1: LOGO AND ADDRESS */}
                     <div className="col-lg-5 col-md-12 mb-4 mb-lg-0">
                         <div className="footer-logo-compact">
                             <img src="/images/logoo.png" alt="PTIT Apartment Logo" className="new-logo" />
@@ -102,28 +96,21 @@ const ResidentFooter = () => {
                             Km10, Nguyen Trai Street, Ha Dong District, Hanoi
                         </p>
                     </div>
-
-                    {/* COLUMN 2: QUICK LINKS */}
                     <div className="col-lg-3 col-md-6 mb-4 mb-lg-0">
                         <h5 className="footer-heading-compact">Quick Links</h5>
                         <ul className="footer-links-list">
                             <li><Link to="/">Home</Link></li>
-                            
-                            {/* Services */}
                             <li>
                                 <a href="/services" onClick={(e) => handleRestrictedLinkClick(e, '/services')} className={!isResident ? 'text-muted' : ''}>
                                     Services {!isResident && <i className="bi bi-lock-fill ms-1" style={{fontSize: '0.8em'}}></i>}
                                 </a>
                             </li>
-
-                            {/* Bill */}
                             <li>
                                 <a href="/bill" onClick={(e) => handleRestrictedLinkClick(e, '/bill')} className={!isResident ? 'text-muted' : ''}>
                                     Bill {!isResident && <i className="bi bi-lock-fill ms-1" style={{fontSize: '0.8em'}}></i>}
                                 </a>
                             </li>
                             
-                            {/* News */}
                             <li>
                                 <a href="/news" onClick={(e) => {
                                     e.preventDefault();
@@ -141,7 +128,6 @@ const ResidentFooter = () => {
                         </ul>
                     </div>
 
-                    {/* COLUMN 3: CONTACT US */}
                     <div className="col-lg-4 col-md-6 mb-4 mb-lg-0">
                         <h5 className="footer-heading-compact">Contact Us</h5>
                         <ul className="footer-contact-list">
@@ -157,7 +143,6 @@ const ResidentFooter = () => {
                     </div>
                 </div>
 
-                {/* COPYRIGHT BAR */}
                 <div className="footer-bottom-bar">
                     <span className="copyright-text">
                         Copyright © {new Date().getFullYear()} PTIT Apartment. All rights reserved.

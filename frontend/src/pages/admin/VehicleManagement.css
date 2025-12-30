@@ -1,15 +1,13 @@
 /* --- VehicleManagement.css (Theme Residem) --- */
 
-/* 1. BIẾN MÀU */
 :root {
-    --veh-primary: #b99a7b;       /* Vàng đồng */
+    --veh-primary: #b99a7b;      
     --veh-primary-hover: #a38568;
     --veh-text-dark: #333333;
     --veh-text-muted: #6c757d;
     --veh-bg-card: #ffffff;
     --veh-border: #e0e0e0;
     
-    /* Màu Badge trạng thái */
     --badge-active-bg: #198754;
     --badge-inactive-bg: #ffc107;
     --badge-pending-bg: #fd7e14;
@@ -17,7 +15,6 @@
     --badge-secondary-bg: #6c757d;
 }
 
-/* 2. CONTAINER & ANIMATION */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -37,7 +34,6 @@
     letter-spacing: -0.5px;
 }
 
-/* 3. CARD STYLE */
 .residem-card {
     background-color: var(--veh-bg-card);
     border: 1px solid var(--veh-border);
@@ -51,7 +47,6 @@
     padding: 1.5rem;
 }
 
-/* 4. TABS STYLE */
 .residem-tabs .nav-tabs {
     border-bottom: 1px solid var(--veh-border);
 }
@@ -74,7 +69,6 @@
     border-bottom-color: var(--veh-primary);
 }
 
-/* 5. TABLE STYLE */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
@@ -119,7 +113,6 @@
     text-align: right;
 }
 
-/* 6. BADGES (Solid Style) */
 .status-badge {
     padding: 0.4em 0.8em;
     font-size: 0.75rem;
@@ -140,7 +133,6 @@
 .status-danger  { background-color: var(--badge-danger-bg); }
 .status-secondary { background-color: var(--badge-secondary-bg); }
 
-/* 7. FORM CONTROLS */
 .residem-form-label {
     font-weight: 600;
     color: var(--veh-text-muted);
@@ -163,7 +155,6 @@
     box-shadow: 0 0 0 3px rgba(185, 154, 123, 0.15);
 }
 
-/* 8. BUTTONS */
 .btn-residem-primary {
     background-color: var(--veh-primary);
     border-color: var(--veh-primary);
@@ -192,7 +183,6 @@
     border-color: #ccc;
 }
 
-/* Small Buttons */
 .btn-residem-success.btn-sm, .btn-residem-danger.btn-sm, 
 .btn-residem-warning.btn-sm, .btn-residem-pause.btn-sm, 
 .btn-residem-play.btn-sm {
@@ -220,7 +210,6 @@
 .residem-link { color: var(--veh-primary); font-weight: 600; text-decoration: none; padding: 0; }
 .residem-link:hover { text-decoration: underline; color: var(--veh-primary-hover); }
 
-/* 9. MODAL */
 .modal-content {
     border-radius: 12px;
     border: none;

@@ -2,11 +2,10 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
-const upload = require('../utils/upload'); // Sử dụng lại file upload có sẵn
+const upload = require('../utils/upload'); 
 const { protect, isAdmin } = require('../middleware/authMiddleware');
 
-// --- Public News endpoints for residents ---
-// GET /api/news - public list of active news
+
 router.get('/', async (req, res) => {
     try {
         const result = await db.query(
@@ -23,7 +22,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/news/:id - public detail (active only)
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -38,16 +36,13 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// --- Admin Routes ---
 
-// POST /api/news/upload-image (Upload ảnh cho bài viết)
 router.post('/upload-image', protect, isAdmin, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded' });
     }
-    // Trả về đường dẫn file (lưu ý: đường dẫn này phải khớp với cách bạn serve static files trong index.js)
-    // Giả sử bạn đang serve folder uploads tại /uploads
-    const imageUrl = `/uploads/proofs/${req.file.filename}`; // Dùng chung folder proofs cho tiện
+
+    const imageUrl = `/uploads/proofs/${req.file.filename}`; 
     res.json({ imageUrl });
 });
 

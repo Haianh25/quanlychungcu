@@ -3,7 +3,7 @@ import { Table, Button, Spinner, Alert, Modal, Badge, Form, Row, Col, Card } fro
 import axios from 'axios';
 import * as XLSX from 'xlsx'; 
 import { FileEarmarkExcelFill, LightningChargeFill, EyeFill, CheckCircleFill } from 'react-bootstrap-icons'; 
-import Pagination from '../../components/admin/Pagination'; // [MỚI] Import Pagination
+import Pagination from '../../components/admin/Pagination'; 
 import './BillManagement.css';
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -23,7 +23,6 @@ const BillManagement = () => {
     const [filterStatus, setFilterStatus] = useState('');
     const [filterRoom, setFilterRoom] = useState('');
 
-    // [MỚI] State cho phân trang
     const [currentPage, setCurrentPage] = useState(1);
     const [billsPerPage] = useState(10);
 
@@ -59,12 +58,9 @@ const BillManagement = () => {
         });
     }, [bills, filterStatus, filterRoom]);
 
-    // [MỚI] Logic cắt trang
     const indexOfLastBill = currentPage * billsPerPage;
     const indexOfFirstBill = indexOfLastBill - billsPerPage;
     const currentBills = filteredBills.slice(indexOfFirstBill, indexOfLastBill);
-
-    // [MỚI] Hàm chuyển trang
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const formatMonth = (dateStr) => {
@@ -105,7 +101,6 @@ const BillManagement = () => {
         }
     };
 
-    // [REMOVED] handleMarkAsPaid function
 
     const handleShowDetails = async (bill) => {
         const config = getAuthConfig();
@@ -132,7 +127,7 @@ const BillManagement = () => {
         } else if (e.target.name === 'filterStatus') {
             setFilterStatus(e.target.value);
         }
-        setCurrentPage(1); // [MỚI] Reset về trang 1 khi lọc
+        setCurrentPage(1); 
     };
 
     const handleExportExcel = () => {
@@ -224,7 +219,6 @@ const BillManagement = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {/* [UPDATED] Sử dụng currentBills thay vì filteredBills */}
                                     {currentBills.length === 0 ? (
                                         <tr><td colSpan="8" className="text-center text-muted py-4">No bills found matching your criteria.</td></tr>
                                     ) : (
@@ -247,7 +241,6 @@ const BillManagement = () => {
                                             </tr>
                                         ))
                                     )}
-                                    {/* Placeholder để giữ chiều cao bảng ổn định nếu ít row */}
                                     {currentBills.length > 0 && currentBills.length < billsPerPage && Array.from({ length: billsPerPage - currentBills.length }).map((_, idx) => (
                                         <tr key={`placeholder-${idx}`}><td colSpan="8" style={{height: '65px'}}></td></tr>
                                     ))}
@@ -255,8 +248,6 @@ const BillManagement = () => {
                             </Table>
                         )}
                     </div>
-
-                    {/* [MỚI] Thanh Phân Trang */}
                     {filteredBills.length > billsPerPage && (
                         <div className="residem-pagination mt-4 d-flex justify-content-center">
                             <Pagination
@@ -271,7 +262,6 @@ const BillManagement = () => {
                 </Card.Body>
             </Card>
 
-            {/* Bill Details Modal */}
             <Modal show={showDetailModal} onHide={handleCloseDetailModal} centered size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title">Invoice Details #{selectedBill?.bill_id}</Modal.Title>

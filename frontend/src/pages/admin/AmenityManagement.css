@@ -1,22 +1,19 @@
 /* --- AmenityManagement.css --- */
 
-/* 1. BIẾN MÀU & THEME */
 :root {
-    --amenity-primary: #b99a7b;       /* Vàng đồng */
+    --amenity-primary: #b99a7b;     
     --amenity-primary-hover: #a38568;
     --amenity-text-dark: #333333;
     --amenity-text-muted: #6c757d;
     --amenity-bg-card: #ffffff;
     --amenity-border: #e0e0e0;
 
-    /* Soft Colors cho Icon */
     --bg-soft-gold: rgba(185, 154, 123, 0.15);
     --bg-soft-green: rgba(25, 135, 84, 0.15);
     --bg-soft-blue: rgba(13, 202, 240, 0.15);
     --bg-soft-yellow: rgba(255, 193, 7, 0.15);
 }
 
-/* Container & Animation */
 .management-page-container {
     width: 100%;
     animation: fadeIn 0.5s ease-out;
@@ -36,7 +33,6 @@
     letter-spacing: -0.5px;
 }
 
-/* 2. STATS CARDS (Giống Dashboard) */
 .stats-card {
     background-color: var(--amenity-bg-card);
     border: 1px solid var(--amenity-border);
@@ -66,13 +62,11 @@
     font-size: 1.4rem;
 }
 
-/* Màu nền icon */
 .bg-primary-soft { background-color: var(--bg-soft-gold); color: var(--amenity-primary); }
 .bg-info-soft { background-color: var(--bg-soft-blue); color: #0dcaf0; }
 .bg-success-soft { background-color: var(--bg-soft-green); color: #198754; }
 .bg-warning-soft { background-color: var(--bg-soft-yellow); color: #ffc107; }
 
-/* 3. MAIN CARD & TABS */
 .residem-card {
     background-color: var(--amenity-bg-card);
     border: 1px solid var(--amenity-border);
@@ -86,7 +80,6 @@
     padding: 1.5rem;
 }
 
-/* Tabs Style */
 .residem-tabs .nav-link {
     color: var(--amenity-text-muted);
     font-weight: 600;
@@ -107,7 +100,6 @@
     border-bottom-color: var(--amenity-primary);
 }
 
-/* 4. TABLE STYLE */
 .table-wrapper {
     overflow-x: auto;
     border-radius: 8px;
@@ -138,7 +130,6 @@
     font-size: 0.95rem;
 }
 
-/* Thumbnail Ảnh Phòng */
 .room-thumbnail {
     width: 60px;
     height: 40px;
@@ -160,7 +151,6 @@
     border: 1px solid var(--amenity-border);
 }
 
-/* 5. BUTTONS & BADGES */
 .btn-residem-primary {
     background-color: var(--amenity-primary);
     border-color: var(--amenity-primary);
@@ -198,7 +188,6 @@
     font-weight: 600;
 }
 
-/* Badges */
 .status-badge {
     padding: 0.35em 0.65em;
     font-size: 0.75rem;
@@ -210,7 +199,6 @@
 .bg-success { background-color: #198754 !important; color: #fff; }
 .bg-secondary { background-color: #6c757d !important; color: #fff; }
 
-/* 6. MODAL & FORMS */
 .modal-content {
     border-radius: 12px;
     border: none;

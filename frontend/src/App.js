@@ -3,12 +3,10 @@ import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-route
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
 
-// Layouts & Guards
 import AdminLayout from './components/layout/AdminLayout';
 import ResidentLayout from './components/layout/ResidentLayout'; 
 import ProtectedRoute from './components/ProtectedRoute';
 
-// ... (Giữ nguyên các import Pages khác) ...
 import Register from './pages/Register';
 import Login from './pages/Login';
 import VerifyEmail from './pages/VerifyEmail';
@@ -35,19 +33,16 @@ import VehicleManagement from './pages/admin/VehicleManagement';
 import BillManagement from './pages/admin/BillManagement';
 import FeeManagement from './pages/admin/FeeManagement';
 import AmenityManagement from './pages/admin/AmenityManagement';
-import PolicyManagement from './pages/admin/PolicyManagement'; // [MỚI] Import trang Policy
+import PolicyManagement from './pages/admin/PolicyManagement'; 
 
-// Component xử lý logic chặn tài khoản
 const AppContent = () => {
     const navigate = useNavigate();
     const [showBlockModal, setShowBlockModal] = useState(false);
 
     useEffect(() => {
-        // Thiết lập Interceptor cho Axios
         const interceptor = axios.interceptors.response.use(
             (response) => response,
             (error) => {
-                // Kiểm tra nếu lỗi là 403 và thông báo liên quan đến "disabled"
                 if (error.response && error.response.status === 403) {
                     const msg = error.response.data?.message || '';
                     if (msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('locked')) {
@@ -58,13 +53,12 @@ const AppContent = () => {
             }
         );
 
-        // Cleanup khi unmount
+        
         return () => axios.interceptors.response.eject(interceptor);
     }, []);
 
     const handleCloseBlockModal = () => {
         setShowBlockModal(false);
-        // Xóa token và chuyển về login
         localStorage.removeItem('token');
         localStorage.removeItem('adminToken');
         navigate('/login');
@@ -72,7 +66,7 @@ const AppContent = () => {
 
     return (
         <>
-            {/* Modal Thông báo khóa tài khoản */}
+            
             <Modal show={showBlockModal} onHide={handleCloseBlockModal} centered backdrop="static" keyboard={false}>
                 <Modal.Header className="bg-danger text-white">
                     <Modal.Title>Account Locked</Modal.Title>
@@ -127,7 +121,7 @@ const AppContent = () => {
                             <Route path="bill-management" element={<BillManagement />} />
                             <Route path="fee-management" element={<FeeManagement />} />
                             <Route path="amenity-management" element={<AmenityManagement />} />
-                            <Route path="policy-management" element={<PolicyManagement />} /> {/* [MỚI] Route Policy */}
+                            <Route path="policy-management" element={<PolicyManagement />} /> 
                         </Route>
                     </Route>
                 </Routes>

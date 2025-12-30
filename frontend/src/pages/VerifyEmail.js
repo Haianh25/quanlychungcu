@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import './VerifyEmail.css'; // Import CSS mới
+import './VerifyEmail.css'; 
 
 const VerifyEmail = () => {
-    // --- LOGIC GỐC CỦA BẠN (GIỮ NGUYÊN) ---
     const [message, setMessage] = useState('Verifying your account...');
     const [error, setError] = useState('');
     const { token } = useParams();
@@ -33,43 +32,30 @@ const VerifyEmail = () => {
             };
         }
     }, [token]);
-
-    // --- GIAO DIỆN JSX ĐÃ ĐƯỢC THAY ĐỔI THEO THEME MỚI ---
     
-    // Xác định trạng thái
     const isLoading = message === 'Verifying your account...' && !error;
     const isSuccess = message && !isLoading && !error;
     const isError = error;
 
     return (
         <div className="login-page-wrapper">
-            {/* 1. CỘT ẢNH NỀN BÊN TRÁI */}
             <div className="login-image-panel">
-                {/* Ảnh nền được đặt trong CSS */}
             </div>
-
-            {/* 2. CỘT FORM BÊN PHẢI */}
             <div className="login-form-panel">
                 <div className="login-form-content">
                     
-                    {/* Logo (Giống Header) */}
                     <div className="login-logo">
                         <img src="/images/logoo.png" alt="PTIT Apartment Logo" />
                         <span>PTIT Apartment</span>
                     </div>
 
                     <h2 className="login-title">Account Verification</h2>
-                    
-                    {/* Trạng thái Đang Tải... */}
                     {isLoading && (
                         <>
                             <p className="login-subtitle">Please wait while we verify your account.</p>
                             <div className="alert alert-info">{message}</div>
-                            {/* Bạn có thể thêm Spinner của Bootstrap tại đây nếu muốn */}
                         </>
                     )}
-
-                    {/* Trạng thái Lỗi */}
                     {isError && (
                          <>
                             <p className="login-subtitle">An error occurred.</p>
@@ -80,7 +66,7 @@ const VerifyEmail = () => {
                         </>
                     )}
 
-                    {/* Trạng thái Thành Công */}
+                   
                     {isSuccess && (
                          <>
                             <p className="login-subtitle">Your account is now active!</p>

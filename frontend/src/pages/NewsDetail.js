@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import './News.css'; // SỬ DỤNG CHUNG CSS VỚI TRANG NEWS
+import './News.css'; 
 import { Container, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstrap';
 
-// Define API URL
 const API_BASE_URL = 'http://localhost:5000';
 
 const NewsDetail = () => {
@@ -14,17 +13,14 @@ const NewsDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Sidebar Data
     const [allNews, setAllNews] = useState([]);
 
-    // --- HELPER TO FIX IMAGE URL ---
     const getImageUrl = (path) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
         return `${API_BASE_URL}${path}`;
     };
 
-    // useEffect 1: Fetch Detail
     useEffect(() => {
         const fetchItem = async () => {
             try {
@@ -43,7 +39,6 @@ const NewsDetail = () => {
         window.scrollTo(0, 0); 
     }, [id]);
 
-    // useEffect 2: Fetch Sidebar Data
     useEffect(() => {
         const fetchAllNews = async () => {
             try {
@@ -56,19 +51,13 @@ const NewsDetail = () => {
         fetchAllNews();
     }, []); 
 
-    // useMemo for Sidebar (Logic Update: Just filter ID, allow duplicate titles for demo)
     const recentPosts = useMemo(() => {
-        // 1. Filter out current post
         const otherPosts = allNews.filter(post => post.id !== id);
         
-        // 2. Sort by Date (Newest first)
         const sortedPosts = otherPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-        // 3. Slice top 5 (No unique title check anymore)
         return sortedPosts.slice(0, 5);
     }, [allNews, id]);
 
-    // --- RENDER ---
     return (
         <Container className="news-page-container my-5 fadeIn">
             {loading ? (
@@ -81,7 +70,6 @@ const NewsDetail = () => {
                 </Alert>
             ) : (
                 <>
-                    {/* --- HEADER SECTION (TITLE & META) --- */}
                     <div className="news-header-section mb-4">
                         <Link className="btn btn-residem-secondary btn-sm mb-3" to="/news">
                             &larr; Back to News
@@ -96,13 +84,9 @@ const NewsDetail = () => {
                         </div>
                         <hr className="my-4" /> 
                     </div>
-
-                    {/* --- MAIN CONTENT & SIDEBAR --- */}
                     <Row>
-                        {/* LEFT COL: IMAGE + CONTENT */}
                         <Col lg={8}>
                             <div className="news-detail-wrapper">
-                                {/* Main Image */}
                                 {(item.imageurl || item.image_url) && (
                                     <img 
                                         src={getImageUrl(item.imageurl || item.image_url)} 
@@ -111,12 +95,9 @@ const NewsDetail = () => {
                                     />
                                 )}
                                 
-                                {/* Content */}
                                 <div className="news-detail-content" dangerouslySetInnerHTML={{ __html: item.content }} />
                             </div>
                         </Col>
-
-                        {/* RIGHT COL: RECENT POSTS */}
                         <Col lg={4}>
                             <aside className="news-sidebar">
                                 <div className="sidebar-widget">

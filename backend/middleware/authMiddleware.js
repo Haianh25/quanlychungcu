@@ -5,14 +5,9 @@ const protect = async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            // 1. Get token from header
+        try {    
             token = req.headers.authorization.split(' ')[1];
-
-            // 2. Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            // 3. Get user from DB (Updated to select is_active)
             const result = await db.query(
                 'SELECT id, full_name, email, role, is_active FROM users WHERE id = $1', 
                 [decoded.id]
@@ -20,16 +15,9 @@ const protect = async (req, res, next) => {
 
             if (result.rows.length > 0) {
                 const dbUser = result.rows[0];
-
-                // --- [CHECK 1] CHECK IF ACCOUNT IS DISABLED ---
-                // This prevents locked users from accessing any protected API
                 if (dbUser.is_active === false) {
                     return res.status(403).json({ message: 'Your account has been disabled. Please contact support.' });
                 }
-
-                // --- [CHECK 2 - NEW] FORCE LOGOUT ON ROLE CHANGE ---
-                // Nếu role trong token (lúc đăng nhập) KHÁC với role hiện tại trong DB (do Admin sửa)
-                // -> Token không còn hợp lệ -> Trả về 401 để Frontend logout
                 if (decoded.role !== dbUser.role) {
                     return res.status(401).json({ message: 'Session expired. Role updated. Please login again.' });
                 }

@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../db');
 const { protect } = require('../middleware/authMiddleware');
 
-// 1. Lấy danh sách phòng
 router.get('/rooms', protect, async (req, res) => {
     try {
         const query = `
@@ -21,7 +20,6 @@ router.get('/rooms', protect, async (req, res) => {
     }
 });
 
-// 2. Lấy lịch sử
 router.get('/my-bookings', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     try {
@@ -40,7 +38,6 @@ router.get('/my-bookings', protect, async (req, res) => {
     }
 });
 
-// 3. Đặt phòng
 router.post('/book', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const { roomId, date, startTime, endTime } = req.body;
@@ -118,14 +115,12 @@ router.post('/book', protect, async (req, res) => {
     }
 });
 
-// 4. Hủy lịch (User hủy) - [ĐÃ FIX LỖI LOGIC]
 router.post('/cancel/:id', protect, async (req, res) => {
     const residentId = req.user.user ? req.user.user.id : req.user.id;
     const residentName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
     try {
-        // [FIX] Kiểm tra xem booking có phải trong tương lai không?
-        // Nếu ngày đặt < ngày hiện tại -> Không cho hủy
+        
         const checkRes = await db.query(
             `SELECT * FROM room_bookings 
              WHERE id = $1 AND resident_id = $2`,
@@ -139,18 +134,13 @@ router.post('/cancel/:id', protect, async (req, res) => {
         const bookingData = checkRes.rows[0];
         const bookingDate = new Date(bookingData.booking_date);
         const now = new Date();
-        now.setHours(0, 0, 0, 0); // Reset giờ về 0 để so sánh ngày
+        now.setHours(0, 0, 0, 0); 
 
-        // Logic chặn hủy quá khứ
         if (bookingDate < now) {
             return res.status(400).json({ message: 'Cannot cancel past bookings.' });
         }
 
-        // Nếu là ngày hôm nay, kiểm tra giờ (Optional: Chặn hủy trước 1 tiếng)
-        // Ở đây ta tạm cho phép hủy trong ngày nếu chưa đến giờ, hoặc chặn luôn trong ngày tùy bạn.
-        // Code hiện tại: Chặn nếu ngày đặt < ngày hôm nay. (Hôm nay vẫn cho hủy).
-
-        // Update trạng thái
+       
         const result = await db.query(
             `UPDATE room_bookings 
              SET status = 'cancelled' 

@@ -10,10 +10,8 @@ const BlockManagement = () => {
     const [selectedBlockId, setSelectedBlockId] = useState('');
     const [selectedBlockName, setSelectedBlockName] = useState('');
     const [rooms, setRooms] = useState([]);
-    
-    // State cho phân trang
     const [currentPage, setCurrentPage] = useState(1);
-    const floorsPerPage = 5; // Mỗi trang hiện 5 tầng
+    const floorsPerPage = 5; 
     
     const [error, setError] = useState('');
     const [loadingRooms, setLoadingRooms] = useState(false);
@@ -70,7 +68,6 @@ const BlockManagement = () => {
         setSelectedRoom(null);
     };
 
-    // Group rooms by floor
     const roomsByFloor = useMemo(() => {
         if (!Array.isArray(rooms)) return {};
         return rooms.reduce((acc, room) => {
@@ -81,14 +78,12 @@ const BlockManagement = () => {
         }, {});
     }, [rooms]);
 
-    // Sort floors
     const sortedFloors = useMemo(() => {
         return Object.keys(roomsByFloor)
             .map(f => parseInt(f))
             .sort((a, b) => a - b);
     }, [roomsByFloor]);
 
-    // Logic Phân trang
     const indexOfLastFloor = currentPage * floorsPerPage;
     const indexOfFirstFloor = indexOfLastFloor - floorsPerPage;
     const currentFloors = sortedFloors.slice(indexOfFirstFloor, indexOfLastFloor);
@@ -99,7 +94,6 @@ const BlockManagement = () => {
         pageNumbers.push(i);
     }
 
-    // Stats calculation
     const stats = useMemo(() => {
         if (!rooms.length) return null;
         const total = rooms.length;
@@ -113,7 +107,6 @@ const BlockManagement = () => {
             <h2 className="page-main-title">Block & Room Management</h2>
             {error && <Alert variant="danger">{error}</Alert>}
 
-            {/* Select Block Card */}
             <Card className="residem-card mb-4 border-0">
                 <Card.Body className="d-flex align-items-center gap-3 p-4">
                     <div className="flex-shrink-0 text-muted">
@@ -149,7 +142,6 @@ const BlockManagement = () => {
                 </div>
             )}
 
-            {/* Stats Bar */}
             {!loadingRooms && selectedBlockId && stats && (
                 <div className="stats-container fadeIn">
                     <div className="stat-card-mini">
@@ -176,7 +168,6 @@ const BlockManagement = () => {
                 </div>
             )}
 
-            {/* Room List */}
             {!loadingRooms && selectedBlockId && currentFloors.length > 0 && (
                 <div className="floor-container fadeIn">
                     {currentFloors.map(floor => (
@@ -200,7 +191,6 @@ const BlockManagement = () => {
                                         }
                                         onClick={() => handleShowDetailsModal(room)}
                                     >
-                                        {/* [UPDATED] Hiển thị Badge Type ở góc trái */}
                                         {room.room_type && (
                                             <span 
                                                 className="position-absolute top-0 start-0 badge rounded-0 rounded-bottom-end" 
@@ -220,7 +210,6 @@ const BlockManagement = () => {
                 </div>
             )}
 
-            {/* Pagination Bar */}
             {!loadingRooms && selectedBlockId && pageNumbers.length > 1 && (
                 <div className="floor-pagination-container fadeIn">
                     <div className="floor-pagination-label">Select Page (View 5 Floors)</div>

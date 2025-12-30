@@ -1,4 +1,3 @@
-// frontend/src/components/admin/Pagination.js
 import React from 'react';
 
 const Pagination = ({ itemsPerPage, totalItems, paginate, currentPage }) => {

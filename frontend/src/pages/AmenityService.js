@@ -89,26 +89,19 @@ const AmenityService = () => {
         } catch (err) { alert('Failed to cancel booking.'); }
     };
 
-    // [UPDATED] Đổi format từ mặc định (có thể là đ) sang 'VND' thủ công hoặc locale chuẩn
-    // Cách đơn giản nhất để hiện đúng "100.000 VND" như yêu cầu:
     const formatCurrency = (val) => {
-        // Format số trước: 100000 -> 100.000
+
         const numberPart = new Intl.NumberFormat('vi-VN').format(val);
         return `${numberPart} VND`; 
     };
 
-    // --- [ĐÃ FIX LỖI MÚI GIỜ] HÀM KIỂM TRA TRẠNG THÁI ---
     const getBookingStatus = (booking) => {
         if (booking.status === 'cancelled') return { label: 'Cancelled', variant: 'secondary', isCompleted: false };
-        
-        // 1. Lấy ngày từ booking_date (Hệ thống sẽ tự convert UTC sang giờ máy tính người dùng)
-        // Ví dụ: DB trả về "2025-11-26T17:00:00Z" -> Máy tính VN hiểu là ngày 27
+
         const bookingDateObj = new Date(booking.booking_date);
 
-        // 2. Lấy giờ phút kết thúc từ chuỗi "HH:MM:SS"
         const [hours, minutes] = booking.end_time.split(':').map(Number);
 
-        // 3. Tạo đối tượng Date hoàn chỉnh cho thời điểm kết thúc theo giờ địa phương
         const bookingEnd = new Date(
             bookingDateObj.getFullYear(),
             bookingDateObj.getMonth(),
@@ -118,8 +111,6 @@ const AmenityService = () => {
         );
 
         const now = new Date();
-
-        // So sánh
         if (now > bookingEnd) {
             return { label: 'Completed', variant: 'primary', isCompleted: true }; 
         }
@@ -152,7 +143,6 @@ const AmenityService = () => {
                                                 <div className="amenity-img-placeholder">No Image</div>
                                             )}
                                             <span className="price-badge-overlay">
-                                                {/* [UPDATED] Sử dụng hàm format mới */}
                                                 {formatCurrency(room.current_price)} / Hour
                                             </span>
                                         </div>
@@ -215,7 +205,7 @@ const AmenityService = () => {
                                 {myBookings.length === 0 ?
                                     <p className="p-3 text-muted text-center small">No booking history found.</p> : 
                                     myBookings.map(b => {
-                                        // Tính toán trạng thái hiển thị (đã fix múi giờ)
+
                                         const statusInfo = getBookingStatus(b);
                                         
                                         return (
@@ -231,8 +221,7 @@ const AmenityService = () => {
                                                     <span className="mx-2">|</span> 
                                                     {b.start_time.slice(0,5)} - {b.end_time.slice(0,5)}
                                                 </div>
-                                                
-                                                {/* Chỉ hiện nút Cancel nếu Confirmed VÀ Chưa hoàn thành */}
+
                                                 {b.status === 'confirmed' && !statusInfo.isCompleted && (
                                                     <div className="text-end mt-1">
                                                         <Button variant="link" size="sm" className="text-danger p-0 small text-decoration-none" onClick={() => handleCancelBooking(b.id)}>
@@ -240,8 +229,6 @@ const AmenityService = () => {
                                                         </Button>
                                                     </div>
                                                 )}
-
-                                                {/* Hiện icon check nếu đã hoàn thành */}
                                                 {statusInfo.isCompleted && (
                                                     <div className="text-end mt-1">
                                                         <small className="text-primary fst-italic">
@@ -293,7 +280,7 @@ const AmenityService = () => {
                         </Row>
                         <div className="alert alert-warning d-flex justify-content-between align-items-center mt-3 mb-0">
                             <span>Estimated Cost:</span>
-                            {/* [UPDATED] Hiển thị giá ước tính với định dạng VND */}
+
                             <strong style={{ fontSize: '1.2rem', color: '#856404' }}>{formatCurrency(totalPrice)}</strong>
                         </div>
                     </Modal.Body>

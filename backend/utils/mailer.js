@@ -1,7 +1,5 @@
-// backend/utils/mailer.js
 const nodemailer = require('nodemailer');
 
-// Create a "transporter" object responsible for sending emails
 const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
     port: process.env.MAIL_PORT,
@@ -11,15 +9,13 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// Function to send verification email
 const sendVerificationEmail = async (email, token) => {
-    // Link that the user will click in the email
     const verificationLink = `http://localhost:3000/verify-email/${token}`;
 
     const mailOptions = {
-        from: '"Apartment Management" <no-reply@quanlychungcu.com>', // Sender address
-        to: email, // Receiver address
-        subject: 'Verify your account', // Email subject
+        from: '"Apartment Management" <no-reply@quanlychungcu.com>',
+        to: email,
+        subject: 'Verify your account',
         html: `
             <p>Hello,</p>
             <p>Thank you for registering. Please click the link below to activate your account:</p>
@@ -33,7 +29,6 @@ const sendVerificationEmail = async (email, token) => {
         console.log('Verification email sent to:', email);
     } catch (error) {
         console.error('Error sending email:', error);
-        // Throw error so the calling function can handle it
         throw new Error('Could not send verification email.');
     }
 };
@@ -62,23 +57,11 @@ const sendPasswordResetEmail = async (email, token) => {
     }
 };
 
-// --- (NEW) Function to send new bill notification email ---
-/**
- * Sends a new bill notification email.
- * @param {string} email - Receiver email
- * @param {string} fullName - Receiver full name
- * @param {object} billDetails - Bill details
- * @param {number} billDetails.billId - Bill ID
- * @param {string} billDetails.monthYear - Bill Month/Year (e.g., "11/2025")
- * @param {number} billDetails.totalAmount - Total amount
- * @param {string} billDetails.dueDate - Due date (formatted)
- */
 const sendNewBillEmail = async (email, fullName, billDetails) => {
     const { billId, monthYear, totalAmount, dueDate } = billDetails;
     
-    // Format amount nicely
     const formattedAmount = totalAmount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-    const paymentLink = `http://localhost:3000/bill`; // Link to bill page
+    const paymentLink = `http://localhost:3000/bill`;
 
     const mailOptions = {
         from: '"Apartment Management" <no-reply@quanlychungcu.com>',
@@ -112,11 +95,8 @@ const sendNewBillEmail = async (email, fullName, billDetails) => {
         console.log(`Bill notification email #${billId} sent to:`, email);
     } catch (error) {
         console.error(`Error sending bill email #${billId} to ${email}:`, error);
-        // Throw error so billService can handle it (or ignore)
         throw new Error('Could not send bill notification email.');
     }
 };
-// --- (END NEW) ---
 
-// EXPORT: Add new function to exports
 module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendNewBillEmail };

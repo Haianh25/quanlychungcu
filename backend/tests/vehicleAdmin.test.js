@@ -1,8 +1,6 @@
 const request = require('supertest');
 const express = require('express');
-const bodyParser = require('body-parser');
 
-// --- 1. MOCK DB FACTORY ---
 jest.mock('../db', () => {
     const mockClient = {
         query: jest.fn(),
@@ -20,7 +18,6 @@ jest.mock('../db', () => {
     };
 });
 
-// --- 2. MOCK AUTH MIDDLEWARE ---
 jest.mock('../middleware/authMiddleware', () => ({
     protect: (req, res, next) => {
         req.user = { id: 999, role: 'admin' };
@@ -43,19 +40,15 @@ describe('Vehicle Admin Routes Unit Tests', () => {
         dbMock = require('../db');
         clientMock = dbMock._mockClient;
 
-        // Default Mocks
         clientMock.query.mockResolvedValue({ rows: [], rowCount: 0 });
         dbMock.query.mockResolvedValue({ rows: [], rowCount: 0 });
 
         const vehicleAdminRoutes = require('../routes/vehicleAdmin');
         app = express();
-        app.use(bodyParser.json());
+        app.use(express.json());
         app.use('/api/admin', vehicleAdminRoutes);
     });
 
-    /**
-     * TEST SUITE 1: APPROVE REQUEST (Duyệt yêu cầu)
-     */
     describe('POST /api/admin/vehicle-requests/:id/approve', () => {
         const requestId = 1;
 
@@ -63,7 +56,6 @@ describe('Vehicle Admin Routes Unit Tests', () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
                 
-                // 1. Get Request
                 if (sql.includes('SELECT * FROM vehicle_card_requests')) {
                     return { 
                         rows: [{ 
@@ -76,23 +68,18 @@ describe('Vehicle Admin Routes Unit Tests', () => {
                         }] 
                     };
                 }
-                // 2. Get Room Type
                 if (sql.includes('SELECT r.room_type')) {
                     return { rows: [{ room_type: 'A' }] };
                 }
-                // 3. Get Policy
                 if (sql.includes('FROM room_type_policies')) {
                     return { rows: [{ max_cars: 2 }] };
                 }
-                // 4. Count Active (0 cars)
                 if (sql.includes('SELECT COUNT(*)')) {
                     return { rows: [{ count: '0' }] };
                 }
-                // 5. Get Fee
                 if (sql.includes('FROM fees')) {
                     return { rows: [{ price: 50000 }] };
                 }
-                // 6. Update Request & Insert Card
                 if (sql.includes('UPDATE vehicle_card_requests')) return;
                 if (sql.includes('INSERT INTO vehicle_cards')) return;
                 
@@ -110,16 +97,14 @@ describe('Vehicle Admin Routes Unit Tests', () => {
         test('Should fail (400) if QUOTA EXCEEDED', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
-                // Request Car
+                
                 if (sql.includes('SELECT * FROM vehicle_card_requests')) {
                     return { 
                         rows: [{ id: requestId, status: 'pending', request_type: 'register', vehicle_type: 'car', resident_id: 10 }] 
                     };
                 }
                 if (sql.includes('SELECT r.room_type')) return { rows: [{ room_type: 'A' }] };
-                // Max 1 car
                 if (sql.includes('FROM room_type_policies')) return { rows: [{ max_cars: 1 }] };
-                // Đã có 1 car active
                 if (sql.includes('SELECT COUNT(*)')) return { rows: [{ count: '1' }] };
                 
                 if (sql === 'ROLLBACK') return;
@@ -134,9 +119,6 @@ describe('Vehicle Admin Routes Unit Tests', () => {
         });
     });
 
-    /**
-     * TEST SUITE 2: REJECT REQUEST (Từ chối)
-     */
     describe('POST /api/admin/vehicle-requests/:id/reject', () => {
         const requestId = 1;
         const rejectData = { admin_notes: 'Invalid Document' };
@@ -165,25 +147,17 @@ describe('Vehicle Admin Routes Unit Tests', () => {
         });
     });
 
-    /**
-     * TEST SUITE 3: CHANGE STATUS (Kích hoạt lại thẻ)
-     */
     describe('PATCH /api/admin/vehicle-cards/:id/status', () => {
         const cardId = 100;
         
         test('Should activate card successfully if quota valid', async () => {
             dbMock.query.mockImplementation(async (sql) => {
-                // 1. Get Card
                 if (sql.includes('SELECT status')) {
                     return { rows: [{ status: 'inactive', resident_id: 10, vehicle_type: 'car' }] };
                 }
-                // 2. Get Room
                 if (sql.includes('SELECT r.room_type')) return { rows: [{ room_type: 'A' }] };
-                // 3. Get Policy (Max 2)
                 if (sql.includes('FROM room_type_policies')) return { rows: [{ max_cars: 2 }] };
-                // 4. Count Active (0)
                 if (sql.includes('SELECT COUNT(*)')) return { rows: [{ count: '0' }] };
-                // 5. Update
                 if (sql.includes('UPDATE vehicle_cards')) return { rows: [{ id: cardId }] };
                 
                 return { rows: [] };
@@ -203,9 +177,7 @@ describe('Vehicle Admin Routes Unit Tests', () => {
                     return { rows: [{ status: 'inactive', resident_id: 10, vehicle_type: 'car' }] };
                 }
                 if (sql.includes('SELECT r.room_type')) return { rows: [{ room_type: 'A' }] };
-                // Max 1
                 if (sql.includes('FROM room_type_policies')) return { rows: [{ max_cars: 1 }] };
-                // Active 1 -> Đầy
                 if (sql.includes('SELECT COUNT(*)')) return { rows: [{ count: '1' }] };
                 
                 return { rows: [] };

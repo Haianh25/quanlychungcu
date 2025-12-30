@@ -4,24 +4,19 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
-// Correctly combined mailer import line
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
-// Function to check password strength
 const isStrongPassword = (password) => {
     // Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return regex.test(password);
 };
 
-// REGISTRATION API
 router.post('/register', async (req, res) => {
-    // [CẬP NHẬT] Thêm 'phone' vào destructuring
     const { fullName, email, password, phone } = req.body;
 
-    // [CẬP NHẬT] Validate thêm phone
     if (!fullName || !email || !password || !phone) {
         return res.status(400).json({ message: 'Please fill in all required fields.' });
     }
@@ -39,7 +34,6 @@ router.post('/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, salt);
         const verificationToken = crypto.randomBytes(32).toString('hex');
         
-        // [CẬP NHẬT] Thêm trường 'phone' vào câu lệnh INSERT
         const newUser = await db.query(
             'INSERT INTO users (full_name, email, password_hash, verification_token, phone) VALUES ($1, $2, $3, $4, $5) RETURNING id, email',
             [fullName, email, passwordHash, verificationToken, phone]
@@ -53,7 +47,6 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// EMAIL VERIFICATION API
 router.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
     try {
@@ -65,10 +58,8 @@ router.get('/verify-email/:token', async (req, res) => {
         
         const user = userResult.rows[0];
 
-        // 1. Cập nhật user là đã xác thực
         await db.query('UPDATE users SET is_verified = TRUE, verification_token = NULL WHERE id = $1', [user.id]);
 
-        // --- GỬI THÔNG BÁO CHO ADMIN ---
         try {
             const admins = await db.query("SELECT id FROM users WHERE role = 'admin'");
             const notificationMessage = `New user '${user.full_name}' (email: ${user.email}) has verified their email.`;
@@ -92,7 +83,6 @@ router.get('/verify-email/:token', async (req, res) => {
     }
 });
 
-// LOGIN API
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -105,7 +95,6 @@ router.post('/login', async (req, res) => {
         }
         const foundUser = user.rows[0];
         
-        // [MỚI] KIỂM TRA TÀI KHOẢN BỊ KHÓA
         if (foundUser.is_active === false) {
              return res.status(403).json({ message: 'Your account has been disabled. Please contact support.' });
         }
@@ -118,7 +107,6 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Incorrect email or password.' });
         }
         
-        // [CẬP NHẬT QUAN TRỌNG] Thêm apartment_number vào Token để Frontend check quyền
         const token = jwt.sign(
             {
                 id: foundUser.id,
@@ -126,7 +114,7 @@ router.post('/login', async (req, res) => {
                 role: foundUser.role,
                 full_name: foundUser.full_name,
                 avatar_url: foundUser.avatar_url || null,
-                apartment_number: foundUser.apartment_number || null // Thêm dòng này
+                apartment_number: foundUser.apartment_number || null 
             },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
@@ -138,7 +126,6 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// FORGOT PASSWORD REQUEST API
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
@@ -157,7 +144,6 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
-// RESET PASSWORD API
 router.post('/reset-password/:token', async (req, res) => {
     const { token } = req.params;
     const { newPassword } = req.body;
@@ -179,7 +165,6 @@ router.post('/reset-password/:token', async (req, res) => {
     }
 });
 
-// ADMIN LOGIN API
 router.post('/admin/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {

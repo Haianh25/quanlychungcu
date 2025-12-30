@@ -1,25 +1,22 @@
-/* --- CÀI ĐẶT FONT CHỮ VÀ THEME CHUNG (THEME RESIDEM MỚI) --- */
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
 
 :root {
     --font-primary: 'Be Vietnam Pro', sans-serif;
     
-    /* --- Bảng màu "Residem" mới --- */
-    --color-bg-dark-teal: #224246;     /* Nền Footer & Nền mục "Discover Room" */
-    --color-bg-light: #f8f6f3;         /* Nền chính (Trắng kem) */
-    --color-primary-accent: #b99a7b;     /* Nút "Schedule a Visit" (Vàng đồng) */
+    --color-bg-dark-teal: #224246;
+    --color-bg-light: #f8f6f3;
+    --color-primary-accent: #b99a7b;
     --color-primary-accent-hover: #a98a6b;
-    --color-text-dark: #333333;           /* Chữ chính (màu tối) */
-    --color-text-muted-dark: #555555;    /* Chữ phụ (màu tối) */
-    --color-text-light: #FFFFFF;         /* Chữ trên nền tối */
-    --color-text-muted-light: #c2c2c2;   /* Chữ phụ trên nền tối */
+    --color-text-dark: #333333;
+    --color-text-muted-dark: #555555;
+    --color-text-light: #FFFFFF;
+    --color-text-muted-light: #c2c2c2;
     --color-border-light: #e0e0e0;
 }
 
-/* THAY ĐỔI LỚN: Chuyển sang nền sáng (trắng kem) */
 body {
     background-color: var(--color-bg-light) !important; 
-    color: var(--color-text-dark); /* Chữ màu tối */
+    color: var(--color-text-dark);
     font-family: var(--font-primary);
     line-height: 1.6;
     min-height: 100vh;
@@ -29,14 +26,12 @@ html {
   overflow-y: scroll;
 }
 
-/* Tiêu đề cũng đổi sang màu tối */
 h1, h2, h3, h4, h5, h6 {
     color: var(--color-text-dark);
     font-family: var(--font-primary);
     font-weight: 700;
 }
 
-/* Link đổi sang màu vàng đồng */
 a {
     color: var(--color-primary-accent);
     text-decoration: none;
@@ -51,8 +46,6 @@ a:hover {
     max-width: 1200px;
 }
 
-/* --- STYLES CHO THÔNG BÁO (Dropdown) --- */
-/* (Giữ nguyên style dropdown nền tối, vì nó vẫn đẹp) */
 .notification-bell {
     position: relative;
 }
@@ -61,7 +54,7 @@ a:hover {
     position: absolute;
     top: 0px;
     right: 5px;
-    background-color: var(--color-primary-accent); /* Đổi sang màu vàng đồng */
+    background-color: var(--color-primary-accent);
     color: var(--color-text-light);
     border-radius: 50%;
     padding: 2px 6px;
@@ -96,7 +89,7 @@ a:hover {
 }
 .notification-header h6 {
     margin: 0;
-    color: var(--color-text-light); /* Chữ sáng */
+    color: var(--color-text-light);
     font-weight: 600;
 }
 .notification-header .mark-all-read {
@@ -131,7 +124,7 @@ a:hover {
     border-bottom: none !important;
 }
 .notification-item.is-unread {
-    background-color: #2a5054 !important; /* Màu teal nhạt hơn */
+    background-color: #2a5054 !important;
 }
 .notification-item:hover {
     background-color: #3d6a6f !important;
@@ -150,8 +143,6 @@ a:hover {
     font-size: 0.8rem;
 }
 
-
-/* --- (Giữ nguyên các style .admin- cũ của bạn ở đây) --- */
 .admin-content-wrapper {
   display: flex;
   flex-direction: column;
@@ -284,32 +275,30 @@ a:hover {
     text-align: center;
     color: #6c757d;
 }
-/* --- CÀI ĐẶT FONT CHỮ VÀ THEME CHUNG (THEME RESIDEM MỚI) --- */
+
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
 
 :root {
     --font-primary: 'Be Vietnam Pro', sans-serif;
     
-    /* --- Bảng màu "Residem" mới --- */
-    --color-bg-dark-teal: #224246;     /* Nền Footer & Nền mục "Discover Room" */
-    --color-bg-light: #f8f6f3;         /* Nền chính (Trắng kem) */
-    --color-primary-accent: #b99a7b;     /* Nút "Schedule a Visit" (Vàng đồng) */
+    --color-bg-dark-teal: #224246;
+    --color-bg-light: #f8f6f3;
+    --color-primary-accent: #b99a7b;
     --color-primary-accent-hover: #a98a6b;
-    --color-text-dark: #333333;           /* Chữ chính (màu tối) */
-    --color-text-muted-dark: #555555;    /* Chữ phụ (màu tối) */
-    --color-text-light: #FFFFFF;         /* Chữ trên nền tối */
-    --color-text-muted-light: #c2c2c2;   /* Chữ phụ trên nền tối */
+    --color-text-dark: #333333;
+    --color-text-muted-dark: #555555;
+    --color-text-light: #FFFFFF;
+    --color-text-muted-light: #c2c2c2;
     --color-border-light: #e0e0e0;
 
-    /* Màu mới cho Highlights Nearby */
-    --color-highlights-card-bg: #e0e0e0; /* Nền card highlights */
-    --color-highlights-card-hover: #d0d0d0; /* Hover card highlights */
+    --color-highlights-card-bg: #e0e0e0;
+    --color-highlights-card-hover: #d0d0d0;
 }
 
 body {
     background-color: var(--color-bg-light) !important; 
-    color: var(--color-text-dark); /* Chữ màu tối */
-    font-family: var(--font-primary) !important; /* Đảm bảo font được ưu tiên */
+    color: var(--color-text-dark);
+    font-family: var(--font-primary) !important;
     line-height: 1.6;
     min-height: 100vh;
 }
@@ -320,7 +309,7 @@ html {
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--color-text-dark);
-    font-family: var(--font-primary) !important; /* Đảm bảo font được ưu tiên */
+    font-family: var(--font-primary) !important;
     font-weight: 700;
 }
 
@@ -338,35 +327,27 @@ a:hover {
     max-width: 1200px;
 }
 
-/* --- (Giữ nguyên các style .admin- cũ của bạn ở đây) --- */
-/* ... (Tất cả .admin- content, .pagination, .admin-notification ... giữ nguyên) ... */
-
 .admin-content-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 75vh;
 }
-/* ... (v.v.) ... */
+
 .admin-notification-empty {
   padding: 20px;
   text-align: center;
   color: #6c757d;
 }
 
-/* --- (Kết thúc style admin) --- */
-
-
-/* --- STYLES CHO THÔNG BÁO (Dropdown) --- */
-/* (Giữ nguyên style dropdown nền tối, vì nó vẫn đẹp) */
 .notification-bell {
     position: relative;
 }
-/* ... (Toàn bộ style .notification-badge, .notification-dropdown, .notification-item ... giữ nguyên) ... */
+
 .notification-badge {
     position: absolute;
     top: 0px;
     right: 5px;
-    background-color: var(--color-primary-accent); /* Đổi sang màu vàng đồng */
+    background-color: var(--color-primary-accent);
     color: var(--color-text-light);
     border-radius: 50%;
     padding: 2px 6px;
@@ -401,7 +382,7 @@ a:hover {
 }
 .notification-header h6 {
     margin: 0;
-    color: var(--color-text-light); /* Chữ sáng */
+    color: var(--color-text-light);
     font-weight: 600;
 }
 .notification-header .mark-all-read {
@@ -436,7 +417,7 @@ a:hover {
     border-bottom: none !important;
 }
 .notification-item.is-unread {
-    background-color: #2a5054 !important; /* Màu teal nhạt hơn */
+    background-color: #2a5054 !important;
 }
 .notification-item:hover {
     background-color: #3d6a6f !important;
@@ -454,26 +435,17 @@ a:hover {
     color: #adb5bd !important;
     font-size: 0.8rem;
 }
-/* --- SỬA LỖI STICKY FOOTER (Thêm vào index.css) --- */
 
-/* Đảm bảo html và body chiếm toàn bộ chiều cao */
 html, body, #root {
     height: 100%;
 }
 
-/* Giả sử #root là nơi render App.
-  Bạn cần một div wrapper chính (ví dụ <div className="app-wrapper">)
-  bên trong App.js để bọc Header, Page Content, và Footer
-*/
 .app-wrapper {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Quan trọng: Chiều cao tối thiểu là 100% viewport */
+    min-height: 100vh;
 }
 
-/* Class này dành cho vùng nội dung chính (ví dụ: <main className="main-content">)
-  nằm giữa Header và Footer
-*/
 .main-content {
-    flex-grow: 1; /* Quan trọng: Đẩy nội dung chiếm hết không gian thừa */
+    flex-grow: 1;
 }

@@ -13,14 +13,11 @@ const AmenityManagement = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-
-    // Modal Edit Room
     const [showModal, setShowModal] = useState(false);
     const [editingRoom, setEditingRoom] = useState(null);
     const [formData, setFormData] = useState({ name: '', description: '', image_url: '', status: 'active' });
     const [modalLoading, setModalLoading] = useState(false);
 
-    // Modal Cancel Booking
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [bookingToCancel, setBookingToCancel] = useState(null);
     const [cancelReason, setCancelReason] = useState('');
@@ -59,7 +56,6 @@ const AmenityManagement = () => {
         return { activeRooms, totalBookings, confirmedBookings, totalRevenue };
     }, [rooms, bookings]);
 
-    // --- HANDLERS ---
     const handleShowModal = (room) => {
         setEditingRoom(room);
         setFormData({ 
@@ -115,7 +111,6 @@ const AmenityManagement = () => {
         }
     };
 
-    // [ĐÃ SỬA] Format chuẩn "VND"
     const formatCurrency = (val) => {
         return new Intl.NumberFormat('vi-VN').format(val) + ' VND';
     };
@@ -126,7 +121,6 @@ const AmenityManagement = () => {
                 <h2 className="page-main-title">Amenity Management</h2>
             </div>
 
-            {/* STATS ROW */}
             <Row className="mb-4 g-3">
                 <Col md={3}>
                     <Card className="stats-card border-0 shadow-sm">
@@ -167,7 +161,6 @@ const AmenityManagement = () => {
                             <div className="stats-icon bg-warning-soft"><Wallet2 /></div>
                             <div className="ms-3">
                                 <h6 className="text-muted mb-0">Est. Revenue</h6>
-                                {/* [ĐÃ SỬA] Format tiền chuẩn */}
                                 <h4>{formatCurrency(stats.totalRevenue)}</h4>
                             </div>
                         </Card.Body>
@@ -182,7 +175,6 @@ const AmenityManagement = () => {
                 <Card.Body>
                     <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3 residem-tabs">
                         
-                        {/* TAB 1: ROOMS */}
                         <Tab eventKey="rooms" title="Room Status & Pricing">
                             <div className="table-wrapper">
                                 <Table striped hover responsive className="residem-table align-middle">
@@ -211,7 +203,7 @@ const AmenityManagement = () => {
                                                     <div className="text-muted small text-truncate" style={{maxWidth: '200px'}}>{room.description}</div>
                                                 </td>
                                                 <td>
-                                                    {/* [ĐÃ SỬA] Xóa chữ / Hr thừa nếu format đã có VND */}
+                                                
                                                     <span className="fw-bold text-primary-accent">{formatCurrency(room.current_price)} / Hr</span>
                                                     <div className="small text-muted">Code: <code>{room.fee_code}</code></div>
                                                 </td>
@@ -232,7 +224,6 @@ const AmenityManagement = () => {
                             </div>
                         </Tab>
 
-                        {/* TAB 2: BOOKINGS */}
                         <Tab eventKey="bookings" title="Booking Logs">
                             <div className="table-wrapper">
                                 <Table striped hover responsive className="residem-table align-middle">
@@ -286,7 +277,6 @@ const AmenityManagement = () => {
                 </Card.Body>
             </Card>
 
-            {/* MODAL EDIT ROOM */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title">Edit Room Details</Modal.Title>
@@ -330,7 +320,6 @@ const AmenityManagement = () => {
                 </Form>
             </Modal>
 
-            {/* MODAL CANCEL BOOKING (MỚI) */}
             <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title className="residem-modal-title text-danger">Confirm Cancellation</Modal.Title>

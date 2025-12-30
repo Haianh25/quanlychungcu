@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // Import useRef
+import React, { useState, useEffect, useCallback, useRef } from 'react'; 
 import { Row, Col, Card, Spinner, Alert, ProgressBar } from 'react-bootstrap';
 import axios from 'axios';
 import { PeopleFill, CarFrontFill, CashCoin, ArrowUpRight, GraphUp, ExclamationTriangleFill, Newspaper } from 'react-bootstrap-icons';
@@ -17,7 +17,7 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const isFirstLoad = useRef(true); // Ref để check lần load đầu tiên
+    const isFirstLoad = useRef(true); 
 
     const fetchStats = useCallback(async (isPolling = false) => {
         const token = localStorage.getItem('adminToken');
@@ -30,7 +30,7 @@ const AdminDashboard = () => {
             if (!isPolling) setError('Could not load dashboard data.');
         } finally {
             setLoading(false);
-            if (!isPolling) isFirstLoad.current = false; // Đánh dấu đã xong lần load đầu
+            if (!isPolling) isFirstLoad.current = false; 
         }
     }, []);
 
@@ -38,7 +38,7 @@ const AdminDashboard = () => {
         fetchStats();
         const intervalId = setInterval(() => {
             fetchStats(true);
-        }, 5000); // Poll every 5 seconds
+        }, 5000); 
 
         return () => clearInterval(intervalId);
     }, [fetchStats]);
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
         responsive: true,
         maintainAspectRatio: false,
         animation: {
-            duration: isFirstLoad.current ? 1000 : 0 // Chỉ animate lần đầu
+            duration: isFirstLoad.current ? 1000 : 0 
         },
         plugins: {
             legend: {
@@ -143,7 +143,7 @@ const AdminDashboard = () => {
     const doughnutOptions = {
         cutout: '75%',
         animation: {
-            duration: isFirstLoad.current ? 1000 : 0 // Chỉ animate lần đầu
+            duration: isFirstLoad.current ? 1000 : 0 
         },
         plugins: {
             legend: {
@@ -159,15 +159,13 @@ const AdminDashboard = () => {
         <div className="dashboard-container fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="page-main-title mb-0">Dashboard Overview</h2>
-                {/* Chỉ báo Live Update */}
                 <div className="live-indicator">
                      <span className="pulsating-circle"></span> Live Updating
                 </div>
             </div>
 
             <Row className="g-4 mb-4">
-                {/* ... (Giữ nguyên phần Cards Residents, Revenue, Vehicles, Action Required) ... */}
-                 {/* 1. Residents */}
+
                  <Col md={6} xl={3}>
                     <Card className="dashboard-card">
                         <Card.Body>
@@ -190,7 +188,6 @@ const AdminDashboard = () => {
                     </Card>
                 </Col>
 
-                {/* 2. Revenue */}
                 <Col md={6} xl={3}>
                     <Card className="dashboard-card">
                         <Card.Body>
@@ -214,7 +211,6 @@ const AdminDashboard = () => {
                     </Card>
                 </Col>
 
-                {/* 3. Vehicles */}
                 <Col md={6} xl={3}>
                     <Card className="dashboard-card">
                         <Card.Body>
@@ -234,7 +230,6 @@ const AdminDashboard = () => {
                     </Card>
                 </Col>
 
-                {/* 4. Action Required */}
                 <Col md={6} xl={3}>
                     <Card className={`dashboard-card action-required-card ${totalPending > 0 ? 'has-pending' : 'all-clear'}`}>
                         <Card.Body>

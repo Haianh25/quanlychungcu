@@ -1,6 +1,4 @@
-/* --- BillPage.css (Theme Residem) --- */
 
-/* ... (Giữ nguyên các phần trên: root, container, animation, tabs, card, table...) ... */
 
 :root {
     --color-bg-light: #f8f6f3;
@@ -26,7 +24,6 @@
     font-weight: 700;
 }
 
-/* Tabs */
 .residem-tabs .nav-tabs { border-bottom: 1px solid var(--color-border-light); }
 .residem-tabs .nav-tabs .nav-link {
     color: var(--color-text-muted-dark);
@@ -45,7 +42,6 @@
     font-weight: 600;
 }
 
-/* Unpaid Bill Card */
 .unpaid-bill-card {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -96,7 +92,6 @@
 }
 .unpaid-bill-footer .payment-note { font-size: 0.85rem; color: var(--color-text-muted-dark); margin-bottom: 0.75rem; font-style: italic; }
 
-/* Tables */
 .table-wrapper {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -114,11 +109,10 @@
 }
 .residem-table .transaction-id { font-family: monospace; font-size: 0.9rem; color: var(--color-text-muted-dark); }
 
-/* [ĐÃ SỬA] Đổi tên class để tránh xung đột với Admin CSS */
 .bill-text-success {
     color: #198754 !important;
     font-weight: 700;
-    background-color: transparent !important; /* Đảm bảo không có nền */
+    background-color: transparent !important; 
 }
 .bill-text-failed {
     color: #dc3545 !important;
@@ -137,7 +131,6 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-/* Sidebar Widgets */
 .sidebar-widget {
     background-color: #FFFFFF;
     border: 1px solid var(--color-border-light);
@@ -166,13 +159,11 @@
 .activity-info span { display: block; font-weight: 600; color: var(--color-text-dark); font-size: 0.95rem; }
 .activity-info small { font-size: 0.85rem; color: #888; }
 
-/* [ĐÃ SỬA] Activity Amount dùng class mới */
 .activity-amount {
     font-weight: 700;
     font-size: 0.95rem;
 }
 
-/* PayPal */
 .paypal-button-container { position: relative; max-width: 100%; margin: 0 auto; }
 .payment-loading-overlay {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
