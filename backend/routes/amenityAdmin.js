@@ -77,14 +77,26 @@ router.post('/bookings/:id/cancel', protect, isAdmin, async (req, res) => {
             const message = `Your booking for ${roomName} on ${dateStr} has been CANCELLED by Admin. Reason: ${reason}`;
             const linkTo = '/services/amenity';
 
-            await db.query(
-                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+            // --- PHẦN TÍCH HỢP SOCKET.IO (MỚI) ---
+            // 1. Lưu vào DB và lấy dữ liệu trả về (RETURNING *)
+            const notiRes = await db.query(
+                "INSERT INTO notifications (user_id, message, link_to, is_read, created_at) VALUES ($1, $2, $3, false, NOW()) RETURNING *",
                 [booking.resident_id, message, linkTo]
             );
+
+            // 2. Gửi Real-time Notification
+            const notificationData = notiRes.rows[0];
+            const socketId = global.userSocketMap ? global.userSocketMap[booking.resident_id] : null;
+            
+            if (socketId) {
+                global.io.to(socketId).emit('newNotification', notificationData);
+                console.log(`[Socket] Sent booking cancellation to user ${booking.resident_id}`);
+            }
+            // --------------------------------------
+
         } catch (notifyError) {
             console.error('Error notifying user:', notifyError);
         }
-        // ------------------------------
 
         res.json({ message: 'Booking cancelled and user notified.' });
     } catch (err) {

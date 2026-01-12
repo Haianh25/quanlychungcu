@@ -271,16 +271,43 @@ router.post('/reissue-card', protect, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        const userCheck = await client.query('SELECT apartment_number FROM users WHERE id = $1', [residentId]);
-        if (!userCheck.rows[0]?.apartment_number) {
+        const userCheck = await client.query(
+            'SELECT u.apartment_number, r.room_type FROM users u LEFT JOIN rooms r ON r.resident_id = u.id WHERE u.id = $1', 
+            [residentId]
+        );
+        const userInfo = userCheck.rows[0];
+        if (!userInfo || !userInfo.apartment_number) {
             throw new Error('You have not been assigned an apartment yet. Please contact Admin.');
         }
 
-        const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
+        const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand, status FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
             throw new Error('Valid card not found.');
         }
         const card = cardRes.rows[0];
+
+        if (card.status !== 'active') {
+            const roomType = userInfo.room_type || 'A';
+            const policyRes = await client.query("SELECT max_cars, max_motorbikes, max_bicycles FROM room_type_policies WHERE type_code = $1", [roomType]);
+            
+            let maxCount = 99;
+            if (policyRes.rows.length > 0) {
+                const p = policyRes.rows[0];
+                if (card.vehicle_type === 'car') maxCount = p.max_cars;
+                else if (card.vehicle_type === 'motorbike') maxCount = p.max_motorbikes;
+                else if (card.vehicle_type === 'bicycle') maxCount = p.max_bicycles;
+            }
+
+            const countRes = await client.query(
+                "SELECT COUNT(*) as count FROM vehicle_cards WHERE resident_id = $1 AND status = 'active' AND vehicle_type = $2",
+                [residentId, card.vehicle_type]
+            );
+            const currentActive = parseInt(countRes.rows[0].count);
+
+            if (currentActive >= maxCount) {
+                throw new Error(`Limit reached for Room Type ${roomType}: Max ${maxCount} ${card.vehicle_type}(s). Cannot reissue/activate this card.`);
+            }
+        }
 
         const pendingReq = await client.query('SELECT id FROM vehicle_card_requests WHERE target_card_id = $1 AND status = $2', [cardId, 'pending']);
         if(pendingReq.rows.length > 0) {
@@ -324,7 +351,7 @@ router.post('/reissue-card', protect, async (req, res) => {
         await client.query('ROLLBACK');
         console.error('Error requesting card reissue:', err);
         
-        if (err.message.includes('assigned an apartment')) {
+        if (err.message.includes('assigned an apartment') || err.message.includes('Limit reached')) {
             res.status(403).json({ message: err.message });
         } else if (err.message.includes('already pending')) {
             res.status(400).json({ message: 'A request is already pending for this card.' });

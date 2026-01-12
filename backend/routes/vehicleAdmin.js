@@ -59,7 +59,20 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
         }
         const request = requestRes.rows[0];
 
+        let shouldCheckQuota = false;
+
         if (request.request_type === 'register') {
+            shouldCheckQuota = true;
+        } else if (request.request_type === 'reissue' && request.target_card_id) {
+            const targetCardRes = await client.query('SELECT status FROM vehicle_cards WHERE id = $1', [request.target_card_id]);
+            const targetStatus = targetCardRes.rows[0]?.status;
+            
+            if (targetStatus !== 'active') {
+                shouldCheckQuota = true;
+            }
+        }
+
+        if (shouldCheckQuota) {
             const roomRes = await client.query('SELECT r.room_type FROM rooms r WHERE r.resident_id = $1', [request.resident_id]);
             const roomType = roomRes.rows[0]?.room_type || 'A';
 
@@ -81,7 +94,7 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
             if (currentActive >= maxCount) {
                 await client.query('ROLLBACK');
                 return res.status(400).json({ 
-                    message: `Cannot approve. Limit reached for Room Type ${roomType}: Max ${maxCount} ${request.vehicle_type}(s).` 
+                    message: `Cannot approve. Limit reached for Room Type ${roomType}: Max ${maxCount} ${request.vehicle_type}(s). Current active: ${currentActive}.` 
                 });
             }
         }
@@ -137,12 +150,23 @@ router.post('/vehicle-requests/:id/approve', protect, isAdmin, async (req, res) 
             notificationMessage = `Your vehicle card cancellation request (Plate: ${request.license_plate || 'N/A'}) has been approved.`;
         }
 
+        // --- PHẦN SOCKET IO GỬI THÔNG BÁO ---
         if (notificationMessage) {
-            await client.query(
-                "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+            // Lưu vào DB và trả về dữ liệu vừa lưu (RETURNING *)
+            const notiRes = await client.query(
+                "INSERT INTO notifications (user_id, message, link_to, is_read, created_at) VALUES ($1, $2, $3, false, NOW()) RETURNING *",
                 [request.resident_id, notificationMessage, linkTo]
             );
+            
+            // Gửi Real-time
+            const notificationData = notiRes.rows[0];
+            const socketId = global.userSocketMap ? global.userSocketMap[request.resident_id] : null;
+            if (socketId) {
+                global.io.to(socketId).emit('newNotification', notificationData);
+                console.log(`[Socket] Sent vehicle approval to user ${request.resident_id}`);
+            }
         }
+        // ------------------------------------
 
         await client.query('COMMIT');
         res.json({ message: 'Request approved successfully' });
@@ -189,10 +213,19 @@ router.post('/vehicle-requests/:id/reject', protect, isAdmin, async (req, res) =
         const notificationMessage = `Your ${request.request_type} request for vehicle card (Plate: ${request.license_plate || 'N/A'}) has been rejected. Reason: ${admin_notes}`;
         const linkTo = '/services'; 
 
-        await client.query(
-            "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
+        // --- PHẦN SOCKET IO GỬI THÔNG BÁO ---
+        const notiRes = await client.query(
+            "INSERT INTO notifications (user_id, message, link_to, is_read, created_at) VALUES ($1, $2, $3, false, NOW()) RETURNING *",
             [request.resident_id, notificationMessage, linkTo]
         );
+
+        const notificationData = notiRes.rows[0];
+        const socketId = global.userSocketMap ? global.userSocketMap[request.resident_id] : null;
+        if (socketId) {
+            global.io.to(socketId).emit('newNotification', notificationData);
+            console.log(`[Socket] Sent vehicle rejection to user ${request.resident_id}`);
+        }
+        // ------------------------------------
         
         await client.query('COMMIT');
         res.json({ message: 'Request rejected' });

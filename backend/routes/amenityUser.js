@@ -51,8 +51,8 @@ router.post('/book', protect, async (req, res) => {
         const bookingDate = new Date(date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        if (bookingDate <= today) {
-            return res.status(400).json({ message: 'Booking date must be in the future.' });
+        if (bookingDate < today) { 
+            return res.status(400).json({ message: 'Booking date must be in the future or today.' });
         }
 
         const activeBooking = await db.query(
@@ -61,7 +61,7 @@ router.post('/book', protect, async (req, res) => {
             [residentId]
         );
         if (activeBooking.rows.length > 0) {
-            return res.status(400).json({ message: 'You already have an active booking.' });
+            return res.status(400).json({ message: 'You already have an active booking. Limit 1 booking at a time.' });
         }
 
         const overlap = await db.query(
@@ -120,7 +120,6 @@ router.post('/cancel/:id', protect, async (req, res) => {
     const residentName = req.user.user ? req.user.user.full_name : req.user.full_name;
 
     try {
-        
         const checkRes = await db.query(
             `SELECT * FROM room_bookings 
              WHERE id = $1 AND resident_id = $2`,
@@ -132,15 +131,23 @@ router.post('/cancel/:id', protect, async (req, res) => {
         }
 
         const bookingData = checkRes.rows[0];
-        const bookingDate = new Date(bookingData.booking_date);
+
+        const bookingDateTime = new Date(bookingData.booking_date);
+        const [hours, minutes] = bookingData.start_time.split(':');
+        bookingDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
         const now = new Date();
-        now.setHours(0, 0, 0, 0); 
+        
+        const diffMs = bookingDateTime - now;
+        const diffHours = diffMs / (1000 * 60 * 60);
 
-        if (bookingDate < now) {
-            return res.status(400).json({ message: 'Cannot cancel past bookings.' });
+        if (diffHours < 2) {
+            return res.status(400).json({ 
+                message: 'Late Cancellation Prohibited. You must cancel at least 2 hours before the start time.' 
+            });
         }
+        // ----------------------------------
 
-       
         const result = await db.query(
             `UPDATE room_bookings 
              SET status = 'cancelled' 

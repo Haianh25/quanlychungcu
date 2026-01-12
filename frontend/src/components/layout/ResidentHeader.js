@@ -5,6 +5,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import '../../pages/Homepage.css'; 
 import axios from 'axios'; 
 import { Dropdown, ListGroup } from 'react-bootstrap'; 
+import { io } from 'socket.io-client';
 
 function timeAgo(date) {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -32,6 +33,7 @@ const ResidentHeader = () => {
 
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [socket, setSocket] = useState(null);
 
     const getAuthToken = (tokenType = 'token') => { 
         return localStorage.getItem(tokenType);
@@ -84,6 +86,9 @@ const ResidentHeader = () => {
     }, []); 
 
     const handleLogout = () => {
+        if (socket) {
+            socket.disconnect(); // Disconnect socket on logout
+        }
         localStorage.removeItem('token'); 
         setIsLoggedIn(false);
         setUserRole(null);
@@ -123,11 +128,36 @@ const ResidentHeader = () => {
                     
                     fetchNotifications(); 
 
+                    // --- SOCKET.IO CONNECTION ---
+                    if (!socket) {
+                        const newSocket = io("http://localhost:5000", {
+                            auth: { token: token }
+                        });
+
+                        newSocket.on('connect', () => {
+                            console.log("Socket connected!");
+                        });
+
+                        // Listen for real-time notifications
+                        newSocket.on('newNotification', (newNoti) => {
+                            console.log("Real-time notification received:", newNoti);
+                            // Add new notification to the top of the list
+                            setNotifications(prev => [newNoti, ...prev]);
+                            
+                            // Optional: Play a sound or show browser notification here
+                        });
+
+                        setSocket(newSocket);
+                    }
+
+                    // Keep fetching profile status but remove notification polling
                     const intervalId = setInterval(() => {
-                        fetchNotifications();
                         fetchProfileStatus(); 
                     }, 5000); 
-                    return () => clearInterval(intervalId);
+                    return () => {
+                        clearInterval(intervalId);
+                        if (socket) socket.disconnect();
+                    };
                 }
             } catch (error) {
                 console.error("Invalid token:", error);
@@ -143,6 +173,10 @@ const ResidentHeader = () => {
             setUserName('');
             setApartmentNumber(null);
             setNotifications([]); 
+            if (socket) {
+                socket.disconnect();
+                setSocket(null);
+            }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.pathname, fetchNotifications, fetchProfileStatus]); 

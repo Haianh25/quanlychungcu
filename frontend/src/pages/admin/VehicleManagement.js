@@ -203,7 +203,6 @@ const VehicleManagement = () => {
         } catch (err) { setError(err.response?.data?.message || `Update status card #${cardId} failed.`); }
     };
 
-    // [MỚI] Logic sắp xếp & Lọc cho All Cards
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
