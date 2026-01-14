@@ -1,0 +1,34 @@
+# --- BẢO MẬT (QUAN TRỌNG NHẤT) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- DEPENDENCIES (Thư viện nặng - không up lên) ---
+node_modules/
+*/node_modules/
+
+# --- BUILD OUTPUT (File sau khi build xong - không up lên) ---
+/frontend/build/
+/frontend/dist/
+/backend/dist/
+
+# --- TESTING (Kết quả test coverage) ---
+/backend/coverage/
+coverage/
+
+# --- UPLOADS (File người dùng tải lên - không up lên) ---
+# Chỉ giữ lại thư mục uploads, không giữ file ảnh bên trong
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# --- SYSTEM FILES (File rác của Hệ điều hành/IDE) ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
