@@ -79,10 +79,10 @@ router.post('/create-payment', protect, async (req, res) => {
         const transCode = `${payment_method.toUpperCase()}-${Date.now()}`;
         const transRes = await client.query(
             `INSERT INTO transactions (bill_id, user_id, paypal_transaction_id, amount, payment_method, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING transaction_id`, // SỬA: dùng paypal_transaction_id
+             VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING transaction_id`, 
             [bill_id, residentId, transCode, amountToPay, payment_method]
         );
-        const newTransactionId = transRes.rows[0].transaction_id; // SỬA: dùng transaction_id
+        const newTransactionId = transRes.rows[0].transaction_id; 
 
         await new Promise(resolve => setTimeout(resolve, 2000));
 

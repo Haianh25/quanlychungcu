@@ -127,7 +127,7 @@ describe('Amenity Admin Routes Unit Tests', () => {
             expect(res.statusCode).toBe(200);
             expect(res.body.message).toContain('cancelled and user notified');
             
-            // Kiểm tra thông báo
+         
             const notifyCall = dbMock.query.mock.calls.find(call => call[0].includes('INSERT INTO notifications'));
             expect(notifyCall[1][1]).toContain('Reason: Room under maintenance');
         });
