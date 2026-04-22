@@ -370,8 +370,15 @@ function calculateMonthlyBill(roomArea, mgmtPricePerM2, vehicles, waterFee = 0, 
         isValid: true
     };
 }
+function isOverdue(dueDate) {
+    const now = new Date();
+    const due = new Date(dueDate);
+    return due < now;
+}
+
 module.exports = {
     generateBillsForMonth,
     generateMoveInBill, 
-    calculateMonthlyBill
+    calculateMonthlyBill,
+    isOverdue
 };

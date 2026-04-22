@@ -58,6 +58,22 @@ describe('Auth Middleware Unit Tests', () => {
             expect(res.json).toHaveBeenCalledWith({ message: 'Not authorized, token failed.' });
         });
 
+        test('Should return 401 if token is expired (MID_03)', async () => {
+            req.headers.authorization = 'Bearer expired_token';
+            
+            // Mock jwt verify ném lỗi TokenExpiredError (đây là cách jwt-jsonwebtoken báo hết hạn)
+            jwt.verify.mockImplementation(() => {
+                const err = new Error('jwt expired');
+                err.name = 'TokenExpiredError';
+                throw err;
+            });
+
+            await authMiddleware.protect(req, res, next);
+
+            expect(res.status).toHaveBeenCalledWith(401);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Not authorized, token failed.' });
+        });
+
         test('Should return 401 if user not found in DB', async () => {
             req.headers.authorization = 'Bearer valid_token';
             // Mock verify thành công

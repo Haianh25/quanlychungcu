@@ -191,6 +191,20 @@ describe('Vehicle Services Unit Tests', () => {
             expect(res.statusCode).toBe(201);
             expect(res.body.message).toContain('Cancellation request submitted');
         });
+
+        test('Should fail (404) if card not found (VEH_08)', async () => {
+            clientMock.query.mockImplementation(async (sql) => {
+                if (sql === 'BEGIN') return;
+                if (sql.includes('SELECT apartment_number')) return { rows: [{ apartment_number: 'A101' }] };
+                if (sql.includes('SELECT id, vehicle_type')) return { rows: [] }; // Card not found
+                if (sql === 'ROLLBACK') return;
+                return { rows: [] };
+            });
+
+            const res = await request(app).post('/api/services/cancel-card').send(cancelData);
+            expect(res.statusCode).toBe(404);
+            expect(clientMock.query).toHaveBeenCalledWith('ROLLBACK');
+        });
         
         test('Should fail (400) if request already pending', async () => {
              clientMock.query.mockImplementation(async (sql) => {

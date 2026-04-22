@@ -203,6 +203,17 @@ adminMasterRouter.use('/fees', feeAdminRoutes);
 adminMasterRouter.use('/amenities', amenityAdminRoutes);
 adminMasterRouter.use('/dashboard', dashboardRoutes);
 
+const maintenanceRoutes = require('./routes/maintenance');
+const maintenanceAdminRoutes = require('./routes/maintenanceAdmin');
+const feedbackRoutes = require('./routes/feedback');
+const surveyRoutes = require('./routes/surveys');
+
+// ... (other imports)
+
+// ...
+
+adminMasterRouter.use('/maintenance', maintenanceAdminRoutes);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/profile', profileRoutes);
@@ -211,6 +222,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/amenities', amenityUserRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/surveys', surveyRoutes);
 
 app.use('/api/admin', adminMasterRouter);
 

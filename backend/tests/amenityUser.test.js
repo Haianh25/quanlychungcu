@@ -166,37 +166,56 @@ describe('Amenity User Routes Unit Tests', () => {
             expect(res.statusCode).toBe(400);
             expect(res.body.message).toContain('Time slot occupied');
         });
+
+        test('Should fail if user already has an active booking (AME_06)', async () => {
+            dbMock.query.mockImplementation(async (sql) => {
+                if (sql.includes('SELECT apartment_number')) return { rows: [{ apartment_number: 'A101' }] };
+                if (sql.includes('booking_date >= CURRENT_DATE')) return { rows: [{ id: 50 }] }; // Found active booking
+                return { rows: [] };
+            });
+
+            const res = await request(app).post('/api/amenities/book').send(bookData);
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toContain('active booking');
+        });
+
+        test('Should fail if duration <= 0 (AME_07)', async () => {
+            const invalidDuration = { ...bookData, startTime: '10:00', endTime: '09:00' };
+            dbMock.query.mockResolvedValueOnce({ rows: [{ apartment_number: 'A101' }] });
+
+            const res = await request(app).post('/api/amenities/book').send(invalidDuration);
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toContain('Invalid duration');
+        });
     });
 
     /**
      * TEST SUITE 3: CANCEL BOOKING
      */
     describe('POST /api/amenities/cancel/:id', () => {
-        test.skip('Should cancel successfully if booking is in future', async () => {
+        test('Should cancel successfully (AME_08)', async () => {
             const futureDate = new Date();
             futureDate.setDate(futureDate.getDate() + 5);
 
-            // Universal Mock: Satisfies all queries in the cancel flow
-            dbMock.query.mockResolvedValue({
-                rows: [{
-                    id: 1, // booking id / admin id
-                    user_id: 100,
-                    resident_id: 10,
-                    status: 'booked',
-                    booking_date: futureDate,
-                    start_time: '10:00:00',
-                    name: 'BBQ Area', // room name
-                    room_id: 101
-                }]
+            dbMock.query.mockImplementation(async (sql) => {
+                // Sửa match SQL để khớp với code thực tế (SELECT * FROM room_bookings)
+                if (sql.includes('SELECT * FROM room_bookings')) {
+                    return { rows: [{ id: 1, resident_id: 10, booking_date: futureDate, start_time: '10:00', status: 'confirmed' }] };
+                }
+                if (sql.includes('UPDATE room_bookings')) {
+                    return { rowCount: 1, rows: [{ id: 1, room_id: 101, booking_date: futureDate }] };
+                }
+                if (sql.includes('SELECT name FROM community_rooms')) return { rows: [{ name: 'BBQ' }] };
+                if (sql.includes('SELECT id FROM users WHERE role = \'admin\'')) return { rows: [{ id: 99 }] };
+                return { rows: [] };
             });
 
             const res = await request(app).post('/api/amenities/cancel/1');
-
             expect(res.statusCode).toBe(200);
             expect(res.body.message).toContain('cancelled successfully');
         });
 
-        test('Should fail (400) if cancelling past booking', async () => {
+        test('Should fail (400) if cancelling past booking (AME_09)', async () => {
             const pastDate = new Date();
             pastDate.setDate(pastDate.getDate() - 5);
 
@@ -214,7 +233,7 @@ describe('Amenity User Routes Unit Tests', () => {
             const res = await request(app).post('/api/amenities/cancel/1');
 
             expect(res.statusCode).toBe(400);
-            expect(res.body.message).toContain('Cannot cancel past');
+            expect(res.body.message).toContain('Late Cancellation Prohibited');
         });
 
         test('Should fail (404) if booking not found', async () => {
@@ -223,6 +242,22 @@ describe('Amenity User Routes Unit Tests', () => {
             const res = await request(app).post('/api/amenities/cancel/999');
 
             expect(res.statusCode).toBe(404);
+        });
+    });
+
+    /**
+     * TEST SUITE 4: MY BOOKINGS
+     */
+    describe('GET /api/amenities/my-bookings', () => {
+        test('Should return my booking history (AME_10)', async () => {
+            dbMock.query.mockResolvedValueOnce({
+                rows: [{ id: 1, room_name: 'Gym', booking_date: '2026-05-01' }]
+            });
+
+            const res = await request(app).get('/api/amenities/my-bookings');
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveLength(1);
         });
     });
 });

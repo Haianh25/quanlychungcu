@@ -63,6 +63,13 @@ describe('Admin Routes Unit Tests', () => {
             expect(res.statusCode).toBe(200);
             expect(res.body).toHaveLength(1);
         });
+
+        test('Should return empty list if no residents found (ADM_02)', async () => {
+            dbMock.query.mockResolvedValue({ rows: [] });
+            const res = await request(app).get('/api/admin/users');
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toEqual([]);
+        });
     });
 
     describe('DELETE /api/admin/users/:id', () => {
@@ -119,7 +126,7 @@ describe('Admin Routes Unit Tests', () => {
             expect(res.body.message).toContain('Room assigned successfully');
         });
 
-        test('Should fail if room not found or occupied', async () => {
+        test('Should fail if room not found or occupied (ADM_06)', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
                 if (sql.includes('SELECT r.room_number')) return { rows: [] };
@@ -130,6 +137,21 @@ describe('Admin Routes Unit Tests', () => {
             const res = await request(app).post('/api/admin/assign-room').send(assignData);
 
             expect(res.statusCode).toBe(400);
+            expect(clientMock.query).toHaveBeenCalledWith('ROLLBACK');
+        });
+
+        test('Should rollback if DB error occurs during transaction (ADM_10)', async () => {
+            clientMock.query.mockImplementation(async (sql) => {
+                if (sql === 'BEGIN') return;
+                if (sql.includes('SELECT r.room_number')) {
+                    throw new Error('Deadlock detected');
+                }
+                if (sql === 'ROLLBACK') return;
+                return { rows: [] };
+            });
+
+            const res = await request(app).post('/api/admin/assign-room').send(assignData);
+            expect(res.statusCode).toBe(500);
             expect(clientMock.query).toHaveBeenCalledWith('ROLLBACK');
         });
     });

@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import '../../pages/Homepage.css'; 
-import axios from 'axios'; 
-import { Dropdown, ListGroup } from 'react-bootstrap'; 
+import '../../pages/Homepage.css';
+import { Bell, PersonCircle, HouseDoor, Receipt, Grid, Newspaper, BoxArrowRight, List, X, Tools, ChatQuote } from 'react-bootstrap-icons';
+import axios from 'axios';
+import { Dropdown, ListGroup, Nav, NavDropdown } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 
 function timeAgo(date) {
@@ -27,15 +28,15 @@ const ResidentHeader = () => {
     const [userRole, setUserRole] = useState(null);
     const [userName, setUserName] = useState('');
     const [apartmentNumber, setApartmentNumber] = useState(null);
-    
+
     const navigate = useNavigate();
-    const location = useLocation(); 
+    const location = useLocation();
 
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [socket, setSocket] = useState(null);
 
-    const getAuthToken = (tokenType = 'token') => { 
+    const getAuthToken = (tokenType = 'token') => {
         return localStorage.getItem(tokenType);
     }
 
@@ -45,7 +46,7 @@ const ResidentHeader = () => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const res = await axios.get('http://localhost:5000/api/profile/status', config);
-            
+
             const newApartmentNumber = res.data.apartment_number;
 
             if (newApartmentNumber !== apartmentNumber) {
@@ -54,7 +55,7 @@ const ResidentHeader = () => {
                 if (!newApartmentNumber) {
                     const restrictedPaths = ['/services', '/bill'];
                     const isOnRestrictedPage = restrictedPaths.some(path => location.pathname.startsWith(path));
-                    
+
                     if (isOnRestrictedPage) {
                         alert("Session Update: You have been unassigned from your apartment. Redirecting to Home.");
                         navigate('/');
@@ -63,14 +64,14 @@ const ResidentHeader = () => {
             }
 
             if (res.data.role !== userRole && userRole !== null) {
-                 window.location.reload();
+                window.location.reload();
             }
         } catch (err) {
         }
     }, [apartmentNumber, userRole, location.pathname, navigate]);
 
     const fetchNotifications = useCallback(async () => {
-        const token = getAuthToken(); 
+        const token = getAuthToken();
         if (!token) return;
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -79,36 +80,36 @@ const ResidentHeader = () => {
         } catch (err) {
             console.error("Failed to fetch notifications:", err);
             if (err.response && err.response.status === 401) {
-                handleLogout(); 
+                handleLogout();
             }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleLogout = () => {
         if (socket) {
             socket.disconnect(); // Disconnect socket on logout
         }
-        localStorage.removeItem('token'); 
+        localStorage.removeItem('token');
         setIsLoggedIn(false);
         setUserRole(null);
         setUserName('');
         setApartmentNumber(null);
-        setNotifications([]); 
-        navigate('/login'); 
+        setNotifications([]);
+        navigate('/login');
     };
-    
+
     useEffect(() => {
-        const token = getAuthToken(); 
+        const token = getAuthToken();
         if (token) {
             setIsLoggedIn(true);
             try {
                 const decodedToken = jwtDecode(token);
                 const currentTime = Date.now() / 1000;
-                
+
                 if (decodedToken.exp < currentTime) {
                     console.log("Token expired");
-                    handleLogout(); 
+                    handleLogout();
                 } else {
                     const rawRole = decodedToken?.role ?? decodedToken?.roles ?? decodedToken?.user?.role;
                     let normalizedRole = null;
@@ -125,8 +126,8 @@ const ResidentHeader = () => {
                     if (decodedToken.apartment_number) {
                         setApartmentNumber(decodedToken.apartment_number);
                     }
-                    
-                    fetchNotifications(); 
+
+                    fetchNotifications();
 
                     // --- SOCKET.IO CONNECTION ---
                     if (!socket) {
@@ -143,7 +144,7 @@ const ResidentHeader = () => {
                             console.log("Real-time notification received:", newNoti);
                             // Add new notification to the top of the list
                             setNotifications(prev => [newNoti, ...prev]);
-                            
+
                             // Optional: Play a sound or show browser notification here
                         });
 
@@ -152,8 +153,8 @@ const ResidentHeader = () => {
 
                     // Keep fetching profile status but remove notification polling
                     const intervalId = setInterval(() => {
-                        fetchProfileStatus(); 
-                    }, 5000); 
+                        fetchProfileStatus();
+                    }, 5000);
                     return () => {
                         clearInterval(intervalId);
                         if (socket) socket.disconnect();
@@ -161,8 +162,8 @@ const ResidentHeader = () => {
                 }
             } catch (error) {
                 console.error("Invalid token:", error);
-                localStorage.removeItem('token'); 
-                setIsLoggedIn(false); 
+                localStorage.removeItem('token');
+                setIsLoggedIn(false);
                 setUserRole(null);
                 setUserName('');
                 setApartmentNumber(null);
@@ -172,21 +173,21 @@ const ResidentHeader = () => {
             setUserRole(null);
             setUserName('');
             setApartmentNumber(null);
-            setNotifications([]); 
+            setNotifications([]);
             if (socket) {
                 socket.disconnect();
                 setSocket(null);
             }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.pathname, fetchNotifications, fetchProfileStatus]); 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname, fetchNotifications, fetchProfileStatus]);
 
     const handleBellClick = () => {
-        setShowNotifications(!showNotifications); 
+        setShowNotifications(!showNotifications);
     };
 
     const handleProfileClick = () => {
-        navigate('/profile'); 
+        navigate('/profile');
     };
 
     const markAllAsRead = async () => {
@@ -204,7 +205,7 @@ const ResidentHeader = () => {
     const markOneAsRead = async (notificationId) => {
         const token = getAuthToken();
         if (!token) return;
-        setNotifications(prev => 
+        setNotifications(prev =>
             prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
         );
         try {
@@ -217,18 +218,18 @@ const ResidentHeader = () => {
 
     const handleNotificationClick = (notification) => {
         if (!notification.is_read) {
-            markOneAsRead(notification.id); 
+            markOneAsRead(notification.id);
         }
-        setShowNotifications(false); 
-        navigate(notification.link_to || '/'); 
+        setShowNotifications(false);
+        navigate(notification.link_to || '/');
     };
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const isResident = isLoggedIn && userRole === 'resident';
-    
-    const hasRoom = isResident && apartmentNumber; 
 
-    const isNavLinkActive = (path) => { 
+    const hasRoom = isResident && apartmentNumber;
+
+    const isNavLinkActive = (path) => {
         return location.pathname === path;
     };
 
@@ -239,9 +240,9 @@ const ResidentHeader = () => {
             return;
         }
         if (!isResident) {
-            return; 
+            return;
         }
-        
+
         if (isResident && !hasRoom) {
             alert("Access Denied: You have not been assigned an apartment yet. Please contact Admin to use this service.");
             return;
@@ -252,8 +253,8 @@ const ResidentHeader = () => {
 
     return (
         <header className="resident-header residem-header-light sticky-top">
-            <nav className="container navbar navbar-expand-lg"> 
-                
+            <nav className="container-fluid px-4 px-lg-5 navbar navbar-expand-lg">
+
                 <Link className="navbar-brand-custom" to={isLoggedIn ? "/" : "/login"}>
                     <img src="/images/logoo.png" alt="PTIT Apartment Logo" className="new-logo" />
                     <span>PTIT Apartment</span>
@@ -271,9 +272,9 @@ const ResidentHeader = () => {
 
                         <li className="nav-item">
                             {isResident ? (
-                                <a 
-                                    href="/services" 
-                                    className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`} 
+                                <a
+                                    href="/services"
+                                    className={`nav-link ${isNavLinkActive('/services') ? 'active' : ''}`}
                                     onClick={(e) => handleRestrictedClick(e, '/services')}
                                 >
                                     Services
@@ -285,9 +286,9 @@ const ResidentHeader = () => {
 
                         <li className="nav-item">
                             {isResident ? (
-                                <a 
-                                    href="/bill" 
-                                    className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`} 
+                                <a
+                                    href="/bill"
+                                    className={`nav-link ${isNavLinkActive('/bill') ? 'active' : ''}`}
                                     onClick={(e) => handleRestrictedClick(e, '/bill')}
                                 >
                                     Bill
@@ -304,6 +305,19 @@ const ResidentHeader = () => {
                                 <span className="nav-link disabled" title="Login to access">News</span>
                             )}
                         </li>
+                        <li className="nav-item">
+                            {isResident ? (
+                                <Link className={`nav-link ${isNavLinkActive('/maintenance') ? 'active' : ''}`} to="/maintenance">Maintenance</Link>
+                            ) : (
+                                <span className="nav-link disabled" title="Login to access">Maintenance</span>
+                            )}
+                        </li>
+                        {isResident && (
+                            <NavDropdown title="Community" id="community-dropdown" className="nav-item">
+                                <NavDropdown.Item as={Link} to="/surveys">Surveys</NavDropdown.Item>
+                                <NavDropdown.Item as={Link} to="/feedback">Feedback</NavDropdown.Item>
+                            </NavDropdown>
+                        )}
                         <li className="nav-item">
                             <Link className={`nav-link ${isNavLinkActive('/about') ? 'active' : ''}`} to="/about">About Us</Link>
                         </li>
@@ -335,11 +349,11 @@ const ResidentHeader = () => {
                                             <div className="notification-empty">No new notifications.</div>
                                         ) : (
                                             notifications.map(noti => (
-                                                <ListGroup.Item 
-                                                    key={noti.id} 
-                                                    action 
-                                                    onClick={() => handleNotificationClick(noti)} 
-                                                    className={`notification-item ${noti.is_read ? 'is-read' : 'is-unread'}`} 
+                                                <ListGroup.Item
+                                                    key={noti.id}
+                                                    action
+                                                    onClick={() => handleNotificationClick(noti)}
+                                                    className={`notification-item ${noti.is_read ? 'is-read' : 'is-unread'}`}
                                                 >
                                                     <p className="mb-1">{noti.message}</p>
                                                     <small>{timeAgo(noti.created_at)}</small>
@@ -353,7 +367,7 @@ const ResidentHeader = () => {
                             <button className="icon-btn icon-btn-light ms-2" onClick={handleProfileClick} title={userName || 'Profile'}>
                                 <i className="bi bi-person-circle"></i>
                             </button>
-                            
+
                             <button className="btn btn-residem-primary ms-3" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (

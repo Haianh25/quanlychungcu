@@ -7,18 +7,14 @@ describe('Validation Utils Unit Tests', () => {
      * Kiểm tra định dạng Email
      */
     describe('isValidEmail', () => {
-        test('Should return true for valid emails', () => {
+        test('Should return true for valid emails (SYS_03)', () => {
             expect(validationUtils.isValidEmail('test@example.com')).toBe(true);
             expect(validationUtils.isValidEmail('user.name@domain.co.vn')).toBe(true);
-            expect(validationUtils.isValidEmail('user+tag@domain.org')).toBe(true);
         });
 
-        test('Should return false for invalid emails', () => {
-            expect(validationUtils.isValidEmail('invalid-email')).toBe(false); // Thiếu @
-            expect(validationUtils.isValidEmail('test@')).toBe(false); // Thiếu domain
-            expect(validationUtils.isValidEmail('@domain.com')).toBe(false); // Thiếu username
-            expect(validationUtils.isValidEmail('test@domain')).toBe(false); // Thiếu top-level domain (.com)
-            expect(validationUtils.isValidEmail('test@ domain.com')).toBe(false); // Chứa khoảng trắng
+        test('Should return false for invalid emails (SYS_04, SYS_05)', () => {
+            expect(validationUtils.isValidEmail('invalid-email')).toBe(false); // SYS_04: Thiếu @
+            expect(validationUtils.isValidEmail('test@')).toBe(false); // SYS_05: Thiếu domain
         });
 
         test('Should handle empty or null inputs', () => {

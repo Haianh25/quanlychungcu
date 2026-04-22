@@ -1,11 +1,11 @@
 .resident-header.residem-header-light {
-    background-color: var(--color-bg-light);
-    padding: 0.8rem 0;
-    border-bottom: 1px solid var(--color-border-light);
-    min-height: 90px;
+    background-color: #ffffff;
+    padding: 0; 
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    min-height: 80px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .residem-header-light .navbar-brand-custom {
@@ -27,8 +27,8 @@
 
 .residem-header-light .navbar-nav {
     flex-grow: 1; 
-    justify-content: flex-start; 
-    margin-left: 2rem; 
+    justify-content: center; 
+    margin-left: 0; 
 }
 
 .residem-header-light .navbar-nav .nav-item {
@@ -36,12 +36,13 @@
 }
 
 .residem-header-light .navbar-nav .nav-link {
-    color: var(--color-text-muted-dark); 
+    color: #444; 
     font-weight: 500;
-    font-size: 1.05rem;
-    padding: 0.5rem 1rem;
-    transition: all 0.3s ease;
-    border-radius: 5px;
+    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.25s ease;
+    border-radius: 8px;
+    white-space: nowrap;
 }
 
 .residem-header-light .navbar-nav .nav-link:hover,

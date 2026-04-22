@@ -107,6 +107,12 @@ describe('Profile Routes Unit Tests', () => {
             const res = await request(app).put('/api/profile/update-details').send({});
             expect(res.statusCode).toBe(400);
         });
+
+        test('Should return 500 if DB error on update (PROF_06)', async () => {
+            dbMock.query.mockRejectedValueOnce(new Error('DB failure'));
+            const res = await request(app).put('/api/profile/update-details').send({ phone: '0123' });
+            expect(res.statusCode).toBe(500);
+        });
     });
 
     /**
@@ -173,6 +179,19 @@ describe('Profile Routes Unit Tests', () => {
 
             expect(res.statusCode).toBe(400);
             expect(res.body.message).toContain('at least 6 characters');
+        });
+
+        test('Should fail (400) if currentPassword is missing (PROF_11)', async () => {
+            const res = await request(app)
+                .put('/api/profile/change-password')
+                .send({ newPassword: 'ValidPass123', confirmPassword: 'ValidPass123' });
+            expect(res.statusCode).toBe(400);
+        });
+
+        test('Should fail (404) if user not found (Edge case/PROF_12)', async () => {
+            dbMock.query.mockResolvedValueOnce({ rows: [] }); // User not found in DB
+            const res = await request(app).put('/api/profile/change-password').send(passwordData);
+            expect(res.statusCode).toBe(404);
         });
     });
 });

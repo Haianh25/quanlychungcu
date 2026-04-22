@@ -191,4 +191,18 @@ describe('Vehicle Admin Routes Unit Tests', () => {
             expect(res.body.message).toContain('Limit reached');
         });
     });
+
+    describe('GET /api/admin/vehicle-requests', () => {
+        test('Should return list of pending requests (VEH_11)', async () => {
+            dbMock.query.mockResolvedValueOnce({
+                rows: [{ id: 1, resident_id: 1, status: 'pending' }]
+            });
+
+            const res = await request(app).get('/api/admin/vehicle-requests?status=pending');
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toHaveLength(1);
+            expect(res.body[0].status).toBe('pending');
+        });
+    });
 });

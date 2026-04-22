@@ -103,7 +103,7 @@ describe('Bill User Routes Unit Tests', () => {
      * TEST SUITE 2: GET MY TRANSACTIONS
      */
     describe('GET /api/bills/my-transactions', () => {
-        test('Should return transaction history', async () => {
+        test('Should return transaction history (BILL_02)', async () => {
             const mockTrans = [{ transaction_id: 1, amount: 500000, status: 'success' }];
             dbMock.query.mockResolvedValueOnce({ rows: mockTrans });
 
@@ -120,7 +120,7 @@ describe('Bill User Routes Unit Tests', () => {
     describe('POST /api/bills/create-payment', () => {
         const paymentData = { bill_id: 10, payment_method: 'paypal' };
 
-        test('Should process payment SUCCESSFULLY', async () => {
+        test('Should process payment SUCCESSFULLY (BILL_03)', async () => {
             // Mock Math.random để luôn vào nhánh thành công (< 0.9)
             jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
@@ -130,7 +130,7 @@ describe('Bill User Routes Unit Tests', () => {
                 
                 // 1. Check Bill
                 if (sql.includes('SELECT * FROM bills')) {
-                    return { rows: [{ bill_id: 10, total_amount: 100000 }] };
+                    return { rows: [{ bill_id: 10, total_amount: 100000, status: 'unpaid' }] };
                 }
                 
                 // 2. Insert Transaction
@@ -154,7 +154,7 @@ describe('Bill User Routes Unit Tests', () => {
             expect(clientMock.query).toHaveBeenCalledWith('COMMIT');
         });
 
-        test('Should process payment FAILURE (Simulated)', async () => {
+        test('Should process payment FAILURE (Simulated/BILL_04)', async () => {
             // Mock Math.random để luôn vào nhánh thất bại (> 0.9)
             jest.spyOn(Math, 'random').mockReturnValue(0.95);
 
@@ -162,7 +162,7 @@ describe('Bill User Routes Unit Tests', () => {
                 if (sql === 'BEGIN') return;
                 
                 if (sql.includes('SELECT * FROM bills')) {
-                    return { rows: [{ bill_id: 10, total_amount: 100000 }] };
+                    return { rows: [{ bill_id: 10, total_amount: 100000, status: 'unpaid' }] };
                 }
                 if (sql.includes('INSERT INTO transactions')) {
                     return { rows: [{ transaction_id: 999 }] };
@@ -182,21 +182,32 @@ describe('Bill User Routes Unit Tests', () => {
             expect(res.body.message).toContain('Payment failed');
         });
 
-        test('Should fail if bill invalid or already paid', async () => {
+        test('Should fail if bill is already paid (BILL_05)', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
-                // Trả về rỗng -> Không tìm thấy bill unpaid
-                if (sql.includes('SELECT * FROM bills')) return { rows: [] };
+                // Nếu query có lọc status -> Trả về rỗng (vì bill đã paid)
+                if (sql.includes('status IN')) return { rows: [] };
+                // Nếu query lấy status chung -> Trả về 'paid'
+                if (sql.includes('SELECT status FROM bills')) return { rows: [{ status: 'paid' }] };
                 if (sql === 'ROLLBACK') return;
                 return { rows: [] };
             });
 
             const res = await request(app).post('/api/bills/create-payment').send(paymentData);
+            expect(res.statusCode).toBe(400);
+            expect(res.body.message).toContain('already paid');
+        });
 
-            // API throw Error -> catch -> return 500
-            expect(res.statusCode).toBe(500);
-            expect(res.body.message).toContain('Invalid bill or already paid');
-            expect(clientMock.query).toHaveBeenCalledWith('ROLLBACK');
+        test('Should fail if bill not found (BILL_06)', async () => {
+            clientMock.query.mockImplementation(async (sql) => {
+                if (sql === 'BEGIN') return;
+                if (sql.includes('SELECT * FROM bills')) return { rows: [] }; // Not found
+                if (sql === 'ROLLBACK') return;
+                return { rows: [] };
+            });
+
+            const res = await request(app).post('/api/bills/create-payment').send(paymentData);
+            expect(res.statusCode).toBe(404);
         });
     });
 });

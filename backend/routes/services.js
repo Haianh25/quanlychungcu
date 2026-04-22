@@ -392,7 +392,8 @@ router.post('/cancel-card', protect, async (req, res) => {
 
         const cardRes = await client.query('SELECT id, vehicle_type, license_plate, brand FROM vehicle_cards WHERE id = $1 AND resident_id = $2 AND status IN ($3, $4)', [cardId, residentId, 'active', 'inactive']);
         if (cardRes.rows.length === 0) {
-            throw new Error('Valid card not found.');
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Valid card not found.' });
         }
         const card = cardRes.rows[0];
 

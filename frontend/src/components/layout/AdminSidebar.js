@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Speedometer2, People, HouseDoor, Grid, Newspaper, Truck, Receipt, Wallet2, CalendarEvent, GearFill } from 'react-bootstrap-icons'; // [MỚI] Thêm GearFill
+import { Speedometer2, People, HouseDoor, Grid, Newspaper, Truck, Receipt, Wallet2, CalendarEvent, GearFill, Tools, ClipboardCheck, ChatQuote } from 'react-bootstrap-icons'; // [MỚI] Thêm GearFill
 
 const AdminSidebar = () => {
- 
+
     const getLinkClass = ({ isActive }) => {
         const baseClass = "d-flex align-items-center py-3 px-4 text-decoration-none fw-medium transition-all";
 
-        return isActive 
-            ? `${baseClass} bg-opacity-10 text-dark border-start border-4` 
+        return isActive
+            ? `${baseClass} bg-opacity-10 text-dark border-start border-4`
             : `${baseClass} text-secondary hover-bg-light`;
     };
 
@@ -20,8 +20,8 @@ const AdminSidebar = () => {
 
     return (
         <div className="d-flex flex-column pt-3 h-100 bg-white">
-            <div className="px-4 mb-3 text-uppercase text-muted fw-bold" style={{fontSize: '0.75rem', letterSpacing: '1px'}}>Management</div>
-            
+            <div className="px-4 mb-3 text-uppercase text-muted fw-bold" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Management</div>
+
             <NavLink to="/admin/dashboard" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
                 <Speedometer2 className="me-3 fs-5" /> General Dashboard
             </NavLink>
@@ -48,6 +48,15 @@ const AdminSidebar = () => {
             </NavLink>
             <NavLink to="/admin/amenity-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
                 <CalendarEvent className="me-3 fs-5" /> Amenity Management
+            </NavLink>
+            <NavLink to="/admin/maintenance-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <Tools className="me-3 fs-5" /> Maintenance Management
+            </NavLink>
+            <NavLink to="/admin/survey-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <ClipboardCheck className="me-3 fs-5" /> Survey Management
+            </NavLink>
+            <NavLink to="/admin/feedback-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
+                <ChatQuote className="me-3 fs-5" /> Feedback Management
             </NavLink>
             <NavLink to="/admin/policy-management" className={getLinkClass} style={({ isActive }) => isActive ? activeStyle : {}}>
                 <GearFill className="me-3 fs-5" /> Policy Management

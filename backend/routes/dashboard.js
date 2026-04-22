@@ -8,7 +8,7 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
     try {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        
+
         const sixMonthsAgoDate = new Date();
         sixMonthsAgoDate.setMonth(sixMonthsAgoDate.getMonth() - 5);
         sixMonthsAgoDate.setDate(1);
@@ -19,10 +19,14 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
             vehicleRes,
             newsRes,
             billRes,
-            revenueHistoryRes, 
+            revenueHistoryRes,
             billStatusRes,
             pendingVehicleRes,
-            pendingUserRes
+            pendingUserRes,
+            vehicleTypeRes,
+            occupancyRes,
+            feedbackRes,
+            activeSurveyRes
         ] = await Promise.all([
             db.query(`
                 SELECT 
@@ -74,7 +78,28 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
 
             db.query(`SELECT COUNT(*) as count FROM vehicle_card_requests WHERE status = 'pending'`),
 
-            db.query(`SELECT COUNT(*) as count FROM users WHERE role = 'user' AND is_verified = true AND (apartment_number IS NULL OR apartment_number = '')`)
+            db.query(`SELECT COUNT(*) as count FROM users WHERE role = 'user' AND is_verified = true AND (apartment_number IS NULL OR apartment_number = '')`),
+
+            // New: Vehicle Types (Joined with requests to get the type)
+            db.query(`
+                SELECT vcr.vehicle_type as type, COUNT(*) as count 
+                FROM vehicle_cards vc
+                JOIN vehicle_card_requests vcr ON vc.created_from_request_id = vcr.id
+                WHERE vc.status = 'active'
+                GROUP BY vcr.vehicle_type
+            `),
+
+            db.query(`
+                SELECT COUNT(DISTINCT apartment_number) as count
+                FROM users
+                WHERE role = 'resident' AND apartment_number IS NOT NULL AND apartment_number != ''
+            `),
+
+            // New: Pending Feedback
+            db.query(`SELECT COUNT(*) as count FROM feedback WHERE status = 'pending'`),
+
+            // New: Active Surveys
+            db.query(`SELECT COUNT(*) as count FROM surveys WHERE is_active = true`)
         ]);
 
         const stats = {
@@ -92,7 +117,11 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
             },
             pending_actions: {
                 vehicles: parseInt(pendingVehicleRes.rows[0].count),
-                residents: parseInt(pendingUserRes.rows[0].count)
+                residents: parseInt(pendingUserRes.rows[0].count),
+                feedback: parseInt(feedbackRes.rows[0].count)
+            },
+            community: {
+                active_surveys: parseInt(activeSurveyRes.rows[0].count)
             },
             charts: {
                 revenue_history: revenueHistoryRes.rows.map(row => ({
@@ -103,8 +132,13 @@ router.get('/stats', protect, isAdmin, async (req, res) => {
                 bill_status: billStatusRes.rows.map(row => ({
                     status: row.status,
                     count: parseInt(row.count)
+                })),
+                vehicle_types: vehicleTypeRes.rows.map(row => ({
+                    type: row.type,
+                    count: parseInt(row.count)
                 }))
-            }
+            },
+            occupancy: parseInt(occupancyRes.rows[0]?.count || 0)
         };
 
         res.json(stats);

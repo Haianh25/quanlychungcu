@@ -82,4 +82,22 @@ describe('Database Connection (db.js) Unit Tests', () => {
         expect(poolInstance).toHaveProperty('query');
         expect(poolInstance.query).toBeDefined();
     });
+
+    test('Should connect successfully (SYS_01)', async () => {
+        const db = require('../db');
+        const pool = db.getPool();
+        const mockClient = { query: jest.fn(), release: jest.fn() };
+        mockPoolConnect.mockResolvedValueOnce(mockClient);
+
+        const client = await pool.connect();
+        expect(client).toBe(mockClient);
+    });
+
+    test('Should handle connection error (SYS_02)', async () => {
+        const db = require('../db');
+        const pool = db.getPool();
+        mockPoolConnect.mockRejectedValueOnce(new Error('Connection failed'));
+
+        await expect(pool.connect()).rejects.toThrow('Connection failed');
+    });
 });

@@ -178,10 +178,23 @@ describe('Bill Service Unit Tests', () => {
 
             // Kiểm tra xem có query lấy diện tích không
             expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('SELECT area FROM rooms'), [roomId]);
-            
-            // Lưu ý: Nếu hôm nay là ngày cuối cùng của tháng, logic code bạn có dòng:
-            // "if (daysToCharge <= 0) return;" -> test này có thể fail insert nếu chạy đúng ngày đó.
-            // Nhưng về cơ bản đây là cách test đúng logic.
+        });
+    });
+
+    /**
+     * TEST SUITE 4: isOverdue (BILL_13)
+     */
+    describe('isOverdue', () => {
+        test('Should return true if due date is in the past', () => {
+            const pastDate = new Date();
+            pastDate.setDate(pastDate.getDate() - 1);
+            expect(billService.isOverdue(pastDate)).toBe(true);
+        });
+
+        test('Should return false if due date is in the future (BILL_13)', () => {
+            const futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + 1);
+            expect(billService.isOverdue(futureDate)).toBe(false);
         });
     });
 });

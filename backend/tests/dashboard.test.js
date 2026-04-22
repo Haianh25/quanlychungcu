@@ -31,7 +31,7 @@ describe('Dashboard Routes Unit Tests', () => {
 
     describe('GET /api/dashboard/stats', () => {
         test('Should return all statistics correctly', async () => {
-            // Mock 8 DB queries in order
+            // Mock 12 DB queries in order
             db.query
                 // 1. users
                 .mockResolvedValueOnce({ rows: [{ total: 100, new_this_month: 5 }] })
@@ -48,7 +48,15 @@ describe('Dashboard Routes Unit Tests', () => {
                 // 7. pending vehicle requests
                 .mockResolvedValueOnce({ rows: [{ count: 2 }] })
                 // 8. pending user verification
-                .mockResolvedValueOnce({ rows: [{ count: 3 }] });
+                .mockResolvedValueOnce({ rows: [{ count: 3 }] })
+                // 9. vehicle types
+                .mockResolvedValueOnce({ rows: [{ type: 'car', count: 30 }] })
+                // 10. occupancy
+                .mockResolvedValueOnce({ rows: [{ count: 80 }] })
+                // 11. feedback
+                .mockResolvedValueOnce({ rows: [{ count: 1 }] })
+                // 12. active surveys
+                .mockResolvedValueOnce({ rows: [{ count: 4 }] });
 
             const res = await request(app).get('/api/dashboard/stats');
 
@@ -63,9 +71,10 @@ describe('Dashboard Routes Unit Tests', () => {
 
             expect(res.body.pending_actions.vehicles).toBe(2);
             expect(res.body.pending_actions.residents).toBe(3);
+            expect(res.body.pending_actions.feedback).toBe(1);
 
             expect(res.body.charts.revenue_history).toHaveLength(1);
-            expect(db.query).toHaveBeenCalledTimes(8);
+            expect(db.query).toHaveBeenCalledTimes(12);
         });
 
         test('Should handle database errors gracefully', async () => {

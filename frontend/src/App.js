@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
 
 import AdminLayout from './components/layout/AdminLayout';
-import ResidentLayout from './components/layout/ResidentLayout'; 
+import ResidentLayout from './components/layout/ResidentLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import Register from './pages/Register';
@@ -19,9 +19,12 @@ import NewsDetail from './pages/NewsDetail';
 import ProfilePage from './pages/ProfilePage';
 import BillPage from './pages/BillPage';
 import AboutUs from './pages/AboutUs';
-import ServicePage from './pages/ServicePage';      
+import ServicePage from './pages/ServicePage';
 import VehicleService from './pages/VehicleService';
-import AmenityService from './pages/AmenityService'; 
+import AmenityService from './pages/AmenityService';
+import MaintenancePage from './pages/MaintenancePage';
+import SurveyList from './pages/SurveyList';
+import FeedbackPage from './pages/FeedbackPage';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -33,7 +36,13 @@ import VehicleManagement from './pages/admin/VehicleManagement';
 import BillManagement from './pages/admin/BillManagement';
 import FeeManagement from './pages/admin/FeeManagement';
 import AmenityManagement from './pages/admin/AmenityManagement';
-import PolicyManagement from './pages/admin/PolicyManagement'; 
+import PolicyManagement from './pages/admin/PolicyManagement';
+import MaintenanceManagement from './pages/admin/MaintenanceManagement';
+import SurveyManagement from './pages/admin/SurveyManagement';
+import FeedbackManagement from './pages/admin/FeedbackManagement';
+
+// Resident Pages
+// import MaintenancePage from './pages/MaintenancePage'; // This line is moved up
 
 const AppContent = () => {
     const navigate = useNavigate();
@@ -53,7 +62,7 @@ const AppContent = () => {
             }
         );
 
-        
+
         return () => axios.interceptors.response.eject(interceptor);
     }, []);
 
@@ -66,13 +75,13 @@ const AppContent = () => {
 
     return (
         <>
-            
+
             <Modal show={showBlockModal} onHide={handleCloseBlockModal} centered backdrop="static" keyboard={false}>
                 <Modal.Header className="bg-danger text-white">
                     <Modal.Title>Account Locked</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="text-center p-4">
-                    <div className="mb-3 text-danger" style={{fontSize: '3rem'}}>
+                    <div className="mb-3 text-danger" style={{ fontSize: '3rem' }}>
                         <i className="bi bi-shield-lock-fill"></i>
                     </div>
                     <h5 className="mb-3">Access Denied</h5>
@@ -86,18 +95,22 @@ const AppContent = () => {
                 </Modal.Footer>
             </Modal>
 
-            <div className="app-wrapper"> 
+            <div className="app-wrapper">
                 <Routes>
                     {/* === Resident Routes === */}
                     <Route element={<ResidentLayout />}>
                         <Route path="/" element={<Homepage />} />
                         <Route path="/news" element={<News />} />
                         <Route path="/news/:id" element={<NewsDetail />} />
-                        <Route path="/services" element={<ServicePage />} />          
-                        <Route path="/services/vehicle" element={<VehicleService />} /> 
-                        <Route path="/services/amenity" element={<AmenityService />} /> 
+                        <Route path="/services" element={<ServicePage />} />
+                        <Route path="/services/vehicle" element={<VehicleService />} />
+                        <Route path="/services/amenity" element={<AmenityService />} />
                         <Route path="profile" element={<ProfilePage />} />
                         <Route path="/bill" element={<BillPage />} />
+
+                        <Route path="/maintenance" element={<MaintenancePage />} />
+                        <Route path="/surveys" element={<SurveyList />} />
+                        <Route path="/feedback" element={<FeedbackPage />} />
                         <Route path="/about" element={<AboutUs />} />
                     </Route>
 
@@ -121,7 +134,14 @@ const AppContent = () => {
                             <Route path="bill-management" element={<BillManagement />} />
                             <Route path="fee-management" element={<FeeManagement />} />
                             <Route path="amenity-management" element={<AmenityManagement />} />
-                            <Route path="policy-management" element={<PolicyManagement />} /> 
+                            <Route path="policy-management" element={<PolicyManagement />} />
+                            <Route path="maintenance-management" element={<MaintenanceManagement />} />
+                            <Route path="survey-management" element={<SurveyManagement />} />
+                            <Route path="feedback-management" element={<FeedbackManagement />} />
+                            {/* Alias for sidebar links */}
+                            <Route path="maintenance" element={<MaintenanceManagement />} />
+                            <Route path="surveys" element={<SurveyManagement />} />
+                            <Route path="feedback" element={<FeedbackManagement />} />
                         </Route>
                     </Route>
                 </Routes>
@@ -131,11 +151,11 @@ const AppContent = () => {
 };
 
 function App() {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
-  );
+    return (
+        <Router>
+            <AppContent />
+        </Router>
+    );
 }
 
 export default App;

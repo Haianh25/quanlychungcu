@@ -71,7 +71,13 @@ router.post('/create-payment', protect, async (req, res) => {
             [bill_id, residentId]
         );
         if (billRes.rows.length === 0) {
-            throw new Error('Invalid bill or already paid.');
+            await client.query('ROLLBACK');
+            // Check if it exists at all but is already paid
+            const existCheck = await client.query("SELECT status FROM bills WHERE bill_id = $1 AND user_id = $2", [bill_id, residentId]);
+            if (existCheck.rows.length > 0) {
+                return res.status(400).json({ message: 'Bill is already paid.' });
+            }
+            return res.status(404).json({ message: 'Bill not found.' });
         }
         const bill = billRes.rows[0];
         const amountToPay = bill.total_amount; 
