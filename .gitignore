@@ -32,3 +32,21 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# --- EXCEL & REPORTS (Yêu cầu của người dùng) ---
+*.xlsx
+*.xls
+*.html
+**/reports/
+**/report/
+qa/reports/
+qa/report/
+qa/performance-tests/apache-jmeter-5.6.3/
+qa/performance-tests/apache-jmeter-5.6.3.tgz
+qa/performance-tests/html-report/
+qa/api-tests/newman/
+qa/evidence/
+*.docx
+*.png
+jmeter.log
+results.csv

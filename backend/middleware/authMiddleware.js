@@ -29,7 +29,10 @@ const protect = async (req, res, next) => {
             }
 
         } catch (error) {
-            console.error('Auth Middleware Error:', error.message);
+            // Suppress common test-induced JWT errors in console to avoid spam
+            if (error.message !== 'jwt malformed' && error.message !== 'jwt expired' && error.message !== 'invalid signature') {
+                console.error('Auth Middleware Error:', error.message);
+            }
             res.status(401).json({ message: 'Not authorized, token failed.' });
         }
     }
