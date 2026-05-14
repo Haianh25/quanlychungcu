@@ -15,7 +15,7 @@ const ResetPassword = () => {
     const onSubmit = async e => {
         e.preventDefault();
         if (newPassword !== confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp.');
+            setError('Confirm password does not match.');
             return;
         }
         setError('');
@@ -25,7 +25,7 @@ const ResetPassword = () => {
             setMessage(res.data.message);
             setTimeout(() => navigate('/login'), 3000); 
         } catch (err) {
-            setError(err.response?.data?.message || 'Đã có lỗi xảy ra.');
+            setError(err.response?.data?.message || 'An error occurred.');
         }
     };
 

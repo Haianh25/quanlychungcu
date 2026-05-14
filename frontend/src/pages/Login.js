@@ -24,7 +24,7 @@ const Login = () => {
             localStorage.setItem('token', res.data.token);
             navigate('/'); 
         } catch (err) {
-            setError(err.response?.data?.message || 'Đã có lỗi xảy ra.');
+            setError(err.response?.data?.message || 'An error occurred.');
         }
     };
 

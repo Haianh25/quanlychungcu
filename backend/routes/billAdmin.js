@@ -33,7 +33,7 @@ router.post('/generate-bills', protect, isAdmin, async (req, res) => {
             // Duyệt qua từng hóa đơn để gửi thông báo
             for (const bill of newBills) {
                 const userId = bill.user_id;
-                const message = `Hóa đơn tháng ${month}/${year} đã được tạo. Tổng tiền: ${parseFloat(bill.total_amount).toLocaleString()} VND.`;
+                const message = `Monthly bill for ${month}/${year} has been generated. Total: ${parseFloat(bill.total_amount).toLocaleString()} VND.`;
                 const linkTo = '/bill';
 
                 // B1: Lưu thông báo vào Database (Để hiện trong danh sách lịch sử)
@@ -110,7 +110,7 @@ router.post('/trigger-late-fees', protect, isAdmin, async (req, res) => {
     try {
         const feeCheck = await client.query("SELECT * FROM fees WHERE fee_code = 'LATE_PAYMENT_FEE'");
         if (feeCheck.rows.length === 0) {
-             return res.json({ success: false, reason: "Lỗi: Chưa cấu hình 'LATE_PAYMENT_FEE' trong bảng fees." });
+             return res.json({ success: false, reason: "Error: 'LATE_PAYMENT_FEE' not configured in fees table." });
         }
 
         // Tìm những hóa đơn SẮP bị phạt (Quá hạn và chưa trả)
@@ -119,8 +119,8 @@ router.post('/trigger-late-fees', protect, isAdmin, async (req, res) => {
         if (billsCheck.rows.length === 0) {
              return res.json({ 
                  success: false, 
-                 reason: "Không tìm thấy hóa đơn nào quá hạn.",
-                 debug_info: "Hãy chắc chắn bạn đã chạy lệnh SQL cập nhật due_date về quá khứ (ví dụ ngày hôm qua) cho bill status='unpaid'."
+                 reason: "No overdue bills found.",
+                 debug_info: "Please ensure you have updated the due_date to the past for unpaid bills."
              });
         }
 
@@ -132,7 +132,7 @@ router.post('/trigger-late-fees', protect, isAdmin, async (req, res) => {
         
         for (const bill of billsCheck.rows) {
             const userId = bill.user_id;
-            const message = `Hóa đơn #${bill.bill_id} đã quá hạn. Phí phạt trả chậm đã được áp dụng.`;
+            const message = `Invoice #${bill.bill_id} is overdue. Late payment fee has been applied.`;
             const linkTo = '/bill';
 
             // B1: Lưu DB
@@ -154,13 +154,13 @@ router.post('/trigger-late-fees', protect, isAdmin, async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: 'Đã chạy tính phí phạt thành công và gửi thông báo.',
+            message: 'Late fees processed successfully and notifications sent.',
             bills_affected: billsCheck.rows.map(b => b.bill_id) 
         });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Lỗi khi chạy debug phí phạt.', error: err.message });
+        res.status(500).json({ message: 'Error during late fee processing.', error: err.message });
     } finally {
         client.release();
     }

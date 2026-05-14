@@ -21,7 +21,7 @@ const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
-        cb(new Error('Chỉ chấp nhận file ảnh!'), false);
+        cb(new Error('Only image files are accepted!'), false);
     }
 };
 

@@ -209,7 +209,7 @@ async function generateBillsForMonth(month, year) {
                 await client.query('UPDATE vehicle_card_requests SET billed_in_bill_id = $1 WHERE id = ANY($2::int[])', [billId, requestIdsToUpdate]);
             }
 
-            const notiMessage = `New Bill Alert: Your service bill for ${month}/${year} (Invoice #${billId}) has been issued. Total: ${totalAmount.toLocaleString('vi-VN')} VND.`;
+            const notiMessage = `New Bill Alert: Your service bill for ${month}/${year} (Invoice #${billId}) has been issued. Total: ${totalAmount.toLocaleString('en-GB')} VND.`;
             await client.query(
                 "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
                 [user_id, notiMessage, '/bill']
@@ -220,7 +220,7 @@ async function generateBillsForMonth(month, year) {
                     billId: billId,
                     monthYear: `${month}/${year}`,
                     totalAmount: totalAmount,
-                    dueDate: dueDate.toLocaleDateString('vi-VN')
+                    dueDate: dueDate.toLocaleDateString('en-GB')
                 };
                 try {
                     await sendNewBillEmail(email, full_name, billDetails);
@@ -334,7 +334,7 @@ async function generateMoveInBill(userId, roomId, client) {
             );
         }
 
-        const notiMessage = `New Bill Alert: Move-in bill generated (Invoice #${billId}). Total: ${totalAmount.toLocaleString('vi-VN')} VND.`;
+        const notiMessage = `New Bill Alert: Move-in bill generated (Invoice #${billId}). Total: ${totalAmount.toLocaleString('en-GB')} VND.`;
         await client.query(
             "INSERT INTO notifications (user_id, message, link_to) VALUES ($1, $2, $3)",
             [userId, notiMessage, '/bill']
