@@ -91,8 +91,13 @@ const AdminLayout = () => {
         setSelectedPartner(user);
         selectedPartnerRef.current = user;
         
-        // UI trick: Xóa tạm số unread của user này
-        setChatPartners(prev => prev.map(u => u.id === user.id ? {...u, unread_count: 0} : u));
+        // UI trick: Xóa tạm số unread của user này và cập nhật tổng
+        setChatPartners(prev => {
+            const updated = prev.map(u => u.id === user.id ? {...u, unread_count: 0} : u);
+            const total = updated.reduce((sum, u) => sum + parseInt(u.unread_count || 0), 0);
+            setTotalUnread(total);
+            return updated;
+        });
 
         if (socket) {
             // Socket vẫn sống, gọi thoải mái

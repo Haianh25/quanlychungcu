@@ -77,7 +77,7 @@ io.on('connection', (socket) => {
 
     // 1. Gửi tin nhắn (Admin <-> User)
     socket.on('send_message', async ({ receiver_id, message }) => {
-        console.log(`[Chat] ${userId} sends to ${receiver_id}: "${message}"`);
+        console.log(`[Chat Debug] sender: ${userId}, receiver: ${receiver_id}, msg: "${message}"`);
         try {
             const result = await db.query(
                 `INSERT INTO messages (sender_id, receiver_id, message, created_at) 
@@ -86,15 +86,21 @@ io.on('connection', (socket) => {
                 [userId, receiver_id, message]
             );
             const newMessage = result.rows[0];
+            console.log(`[Chat Debug] Saved to DB: ${newMessage.id}`);
 
             const receiverSocketId = userSocketMap[receiver_id];
             if (receiverSocketId) {
+                console.log(`[Chat Debug] Sending to receiver socket: ${receiverSocketId}`);
                 io.to(receiverSocketId).emit('receive_message', newMessage);
+            } else {
+                console.log(`[Chat Debug] Receiver ${receiver_id} not connected.`);
             }
+            
+            console.log(`[Chat Debug] Sending back to sender socket: ${socket.id}`);
             socket.emit('receive_message', newMessage);
 
         } catch (err) {
-            console.error("Error sending message:", err);
+            console.error("[Chat Debug] Error sending message:", err);
         }
     });
 
@@ -114,8 +120,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 3. Admin lấy danh sách
-    socket.on('get_chat_partners', async () => {
+    const sendChatPartners = async () => {
         try {
             const result = await db.query(
                 `SELECT DISTINCT u.id, u.full_name, u.email, u.role,
@@ -130,7 +135,10 @@ io.on('connection', (socket) => {
         } catch (err) {
             console.error("Error fetching chat partners:", err);
         }
-    });
+    };
+
+    // 3. Admin lấy danh sách
+    socket.on('get_chat_partners', sendChatPartners);
 
     // 4. Tìm Admin
     socket.on('find_admin_to_chat', async () => {
@@ -152,6 +160,8 @@ io.on('connection', (socket) => {
                  WHERE sender_id = $1 AND receiver_id = $2 AND is_read = false`,
                 [sender_id, userId]
             );
+            // Push updated list immediately
+            await sendChatPartners();
         } catch (err) {
             console.error("Error marking read:", err);
         }
