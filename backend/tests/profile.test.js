@@ -25,21 +25,17 @@ jest.mock('bcryptjs', () => ({
 describe('Profile Routes Unit Tests', () => {
     let app;
     let dbMock;
-    let bcryptMock; // [QUAN TRỌNG] Biến giữ instance bcrypt mới nhất
+    let bcryptMock;
 
     beforeEach(() => {
-        // 1. Reset modules để xóa cache
         jest.resetModules();
         jest.clearAllMocks();
 
-        // 2. [QUAN TRỌNG] Require lại module để lấy instance mới khớp với Route
         dbMock = require('../db');
         bcryptMock = require('bcryptjs'); 
 
-        // 3. Cài đặt mặc định an toàn cho DB
         dbMock.query.mockResolvedValue({ rows: [], rowCount: 0 });
 
-        // 4. Setup App
         const profileRoutes = require('../routes/profile');
         app = express();
         app.use(bodyParser.json());
@@ -47,9 +43,10 @@ describe('Profile Routes Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 1: GET /me
+     * TEST SUITE 1: GET /me (PROF_01 – PROF_02)
      */
     describe('GET /api/profile/me', () => {
+        // PROF_01
         test('Should return user profile with room details', async () => {
             const mockUser = {
                 id: 1, full_name: 'Nguyen Van A', apartment_number: 'A101',
@@ -63,6 +60,7 @@ describe('Profile Routes Unit Tests', () => {
             expect(res.body.full_name).toBe('Nguyen Van A');
         });
 
+        // PROF_02
         test('Should return 404 if user not found', async () => {
             dbMock.query.mockResolvedValueOnce({ rows: [] }); 
 
@@ -73,9 +71,10 @@ describe('Profile Routes Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 2: GET /status
+     * TEST SUITE 2: GET /status (PROF_03)
      */
     describe('GET /api/profile/status', () => {
+        // PROF_03
         test('Should return status info', async () => {
             dbMock.query.mockResolvedValueOnce({ rows: [{ role: 'resident', apartment_number: 'A101' }] });
 
@@ -87,9 +86,10 @@ describe('Profile Routes Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 3: PUT /update-details
+     * TEST SUITE 3: PUT /update-details (PROF_04 – PROF_06)
      */
     describe('PUT /api/profile/update-details', () => {
+        // PROF_04
         test('Should update phone successfully', async () => {
             dbMock.query.mockResolvedValueOnce({ 
                 rows: [{ id: 1, phone: '0999888777' }] 
@@ -103,12 +103,14 @@ describe('Profile Routes Unit Tests', () => {
             expect(res.body.message).toContain('updated successfully');
         });
 
+        // PROF_05
         test('Should fail (400) if phone is missing', async () => {
             const res = await request(app).put('/api/profile/update-details').send({});
             expect(res.statusCode).toBe(400);
         });
 
-        test('Should return 500 if DB error on update (PROF_06)', async () => {
+        // PROF_06
+        test('Should return 500 if DB error on update', async () => {
             dbMock.query.mockRejectedValueOnce(new Error('DB failure'));
             const res = await request(app).put('/api/profile/update-details').send({ phone: '0123' });
             expect(res.statusCode).toBe(500);
@@ -116,7 +118,7 @@ describe('Profile Routes Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 4: PUT /change-password
+     * TEST SUITE 4: PUT /change-password (PROF_07 – PROF_12)
      */
     describe('PUT /api/profile/change-password', () => {
         const passwordData = {
@@ -125,14 +127,10 @@ describe('Profile Routes Unit Tests', () => {
             confirmPassword: 'newPass456'
         };
 
+        // PROF_07
         test('Should change password successfully', async () => {
-            // 1. Mock DB lấy password cũ
             dbMock.query.mockResolvedValueOnce({ rows: [{ password_hash: 'hashed_old_pass' }] });
-            
-            // 2. [QUAN TRỌNG] Dùng bcryptMock mới để mock return value
             bcryptMock.compare.mockResolvedValue(true);
-            
-            // 3. Mock DB update password mới
             dbMock.query.mockResolvedValueOnce({ rowCount: 1 });
 
             const res = await request(app)
@@ -141,15 +139,12 @@ describe('Profile Routes Unit Tests', () => {
 
             expect(res.statusCode).toBe(200);
             expect(res.body.message).toContain('Password changed successfully');
-            
             expect(bcryptMock.hash).toHaveBeenCalledWith('newPass456', expect.anything());
         });
 
+        // PROF_08
         test('Should fail (400) if current password incorrect', async () => {
-            // 1. Mock DB lấy pass cũ
             dbMock.query.mockResolvedValueOnce({ rows: [{ password_hash: 'hashed_old_pass' }] });
-            
-            // 2. Mock bcrypt compare (SAI)
             bcryptMock.compare.mockResolvedValue(false);
 
             const res = await request(app)
@@ -158,11 +153,10 @@ describe('Profile Routes Unit Tests', () => {
 
             expect(res.statusCode).toBe(400);
             expect(res.body.message).toContain('Incorrect current password');
-            
-            // Không được gọi lệnh update DB (chỉ gọi 1 lần SELECT lúc đầu)
             expect(dbMock.query).toHaveBeenCalledTimes(1); 
         });
 
+        // PROF_09
         test('Should fail (400) if new passwords do not match', async () => {
             const res = await request(app)
                 .put('/api/profile/change-password')
@@ -172,6 +166,7 @@ describe('Profile Routes Unit Tests', () => {
             expect(res.body.message).toContain('do not match');
         });
 
+        // PROF_10
         test('Should fail (400) if new password too short', async () => {
             const res = await request(app)
                 .put('/api/profile/change-password')
@@ -181,15 +176,17 @@ describe('Profile Routes Unit Tests', () => {
             expect(res.body.message).toContain('at least 6 characters');
         });
 
-        test('Should fail (400) if currentPassword is missing (PROF_11)', async () => {
+        // PROF_11
+        test('Should fail (400) if currentPassword is missing', async () => {
             const res = await request(app)
                 .put('/api/profile/change-password')
                 .send({ newPassword: 'ValidPass123', confirmPassword: 'ValidPass123' });
             expect(res.statusCode).toBe(400);
         });
 
-        test('Should fail (404) if user not found (Edge case/PROF_12)', async () => {
-            dbMock.query.mockResolvedValueOnce({ rows: [] }); // User not found in DB
+        // PROF_12
+        test('Should fail (404) if user not found (Edge case)', async () => {
+            dbMock.query.mockResolvedValueOnce({ rows: [] });
             const res = await request(app).put('/api/profile/change-password').send(passwordData);
             expect(res.statusCode).toBe(404);
         });

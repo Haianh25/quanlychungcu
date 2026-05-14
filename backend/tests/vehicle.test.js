@@ -44,10 +44,8 @@ jest.mock('../utils/upload', () => ({
 }));
 
 // 4. MOCK FS (File System)
-// Quan trọng: Định nghĩa ở scope toàn cục để factory hoạt động xuyên suốt
 jest.mock('fs', () => ({
-    unlink: jest.fn((path, cb) => cb(null)), // Giả lập xóa thành công
-    // Nếu code dùng promise fs thì cần mock thêm fs/promises, nhưng ở đây code dùng callback
+    unlink: jest.fn((path, cb) => cb(null)),
 }));
 
 describe('Vehicle Services Unit Tests', () => {
@@ -57,30 +55,25 @@ describe('Vehicle Services Unit Tests', () => {
     let fsMock;
 
     beforeEach(() => {
-        // 1. Reset modules để xóa cache
         jest.resetModules();
         jest.clearAllMocks();
 
-        // 2. Lấy lại các module mock mới nhất sau khi reset
         dbMock = require('../db');
         clientMock = dbMock._mockClient;
-        fsMock = require('fs'); // [QUAN TRỌNG] Lấy instance fs mock mới
+        fsMock = require('fs');
 
-        // 3. Cài đặt mặc định an toàn cho DB
         clientMock.query.mockResolvedValue({ rows: [], rowCount: 0 });
         dbMock.query.mockResolvedValue({ rows: [], rowCount: 0 });
 
-        // 4. Require lại route (nó sẽ dùng fs mock mới)
         const vehicleRoutes = require('../routes/services'); 
         
-        // 5. Setup App
         app = express();
         app.use(bodyParser.json());
         app.use('/api/services', vehicleRoutes);
     });
 
     /**
-     * TEST SUITE 1: GET FEES TABLE
+     * VEH_01: GET FEES TABLE
      */
     describe('GET /api/services/fees-table', () => {
         test('Should return fees object', async () => {
@@ -99,7 +92,7 @@ describe('Vehicle Services Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 2: MY POLICY
+     * VEH_02: MY POLICY
      */
     describe('GET /api/services/my-policy', () => {
         test('Should return room policy', async () => {
@@ -117,7 +110,7 @@ describe('Vehicle Services Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 3: REGISTER CARD
+     * VEH_03 – VEH_06: REGISTER CARD
      */
     describe('POST /api/services/register-card', () => {
         const regData = {
@@ -128,6 +121,7 @@ describe('Vehicle Services Unit Tests', () => {
             color: 'Black'
         };
 
+        // VEH_03
         test('Should register successfully if quota available', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
@@ -147,12 +141,12 @@ describe('Vehicle Services Unit Tests', () => {
             expect(res.body.message).toContain('submitted successfully');
         });
 
+        // VEH_04
         test('Should fail (403) if limit reached', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
                 if (sql.includes('SELECT u.apartment_number')) return { rows: [{ apartment_number: 'A101', room_type: 'A' }] };
                 if (sql.includes('FROM room_type_policies')) return { rows: [{ max_cars: 1 }] };
-                // Giả lập Đã có 1 xe -> Hết quota
                 if (sql.includes('FROM vehicle_cards WHERE resident_id')) return { rows: [{ vehicle_type: 'car', count: '1' }] }; 
                 if (sql === 'ROLLBACK') return;
                 return { rows: [] };
@@ -162,18 +156,43 @@ describe('Vehicle Services Unit Tests', () => {
 
             expect(res.statusCode).toBe(403);
             expect(res.body.message).toContain('Limit reached');
-            
-            // QUAN TRỌNG: Kiểm tra trên biến fsMock lấy từ require('fs')
             expect(fsMock.unlink).toHaveBeenCalled();
+        });
+
+        // VEH_05: No image - override upload mock to return no file
+        test('Should fail (400) if no image uploaded', async () => {
+            // Re-mock upload to simulate no file
+            jest.resetModules();
+            jest.mock('../utils/upload', () => ({
+                single: (fieldName) => (req, res, next) => {
+                    req.file = undefined;
+                    next();
+                }
+            }));
+            const vehicleRoutes2 = require('../routes/services');
+            const app2 = express();
+            app2.use(bodyParser.json());
+            app2.use('/api/services', vehicleRoutes2);
+
+            const res = await request(app2).post('/api/services/register-card').send(regData);
+            expect(res.statusCode).toBe(400);
+        });
+
+        // VEH_06
+        test('Should fail (400) if invalid vehicle type', async () => {
+            const invalidData = { ...regData, vehicleType: 'tank' };
+            const res = await request(app).post('/api/services/register-card').send(invalidData);
+            expect(res.statusCode).toBe(400);
         });
     });
 
     /**
-     * TEST SUITE 4: CANCEL CARD
+     * VEH_07 – VEH_09: CANCEL CARD
      */
     describe('POST /api/services/cancel-card', () => {
         const cancelData = { cardId: 100, reason: 'Lost' };
 
+        // VEH_07
         test('Should submit cancellation request', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
@@ -192,11 +211,12 @@ describe('Vehicle Services Unit Tests', () => {
             expect(res.body.message).toContain('Cancellation request submitted');
         });
 
-        test('Should fail (404) if card not found (VEH_08)', async () => {
+        // VEH_08
+        test('Should fail (404) if card not found', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
                 if (sql.includes('SELECT apartment_number')) return { rows: [{ apartment_number: 'A101' }] };
-                if (sql.includes('SELECT id, vehicle_type')) return { rows: [] }; // Card not found
+                if (sql.includes('SELECT id, vehicle_type')) return { rows: [] };
                 if (sql === 'ROLLBACK') return;
                 return { rows: [] };
             });
@@ -206,12 +226,12 @@ describe('Vehicle Services Unit Tests', () => {
             expect(clientMock.query).toHaveBeenCalledWith('ROLLBACK');
         });
         
+        // VEH_09
         test('Should fail (400) if request already pending', async () => {
              clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
                 if (sql.includes('SELECT apartment_number')) return { rows: [{ apartment_number: 'A101' }] };
                 if (sql.includes('SELECT id, vehicle_type')) return { rows: [{ id: 100 }] };
-                // ĐÃ CÓ request
                 if (sql.includes('SELECT id FROM vehicle_card_requests')) return { rows: [{ id: 50 }] };
                 if (sql === 'ROLLBACK') return;
                 return { rows: [] };
@@ -224,13 +244,12 @@ describe('Vehicle Services Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 5: CANCEL PENDING REQUEST
+     * VEH_10: CANCEL PENDING REQUEST
      */
     describe('POST /api/services/cancel-pending-request', () => {
         test('Should cancel pending request and delete file', async () => {
             clientMock.query.mockImplementation(async (sql) => {
                 if (sql === 'BEGIN') return;
-                // Check Request tồn tại
                 if (sql.includes('SELECT id, proof_image_url')) return { 
                     rows: [{ id: 1, proof_image_url: '/uploads/proofs/test.jpg', vehicle_type: 'car' }] 
                 };
@@ -245,8 +264,6 @@ describe('Vehicle Services Unit Tests', () => {
                 .send({ requestId: 1 });
 
             expect(res.statusCode).toBe(200);
-            
-            // Kiểm tra trên biến fsMock
             expect(fsMock.unlink).toHaveBeenCalled();
         });
     });

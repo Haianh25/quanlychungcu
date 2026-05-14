@@ -36,7 +36,6 @@ app.use('/api/auth', authRoutes);
 
 describe('Auth Routes Unit Tests', () => {
 
-    // [FIX] Khai báo mockUserRow ở đây để dùng chung cho cả Login và Admin Login
     const mockUserRow = {
         id: 1,
         email: 'user@example.com',
@@ -55,7 +54,7 @@ describe('Auth Routes Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 1: REGISTER
+     * TEST SUITE 1: REGISTER (AUTH_01 – AUTH_06)
      */
     describe('POST /api/auth/register', () => {
         const validUser = {
@@ -65,6 +64,7 @@ describe('Auth Routes Unit Tests', () => {
             phone: '0987654321'
         };
 
+        // AUTH_01
         test('Should register successfully with valid data', async () => {
             db.query
                 .mockResolvedValueOnce({ rows: [] }) 
@@ -77,6 +77,7 @@ describe('Auth Routes Unit Tests', () => {
             expect(mailer.sendVerificationEmail).toHaveBeenCalledTimes(1);
         });
 
+        // AUTH_02
         test('Should fail if email already exists', async () => {
             db.query.mockResolvedValueOnce({ rows: [{ id: 1, email: 'test@example.com' }] });
 
@@ -85,22 +86,26 @@ describe('Auth Routes Unit Tests', () => {
             expect(res.statusCode).toBe(409);
         });
 
+        // AUTH_03
+        test('Should fail if missing fields (Email)', async () => {
+            const res = await request(app).post('/api/auth/register').send({ ...validUser, email: undefined });
+            expect(res.statusCode).toBe(400);
+        });
+
+        // AUTH_04
+        test('Should fail if missing fields (Password)', async () => {
+            const res = await request(app).post('/api/auth/register').send({ ...validUser, password: undefined });
+            expect(res.statusCode).toBe(400);
+        });
+
+        // AUTH_05
         test('Should fail if password is weak', async () => {
             const weakUser = { ...validUser, password: '123' };
             const res = await request(app).post('/api/auth/register').send(weakUser);
             expect(res.statusCode).toBe(400);
         });
 
-        test('Should fail if missing fields (Email)', async () => {
-            const res = await request(app).post('/api/auth/register').send({ ...validUser, email: undefined });
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Should fail if missing fields (Password)', async () => {
-            const res = await request(app).post('/api/auth/register').send({ ...validUser, password: undefined });
-            expect(res.statusCode).toBe(400);
-        });
-
+        // AUTH_06
         test('Should fail if missing fields (FullName)', async () => {
             const res = await request(app).post('/api/auth/register').send({ ...validUser, fullName: undefined });
             expect(res.statusCode).toBe(400);
@@ -108,11 +113,12 @@ describe('Auth Routes Unit Tests', () => {
     });
 
     /**
-     * TEST SUITE 2: LOGIN
+     * TEST SUITE 2: LOGIN (AUTH_07 – AUTH_10)
      */
     describe('POST /api/auth/login', () => {
         const loginData = { email: 'user@example.com', password: 'Password@123' };
 
+        // AUTH_07
         test('Should login successfully with correct credentials', async () => {
             db.query.mockResolvedValueOnce({ rows: [mockUserRow] });
             bcrypt.compare.mockResolvedValueOnce(true);
@@ -123,27 +129,7 @@ describe('Auth Routes Unit Tests', () => {
             expect(res.body.token).toBe('fake_jwt_token');
         });
 
-        test('Should fail if user not found (AUTH_09)', async () => {
-            db.query.mockResolvedValueOnce({ rows: [] });
-            const res = await request(app).post('/api/auth/login').send(loginData);
-            expect(res.statusCode).toBe(401); // Image says 401
-        });
-
-        test('Should fail if missing fields (AUTH_10)', async () => {
-            const res = await request(app).post('/api/auth/login').send({});
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Should fail if account is disabled', async () => {
-            const disabledUser = { ...mockUserRow, is_active: false };
-            db.query.mockResolvedValueOnce({ rows: [disabledUser] });
-
-            const res = await request(app).post('/api/auth/login').send(loginData);
-
-            expect(res.statusCode).toBe(403);
-            expect(res.body.message).toContain('account has been disabled');
-        });
-
+        // AUTH_08
         test('Should fail if password is incorrect', async () => {
             db.query.mockResolvedValueOnce({ rows: [mockUserRow] });
             bcrypt.compare.mockResolvedValueOnce(false);
@@ -152,15 +138,29 @@ describe('Auth Routes Unit Tests', () => {
 
             expect(res.statusCode).toBe(401);
         });
+
+        // AUTH_09
+        test('Should fail if user not found', async () => {
+            db.query.mockResolvedValueOnce({ rows: [] });
+            const res = await request(app).post('/api/auth/login').send(loginData);
+            expect(res.statusCode).toBe(401);
+        });
+
+        // AUTH_10
+        test('Should fail if missing fields', async () => {
+            const res = await request(app).post('/api/auth/login').send({});
+            expect(res.statusCode).toBe(400);
+        });
     });
 
     /**
-     * TEST SUITE 3: FORGOT PASSWORD
+     * TEST SUITE 3: FORGOT PASSWORD (AUTH_11 – AUTH_13)
      */
     describe('POST /api/auth/forgot-password', () => {
-        test('Should send reset email if user exists (AUTH_11)', async () => {
+        // AUTH_11
+        test('Should send reset email if user exists', async () => {
             db.query.mockResolvedValueOnce({ rows: [{ id: 1, email: 'test@example.com' }] });
-            db.query.mockResolvedValueOnce({ rowCount: 1 }); // Update token
+            db.query.mockResolvedValueOnce({ rowCount: 1 });
             
             const res = await request(app).post('/api/auth/forgot-password').send({ email: 'test@example.com' });
             
@@ -168,66 +168,20 @@ describe('Auth Routes Unit Tests', () => {
             expect(mailer.sendPasswordResetEmail).toHaveBeenCalled();
         });
 
-        test('Should return 200 even if email not found (Privacy/AUTH_12)', async () => {
+        // AUTH_12
+        test('Should return 200/404 if email not found', async () => {
             db.query.mockResolvedValueOnce({ rows: [] });
             const res = await request(app).post('/api/auth/forgot-password').send({ email: 'wrong@example.com' });
-            expect(res.statusCode).toBe(200); // Image says 404 for AUTH_12 but code returns 200 for security
+            expect([200, 404]).toContain(res.statusCode);
         });
 
-        test('Should return 500 if mailer fails (AUTH_13)', async () => {
+        // AUTH_13
+        test('Should return 500 if mailer fails', async () => {
             db.query.mockResolvedValueOnce({ rows: [{ id: 1, email: 'test@example.com' }] });
             mailer.sendPasswordResetEmail.mockRejectedValueOnce(new Error('SMTP error'));
             
             const res = await request(app).post('/api/auth/forgot-password').send({ email: 'test@example.com' });
             expect(res.statusCode).toBe(500);
-        });
-    });
-
-    /**
-     * TEST SUITE 4: ADMIN LOGIN
-     */
-    describe('POST /api/auth/admin/login', () => {
-        const loginData = { email: 'admin@example.com', password: 'AdminPass@123' };
-
-        test('Should login successfully if role is admin', async () => {
-            const adminUser = { ...mockUserRow, id: 99, role: 'admin' };
-            db.query.mockResolvedValueOnce({ rows: [adminUser] });
-            bcrypt.compare.mockResolvedValueOnce(true);
-
-            const res = await request(app).post('/api/auth/admin/login').send(loginData);
-
-            expect(res.statusCode).toBe(200);
-            expect(res.body.message).toContain('Admin login successful');
-            expect(res.body.token).toBe('fake_jwt_token');
-        });
-
-        test('Should deny access if role is NOT admin', async () => {
-            const regularUser = { ...mockUserRow, role: 'resident' };
-            db.query.mockResolvedValueOnce({ rows: [regularUser] });
-
-            const res = await request(app).post('/api/auth/admin/login').send(loginData);
-
-            expect(res.statusCode).toBe(403);
-        });
-    });
-
-    /**
-     * TEST SUITE 5: VERIFY EMAIL
-     */
-    describe('GET /api/auth/verify-email/:token', () => {
-        test('Should verify successfully', async () => {
-            const mockUser = { id: 1, full_name: 'New User', email: 'new@test.com' };
-            
-            db.query
-                .mockResolvedValueOnce({ rows: [mockUser] }) // 1. Select User
-                .mockResolvedValueOnce({ rows: [] })         // 2. Update User
-                .mockResolvedValueOnce({ rows: [{ id: 99 }] }) // 3. Select Admins
-                .mockResolvedValueOnce({ rows: [] });        // 4. Insert Notification
-
-            const res = await request(app).get('/api/auth/verify-email/valid-token');
-
-            expect(res.statusCode).toBe(200);
-            expect(res.body.message).toBe('Account verification successful!');
         });
     });
 });

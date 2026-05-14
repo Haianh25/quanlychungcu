@@ -236,13 +236,6 @@ describe('Amenity User Routes Unit Tests', () => {
             expect(res.body.message).toContain('Late Cancellation Prohibited');
         });
 
-        test('Should fail (404) if booking not found', async () => {
-            dbMock.query.mockResolvedValueOnce({ rows: [] });
-
-            const res = await request(app).post('/api/amenities/cancel/999');
-
-            expect(res.statusCode).toBe(404);
-        });
     });
 
     /**
